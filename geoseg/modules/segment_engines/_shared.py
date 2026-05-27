@@ -103,27 +103,39 @@ def _create_overlay(
     effective_alpha = {"blend": alpha, "solid": 0.85, "mask": 1.0}.get(fill_mode, alpha)
     is_mask = fill_mode == "mask"
 
+    unique_labels = sorted(np.unique(cleaned_labels))
+    n_labels = len(unique_labels)
+
     if overlay_colors is not None:
-        colors = overlay_colors.astype(np.uint8)
+        base_colors = overlay_colors.astype(np.uint8)
     else:
-        colors = _distinct_colors(len(seeds_rgb))
+        base_colors = _distinct_colors(n_labels)
+
+    # Map each actual label value to a color (labels need not start at 0)
+    color_map: dict[int, np.ndarray] = {}
+    for i, lbl in enumerate(unique_labels):
+        if i < len(base_colors):
+            color_map[int(lbl)] = base_colors[i]
+        else:
+            color_map[int(lbl)] = np.array([128, 128, 128], dtype=np.uint8)
 
     if is_mask:
         overlay = np.full_like(panel_rgb, 32)
     else:
         overlay = panel_rgb.copy()
 
-    for l in range(len(colors)):
-        if bg_label is not None and l == bg_label:
+    for lbl in unique_labels:
+        if bg_label is not None and lbl == bg_label:
             continue
-        mask = cleaned_labels == l
+        mask = cleaned_labels == lbl
         if not mask.any():
             continue
+        color = color_map.get(int(lbl), np.array([128, 128, 128], dtype=np.uint8))
         if is_mask:
-            overlay[mask] = colors[l]
+            overlay[mask] = color
         else:
             overlay[mask] = (
-                overlay[mask] * (1 - effective_alpha) + colors[l] * effective_alpha
+                overlay[mask] * (1 - effective_alpha) + color * effective_alpha
             ).astype(np.uint8)
 
     boundaries = segmentation.find_boundaries(cleaned_labels, mode=boundary_mode)
@@ -507,7 +519,7 @@ def _scan_for_missing_colors(
 
 def _refine_vlm_seeds(
     panel_rgb: np.ndarray,
-    reps: list[dict],
+    reps: list[dict] | None,
     bg_rgb: np.ndarray,
     cv_seeds_rgb: np.ndarray,
     cv_tags: list[str],
@@ -517,13 +529,17 @@ def _refine_vlm_seeds(
 
     Returns (refined_seeds, refined_reps_metadata).
     """
+    if not reps:
+        return [], []
+
     h, w = panel_rgb.shape[:2]
     panel_lab = rgb2lab(panel_rgb)
 
     raw_rgb = []
     for r in reps:
-        x = int(r["representative_point"]["x"])
-        y = int(r["representative_point"]["y"])
+        rp = r.get("representative_point", {}) if isinstance(r, dict) else {}
+        x = int(rp.get("x", w // 2))
+        y = int(rp.get("y", h // 2))
         x = max(0, min(w - 1, x))
         y = max(0, min(h - 1, y))
         x0, x1 = max(0, x - 1), min(w, x + 2)
@@ -540,8 +556,9 @@ def _refine_vlm_seeds(
     refined_reps = []
 
     for idx, r in enumerate(reps):
-        ox = int(r["representative_point"]["x"])
-        oy = int(r["representative_point"]["y"])
+        rp = r.get("representative_point", {}) if isinstance(r, dict) else {}
+        ox = int(rp.get("x", w // 2))
+        oy = int(rp.get("y", h // 2))
         ox = max(0, min(w - 1, ox))
         oy = max(0, min(h - 1, oy))
         raw_vlm_rgb = panel_rgb[oy, ox]
@@ -632,7 +649,7 @@ def _refine_vlm_seeds(
 
         refined_seeds.append(rgb)
         refined_reps.append({
-            "name": r["color_name"],
+            "name": r.get("color_name", f"layer_{idx + 1}") if isinstance(r, dict) else f"layer_{idx + 1}",
             "vlm_x": ox,
             "vlm_y": oy,
             "rgb": raw_rgb[idx].tolist(),
@@ -659,8 +676,12 @@ def _auto_k(
 ) -> tuple[list[np.ndarray], list[dict]]:
     """Detect missing colors from unused CV seeds + full-image scan."""
     h, w = panel_rgb.shape[:2]
-    refined_seeds_arr = np.array(refined_seeds, dtype=np.uint8)
-    refined_lab = rgb2lab(refined_seeds_arr[np.newaxis, ...])[0]
+    if not refined_seeds:
+        refined_seeds_arr = np.empty((0, 3), dtype=np.uint8)
+        refined_lab = np.empty((0, 3), dtype=np.float64)
+    else:
+        refined_seeds_arr = np.array(refined_seeds, dtype=np.uint8)
+        refined_lab = rgb2lab(refined_seeds_arr[np.newaxis, ...])[0]
 
     auto_seeds: list[np.ndarray] = []
     auto_reps: list[dict] = []
@@ -668,6 +689,7 @@ def _auto_k(
 
     if max_auto_k > 0 and len(cv_seeds_rgb) > len(used_cv_indices):
         candidates = []
+        has_refined = refined_lab.shape[0] > 0
         for ci, (cseed, tag) in enumerate(zip(cv_seeds_rgb, cv_tags)):
             if ci in used_cv_indices:
                 continue
@@ -675,7 +697,10 @@ def _auto_k(
             if count < min_auto_count:
                 continue
             cseed_lab = rgb2lab(cseed[np.newaxis, ...])[0]
-            d = float(np.linalg.norm(refined_lab - cseed_lab, axis=1).min())
+            if has_refined:
+                d = float(np.linalg.norm(refined_lab - cseed_lab, axis=1).min())
+            else:
+                d = float('inf')
             candidates.append((ci, cseed, tag, count, d))
 
         candidates.sort(key=lambda t: (t[3], t[4]), reverse=True)

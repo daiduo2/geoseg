@@ -132,31 +132,31 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
   <tr>
     <td align="center" width="50%">
       <img src="docs/assets/example1_original.jpg" width="100%" alt="Original Figure 1"/>
-      <br/><sub>Original: 4-layer velocity model (Gras et al., 2019)</sub>
+      <br/><sub>Original: 5-layer velocity cross-section (Gras et al., 2019)</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/assets/example1_overlay.jpg" width="100%" alt="Segmentation Overlay 1"/>
-      <br/><sub>Overlay: vivid distinct colors (α=0.65), 4 layers, background suppressed</sub>
+      <img src="docs/assets/example1_overlay.png" width="100%" alt="Segmentation Overlay 1"/>
+      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, ensemble engine</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="docs/assets/example2_original.jpg" width="100%" alt="Original Figure 2"/>
-      <br/><sub>Original: 5-layer P-wave tomography cross-section</sub>
+      <br/><sub>Original: 5-layer Vp model with wellbore (Silixa 2021)</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/assets/example2_overlay.jpg" width="100%" alt="Segmentation Overlay 2"/>
-      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, thin boundaries</sub>
+      <img src="docs/assets/example2_overlay.png" width="100%" alt="Segmentation Overlay 2"/>
+      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, v4_colorbar-guided</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/assets/example3_original.png" width="100%" alt="Original Figure 3"/>
-      <br/><sub>Original: Seismic tomography cross-section</sub>
+      <img src="docs/assets/example3_original.jpg" width="100%" alt="Original Figure 3"/>
+      <br/><sub>Original: Seismic tomography cross-section (Gras et al., 2019)</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/example3_overlay.png" width="100%" alt="Segmentation Overlay 3"/>
-      <br/><sub>Overlay: edge-guided engine, 4 layers</sub>
+      <br/><sub>Overlay: vivid distinct colors (α=0.65), 8 layers, kmeans_full</sub>
     </td>
   </tr>
 </table>

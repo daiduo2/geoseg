@@ -78,8 +78,13 @@ Each agent:
 2. Identify target panel
 3. Crop + remove colorbar
 4. Run autonomous segmentation (≥2 engines, pick best)
-5. Save to `runs/sandbox/{figure_id}/`
-6. Update state → `SEGMENTED`
+5. Generate overlay with **vivid distinct colors** (`_create_overlay`)
+   - Default `fill_mode="blend"` (α=0.65, distinct HSV palette over original)
+   - Auto-detect and skip background label
+   - Pre-merge tiny fragments; thin white boundaries
+   - Agent may override to `"solid"` (α=0.85) or `"mask"` (pure map) if figure has low-contrast layers
+6. Save to `runs/sandbox/{figure_id}/`
+7. Update state → `SEGMENTED`
 
 Save session state after each completion.
 

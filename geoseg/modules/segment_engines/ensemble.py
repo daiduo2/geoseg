@@ -143,7 +143,7 @@ def _compute_palette(
 
 def segment(
     panel_rgb: np.ndarray,
-    reps: list[dict],
+    reps: list[dict] | None = None,
     n_layers: int = 5,
     max_auto_k: int = 3,
 ) -> dict:
@@ -158,15 +158,13 @@ def segment(
 
     Args:
         panel_rgb: RGB uint8 array (H, W, 3).
-        reps: VLM representative points.
+        reps: Optional VLM representative points. If None, each sub-engine uses CV seeds.
         n_layers: Not used directly, kept for interface consistency.
         max_auto_k: Maximum extra seeds to auto-detect.
 
     Returns:
         dict with keys: labels, seeds, overlay, meta.
     """
-    if not reps:
-        raise ValueError("ensemble path requires at least one rep")
 
     h, w, _ = panel_rgb.shape
     sat = saturation_ratio(panel_rgb)

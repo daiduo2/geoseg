@@ -45,6 +45,7 @@ Agent 自主执行（Bash/Read/Write/Edit 工具）
 - **Schema 改动 = 一次 PR 内更新所有 consumer + 跑 `tests/test_integration_ph01.py`**
 - **双管线接口**：通过 `geoseg/pipeline_interfaces.py` 通信，模块不感知上游来源
 - **Schema 定义**：`vlm_client/prompts.py` 是 schema + prompt 模板的唯一来源。所有 VLM 语义推理走 `.claude/skills/`（agent-native），禁止写新的 Python client 调 CLI（`client.py` 中 `_call_claude_cli` 已 DEPRECATED）。
+- **Agent-Native Pipeline 铁律**：pipeline 必须由 Claude Code Agent 工具纯 agent 驱动（Read 看图 → Bash 调用工具 → 自主决策），**绝不写 Python 批量脚本代劳**。Background agents 是执行单元，脚本是反模式。
 - **不开 swarm / agent 团队**（Phase 0 单人，但用 Claude Code 原生 Agent 工具）
 - **不创建** `docs/DESIGN.md` / `docs/CODEBASE.md` / 模块 CLAUDE.md **之外的新 markdown**
 

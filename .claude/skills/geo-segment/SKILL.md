@@ -73,6 +73,26 @@ Show a concise summary + overlay image:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+**Overlay Generation (`_create_overlay`)**
+
+The overlay uses vivid, perceptually distinct colors (golden-ratio HSV
+palette) so both VLM and human reviewers can clearly see every segmented
+region. Three fill modes are available:
+
+| Mode | Alpha | Description | Best for |
+|------|-------|-------------|----------|
+| `blend` | 0.65 | Distinct colors blended over original | Human review (default) |
+| `solid` | 0.85 | Near-opaque color fill | Complex figures where blend is too subtle |
+| `mask`  | 1.00 | Pure segmentation map, no original | VLM-only audit / README showcase |
+
+Default is `blend`. The agent may switch to `solid` or `mask` when:
+- The original figure has low contrast between layers
+- VLM review reports "cannot distinguish regions"
+- The user requests a clearer mask view
+
+Background label is auto-detected and skipped. Tiny fragments (<0.2% area)
+are merged before boundary drawing. Boundaries are drawn thin (`mode="thin"`).
+
 ### Step 3: Ask for Feedback
 
 Present choices:
