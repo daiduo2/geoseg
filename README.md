@@ -132,21 +132,21 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
   <tr>
     <td align="center" width="50%">
       <img src="docs/assets/example1_original.jpg" width="100%" alt="Original Figure 1"/>
-      <br/><sub>Original: 3-layer P-wave tomography model</sub>
+      <br/><sub>Original: 4-layer velocity model (Gras et al., 2019)</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/example1_overlay.jpg" width="100%" alt="Segmentation Overlay 1"/>
-      <br/><sub>Overlay: k-means engine, 3 layers, quality 0.91</sub>
+      <br/><sub>Overlay: 4 layers, background suppressed, thin boundaries</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="docs/assets/example2_original.jpg" width="100%" alt="Original Figure 2"/>
-      <br/><sub>Original: Complex model with fault structures</sub>
+      <br/><sub>Original: 5-layer P-wave tomography cross-section</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/example2_overlay.jpg" width="100%" alt="Segmentation Overlay 2"/>
-      <br/><sub>Overlay: ensemble engine, 5 layers, quality 0.85</sub>
+      <br/><sub>Overlay: 5 layers, noise fragments merged</sub>
     </td>
   </tr>
   <tr>

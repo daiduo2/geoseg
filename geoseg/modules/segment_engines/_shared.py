@@ -17,20 +17,81 @@ SATURATION_THRESHOLD = 80
 SHAPE_RATIO_THRESHOLD = 35.0
 
 
+def _detect_background_label(labels: np.ndarray) -> int | None:
+    """Detect the label most likely to be background.
+
+    Heuristic: the label that covers the largest fraction of the image edge
+    AND occupies a substantial total area is treated as background.
+    """
+    h, w = labels.shape
+    edge_margin = max(3, min(h, w) // 50)
+    edge_mask = np.zeros((h, w), dtype=bool)
+    edge_mask[:edge_margin, :] = True
+    edge_mask[-edge_margin:, :] = True
+    edge_mask[:, :edge_margin] = True
+    edge_mask[:, -edge_margin:] = True
+
+    unique = np.unique(labels)
+    best_label = None
+    best_score = 0.0
+    for lbl in unique:
+        mask = labels == lbl
+        edge_count = int(mask[edge_mask].sum())
+        total_count = int(mask.sum())
+        if total_count == 0:
+            continue
+        edge_ratio = edge_count / edge_mask.sum()
+        area_ratio = total_count / (h * w)
+        score = edge_ratio * area_ratio
+        if score > best_score and edge_ratio > 0.25 and area_ratio > 0.08:
+            best_score = score
+            best_label = int(lbl)
+    return best_label
+
+
 def _create_overlay(
     panel_rgb: np.ndarray,
     labels: np.ndarray,
     seeds_rgb: np.ndarray,
     alpha: float = 0.35,
+    boundary_mode: str = "thin",
+    skip_background: bool = True,
+    min_area_frac: float = 0.002,
 ) -> np.ndarray:
-    """Blend seed colors onto panel and draw white boundaries."""
+    """Blend seed colors onto panel and draw white boundaries.
+
+    Args:
+        panel_rgb: Original RGB image.
+        labels: Label map (int array).
+        seeds_rgb: Color palette, one per label.
+        alpha: Blending strength [0, 1].
+        boundary_mode: "thin" | "thick" | "inner".  Prefer "thin" to avoid
+            noisy boundary clutter from small fragments.
+        skip_background: If True, auto-detect and skip the background label.
+        min_area_frac: Merge connected components smaller than this fraction
+            before drawing the overlay, to suppress noise boundaries.
+    """
+    # Pre-clean labels: merge tiny fragments so they don't spawn spurious boundaries
+    cleaned_labels = _merge_small_regions(labels, min_area_frac=min_area_frac)
+
+    # Optionally skip the background label
+    bg_label = None
+    if skip_background:
+        bg_label = _detect_background_label(cleaned_labels)
+
     overlay = panel_rgb.copy()
     colors = seeds_rgb.astype(np.uint8)
+
     for l in range(len(colors)):
-        mask = labels == l
+        if bg_label is not None and l == bg_label:
+            continue
+        mask = cleaned_labels == l
         if mask.any():
             overlay[mask] = (overlay[mask] * (1 - alpha) + colors[l] * alpha).astype(np.uint8)
-    boundaries = segmentation.find_boundaries(labels, mode="thick")
+
+    boundaries = segmentation.find_boundaries(cleaned_labels, mode=boundary_mode)
+    if bg_label is not None:
+        boundaries &= cleaned_labels != bg_label
     overlay[boundaries] = [255, 255, 255]
     return overlay
 
