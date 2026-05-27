@@ -11,6 +11,8 @@ from skimage import segmentation, morphology, color
 from scipy import ndimage
 from sklearn.cluster import KMeans
 
+from geoseg.modules.segment_engines._shared import _distinct_colors
+
 
 # Defaults tuned on ph01 conceptual model panels
 _DEFAULT_COMPACTNESS = 5
@@ -187,12 +189,12 @@ def segment(
 
 def _create_overlay(panel_rgb: np.ndarray, labels: np.ndarray, seeds_rgb: np.ndarray) -> np.ndarray:
     overlay = panel_rgb.copy()
-    colors = seeds_rgb.astype(np.uint8)
-    alpha = 0.35
+    colors = _distinct_colors(len(seeds_rgb))
+    alpha = 0.65
     for l in range(len(colors)):
         mask = labels == l
         if mask.any():
             overlay[mask] = (overlay[mask] * (1 - alpha) + colors[l] * alpha).astype(np.uint8)
-    boundaries = segmentation.find_boundaries(labels, mode="thick")
+    boundaries = segmentation.find_boundaries(labels, mode="thin")
     overlay[boundaries] = [255, 255, 255]
     return overlay

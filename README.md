@@ -136,7 +136,7 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/example1_overlay.jpg" width="100%" alt="Segmentation Overlay 1"/>
-      <br/><sub>Overlay: 4 layers, background suppressed, thin boundaries</sub>
+      <br/><sub>Overlay: vivid distinct colors (α=0.65), 4 layers, background suppressed</sub>
     </td>
   </tr>
   <tr>
@@ -146,7 +146,7 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/example2_overlay.jpg" width="100%" alt="Segmentation Overlay 2"/>
-      <br/><sub>Overlay: 5 layers, noise fragments merged</sub>
+      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, thin boundaries</sub>
     </td>
   </tr>
   <tr>
@@ -161,7 +161,7 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
   </tr>
 </table>
 
-> **Note:** All overlays are generated automatically by the agent-native pipeline. The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
+> **Note:** All overlays use vivid, perceptually distinct colors (golden-ratio HSV palette) at high opacity (α=0.65) so both VLM and human reviewers can clearly distinguish every segmented region. Three fill modes are available: `blend` (default, shown above), `solid` (near-opaque), and `mask` (pure segmentation map). The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
 
 ## Project Structure
 

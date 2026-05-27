@@ -5,6 +5,8 @@ Extracted from skill lib/segment.py to avoid duplication across engines.
 
 from __future__ import annotations
 
+import colorsys
+
 import numpy as np
 from scipy import ndimage
 from skimage.color import rgb2lab
@@ -15,6 +17,18 @@ from skimage import segmentation
 
 SATURATION_THRESHOLD = 80
 SHAPE_RATIO_THRESHOLD = 35.0
+
+
+def _distinct_colors(n: int, saturation: float = 0.88, value: float = 0.95) -> np.ndarray:
+    """Generate n perceptually distinct vivid colors using golden-ratio hue distribution."""
+    colors = np.zeros((max(n, 1), 3), dtype=np.uint8)
+    golden = 0.618033988749895
+    h = 0.08
+    for i in range(n):
+        h = (h + golden) % 1.0
+        r, g, b = colorsys.hsv_to_rgb(h, saturation, value)
+        colors[i] = [int(r * 255), int(g * 255), int(b * 255)]
+    return colors
 
 
 def _detect_background_label(labels: np.ndarray) -> int | None:
@@ -53,41 +67,64 @@ def _create_overlay(
     panel_rgb: np.ndarray,
     labels: np.ndarray,
     seeds_rgb: np.ndarray,
-    alpha: float = 0.35,
+    alpha: float = 0.65,
     boundary_mode: str = "thin",
     skip_background: bool = True,
     min_area_frac: float = 0.002,
+    fill_mode: str = "blend",
+    overlay_colors: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Blend seed colors onto panel and draw white boundaries.
+    """Create segmentation overlay with vivid, perceptually distinct region colors.
 
     Args:
         panel_rgb: Original RGB image.
         labels: Label map (int array).
-        seeds_rgb: Color palette, one per label.
-        alpha: Blending strength [0, 1].
-        boundary_mode: "thin" | "thick" | "inner".  Prefer "thin" to avoid
-            noisy boundary clutter from small fragments.
+        seeds_rgb: Color palette, one per label (used only for sizing if
+            overlay_colors is not provided).
+        alpha: Blending strength [0, 1].  Higher = more visible mask.
+            Default 0.65 so VLM can clearly distinguish regions.
+        boundary_mode: "thin" | "thick" | "inner".
         skip_background: If True, auto-detect and skip the background label.
         min_area_frac: Merge connected components smaller than this fraction
-            before drawing the overlay, to suppress noise boundaries.
+            before drawing the overlay.
+        fill_mode:
+            - "blend": alpha-blend distinct colors onto original (default).
+            - "solid": strong alpha (0.85) blend, almost opaque.
+            - "mask": pure mask with distinct colors, no original image.
+        overlay_colors: Optional (n, 3) uint8 array of explicit colors.
+            If None, auto-generates high-contrast distinct colors.
     """
-    # Pre-clean labels: merge tiny fragments so they don't spawn spurious boundaries
     cleaned_labels = _merge_small_regions(labels, min_area_frac=min_area_frac)
 
-    # Optionally skip the background label
     bg_label = None
     if skip_background:
         bg_label = _detect_background_label(cleaned_labels)
 
-    overlay = panel_rgb.copy()
-    colors = seeds_rgb.astype(np.uint8)
+    effective_alpha = {"blend": alpha, "solid": 0.85, "mask": 1.0}.get(fill_mode, alpha)
+    is_mask = fill_mode == "mask"
+
+    if overlay_colors is not None:
+        colors = overlay_colors.astype(np.uint8)
+    else:
+        colors = _distinct_colors(len(seeds_rgb))
+
+    if is_mask:
+        overlay = np.full_like(panel_rgb, 32)
+    else:
+        overlay = panel_rgb.copy()
 
     for l in range(len(colors)):
         if bg_label is not None and l == bg_label:
             continue
         mask = cleaned_labels == l
-        if mask.any():
-            overlay[mask] = (overlay[mask] * (1 - alpha) + colors[l] * alpha).astype(np.uint8)
+        if not mask.any():
+            continue
+        if is_mask:
+            overlay[mask] = colors[l]
+        else:
+            overlay[mask] = (
+                overlay[mask] * (1 - effective_alpha) + colors[l] * effective_alpha
+            ).astype(np.uint8)
 
     boundaries = segmentation.find_boundaries(cleaned_labels, mode=boundary_mode)
     if bg_label is not None:
