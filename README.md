@@ -124,6 +124,45 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
 # Now type feedback in the HTML report chatbox — it appears directly in the CLI session
 ```
 
+## Examples
+
+### Original vs. Segmentation Overlay
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/example1_original.jpg" width="100%" alt="Original Figure 1"/>
+      <br/><sub>Original: 3-layer P-wave tomography model</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/example1_overlay.jpg" width="100%" alt="Segmentation Overlay 1"/>
+      <br/><sub>Overlay: k-means engine, 3 layers, quality 0.91</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/example2_original.jpg" width="100%" alt="Original Figure 2"/>
+      <br/><sub>Original: Complex model with fault structures</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/example2_overlay.jpg" width="100%" alt="Segmentation Overlay 2"/>
+      <br/><sub>Overlay: ensemble engine, 5 layers, quality 0.85</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/example3_original.png" width="100%" alt="Original Figure 3"/>
+      <br/><sub>Original: Seismic tomography cross-section</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/example3_overlay.png" width="100%" alt="Segmentation Overlay 3"/>
+      <br/><sub>Overlay: edge-guided engine, 4 layers</sub>
+    </td>
+  </tr>
+</table>
+
+> **Note:** All overlays are generated automatically by the agent-native pipeline. The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
+
 ## Project Structure
 
 ```

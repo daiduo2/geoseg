@@ -18,8 +18,13 @@ runs/
 !tests/fixtures/**/*.png
 *.jpg
 !tests/fixtures/**/*.jpg
+!docs/assets/**/*.jpg
 *.jpeg
 !tests/fixtures/**/*.jpeg
+!docs/assets/**/*.jpeg
+*.png
+!tests/fixtures/**/*.png
+!docs/assets/**/*.png
 *.npz
 *.npy
 
