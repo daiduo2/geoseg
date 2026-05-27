@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./tests/fixtures/**/*.pdf)",
+      "Read(./tests/fixtures/**/*.png)",
+      "Read(./tests/fixtures/**/*.jpg)",
+      "Read(./tests/fixtures/**/*.jpeg)",
+      "Read(/Users/daiduo2/.claude/skills/geo-segment/**)"
+    ],
+    "defaultMode": "auto"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'mods=\"\"; for f in $CLAUDE_FILE_PATHS; do if echo \"$f\" | grep -qE \"geoseg/modules/[^/]+/.*\\.py$\"; then mod=$(echo \"$f\" | sed -E \"s|.*modules/([^/]+)/.*|\\1|\"); mods=\"$mods $mod\"; fi; done; for mod in $(echo \"$mods\" | tr \" \" \"\\n\" | sort -u); do demo=\"geoseg/modules/$mod/demo.py\"; if [ -f \"$demo\" ]; then echo \"[hook] Running demo for module: $mod\"; python -m geoseg.modules.$mod.demo 2>&1 | tail -20; fi; done'",
+            "timeout": 60000
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'stamp=\"/Users/daiduo2/geoseg/.claude/.doc_sync_stamp\"; if [ -f \"$stamp\" ] && [ \"$(find \"$stamp\" -mmin -60 2>/dev/null)\" ]; then exit 0; fi; cd /Users/daiduo2/geoseg; issues=0; for d in geoseg/modules/*/; do mod=$(basename \"$d\"); [ \"$mod\" = \"__pycache__\" ] && continue; if ! grep -q \"$mod/\" docs/CODEBASE.md 2>/dev/null; then echo \"[DOC SYNC] New module missing in CODEBASE.md: $mod/\"; issues=1; fi; done; for f in geoseg/gui/*.py; do [ -f \"$f\" ] || continue; name=$(basename \"$f\"); if ! grep -q \"$name\" docs/CODEBASE.md 2>/dev/null; then echo \"[DOC SYNC] New GUI file missing in CODEBASE.md: $name\"; issues=1; fi; done; for d in geoseg/modules/*/; do mod=$(basename \"$d\"); [ \"$mod\" = \"__pycache__\" ] && continue; if [ ! -f \"geoseg/modules/$mod/CLAUDE.md\" ]; then echo \"[DOC SYNC] Module missing CLAUDE.md: $mod/\"; issues=1; fi; done; if [ $issues -eq 1 ]; then echo \"[DOC SYNC] 👉 运行: 为我同步一下文档\"; fi; touch \"$stamp\"'",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'for f in $CLAUDE_FILE_PATHS; do if echo \"$f\" | grep -q \"vlm_client/prompts.py\"; then echo \"⚠️  [SCHEMA WARNING] You are editing vlm_client/prompts.py.\"; echo \"    Remember: schema change = update ALL consumers + run pytest tests/test_integration_ph01.py\"; echo \"    See DESIGN.md §4.\"; fi; done'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

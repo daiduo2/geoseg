@@ -1,0 +1,21 @@
+{
+  "figure_type": "velocity_model",
+  "confidence": 0.92,
+  "reason": "Colored regions with distinct layers representing velocity variations, clear colorbar with Vp values",
+  "visual_features": "Horizontal colored bands with a vertical colorbar on the right side. Labels indicate Vp values in km/s.",
+  "category_checklist": [
+    {"category": "velocity_model", "applicable": "yes", "evidence": "Colored layers with Vp labels and colorbar"},
+    {"category": "geological_cross_section", "applicable": "no", "evidence": "No stratigraphic labels or fault lines"},
+    {"category": "tomography_map", "applicable": "no", "evidence": "Not a map view, no geographic outlines"},
+    {"category": "shot_gather", "applicable": "no", "evidence": "No wiggly traces"},
+    {"category": "waveform_plot", "applicable": "no", "evidence": "No waveform traces"},
+    {"category": "statistical_plot", "applicable": "no", "evidence": "No scatter points or curves"},
+    {"category": "equation", "applicable": "no", "evidence": "No mathematical formulas"},
+    {"category": "data_table", "applicable": "no", "evidence": "No tabular data"},
+    {"category": "flowchart", "applicable": "no", "evidence": "No boxes or arrows"},
+    {"category": "other", "applicable": "no", "evidence": "Fits velocity_model category"}
+  ],
+  "primary_evidence": "The colored horizontal layers explicitly labeled with Vp (km/s) values directly identify this as a velocity model.",
+  "conflicting_evidence": "None. The figure is unambiguously a velocity model.",
+  "segmentation_recommendation": "proceed"
+}

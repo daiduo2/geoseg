@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+# geo-segment skill entry
+# Usage: geo-segment <image> [--vlm-json JSON] [--panel=N] [--interactive] ...
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+python3 -m lib.cli "$@"

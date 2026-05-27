@@ -1,0 +1,7 @@
+numpy>=1.26
+pillow>=10.0
+scikit-image>=0.22
+scipy>=1.11
+requests>=2.31
+# Optional, only needed for --api=claude:
+# anthropic>=0.30

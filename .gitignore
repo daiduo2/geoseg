@@ -1,0 +1,54 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+geoseg-gui/node_modules/
+geoseg-gui/dist/
+
+# Generated artifacts
+runs/
+*.png
+!tests/fixtures/**/*.png
+*.jpg
+!tests/fixtures/**/*.jpg
+*.jpeg
+!tests/fixtures/**/*.jpeg
+*.npz
+*.npy
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+debug_*.png
+
+# Claude Code backups
+CLAUDE.md.bak-*
+
+# Misc
+.mcp.json
+scripts/
+papers_new/
+*.pdf
+
+# Deprecated
+geoseg-gui/

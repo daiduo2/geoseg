@@ -1,0 +1,26 @@
+{
+  "page_idx": 7,
+  "image_size": {"width": 1343, "height": 691},
+  "figure_type": "velocity_model_cross_section",
+  "panels": [
+    {"id": 0, "description": "Absolute isotropic Vs at 5 km depth (panel a)"},
+    {"id": 1, "description": "Absolute isotropic Vs at 15 km depth (panel b)"},
+    {"id": 2, "description": "Absolute isotropic Vs at 25 km depth (panel c)"},
+    {"id": 3, "description": "Absolute isotropic Vs at 35 km depth (panel d)"}
+  ],
+  "target_panel_id": 0,
+  "has_colorbar": true,
+  "noise_elements": [
+    {"kind": "colorbar", "description": "Vs colorbar 1000-5000 m/s"},
+    {"kind": "axis_label", "description": "40°N latitude labels"},
+    {"kind": "annotation", "description": "KMP benchmark location marker"}
+  ],
+  "color_zones": [
+    {"color_name": "slow_red", "colorbar_value": 0},
+    {"color_name": "slow_orange", "colorbar_value": 25},
+    {"color_name": "medium_yellow", "colorbar_value": 50},
+    {"color_name": "fast_cyan", "colorbar_value": 75},
+    {"color_name": "fast_blue", "colorbar_value": 100}
+  ],
+  "confidence": 0.92
+}
