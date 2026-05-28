@@ -867,9 +867,9 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 
 ## 16. v0.8 方向 A：边界导航线后处理（Horizon Refinement）
 
-> **状态**：已实现 ✅（2026-05-28）。将 pixel-wise 聚类的后处理从"合并碎片"升级为"拟合光滑边界+重分区"。
+> **状态**：已实现 ✅（2026-05-28）。将 pixel-wise 聚类的后处理从"合并碎片"升级为"拟合光滑边界+局部边界调整"。
 > **动机**：自修复实验表明，强模糊（σ=3.5）能把 example3 的碎片化从 0.60 提到 0.88，但边界锐利度受损。需要一种不牺牲边界精度就能消除碎片的方法。
-> **验证结果**：example3 碎片化 0.0269→0.0022（12× 改善），层数保持 4→4；silixa 0.0069→0.0000；c11b8db 粗分质量已优， refinement 自动 fallback 返回 coarse。
+> **验证结果**：silixa 0.0069→0.0006（10× 改善），层数保持 4→4，分区结构完全保留；16b0cf 0.0269→0.0204（24% 改善），分区结构保留；c11b8db 粗分质量已优，refinement 自动 fallback 返回 coarse。
 
 ### 16.1 问题定义：Pixel-wise 聚类的结构性天花板
 
@@ -888,14 +888,14 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 
 自修复实验验证了天花板：**example3 在 σ=3.5 模糊后 quality=0.88，但报告"中右侧黄蓝过渡区略有模糊，左下边界轻微锯齿"**。0.88→0.95 的 gap 无法通过调参跨越，需要范式转换。
 
-### 16.2 范式转换：从"区域分割"到"边界拟合+重分区"
+### 16.2 范式转换：从"区域分割"到"边界拟合+局部调整"
 
 人类专家画概念模型的方式不是"标出每个像素属于哪层"，而是**"画几条光滑曲线把区域分开"**。曲线是连续、光滑的，天然避免碎片化。
 
 新范式：
 
 ```
-原图 → 粗分大层（低分辨率+强模糊）→ 提取层边界点 → 曲线拟合 → 重分区
+原图 → 粗分大层（低分辨率+强模糊）→ 提取层边界点 → 曲线拟合 → 局部边界调整
           ↑___________________________↓
                         边界由原图梯度精确定位，连续性由拟合保证
 ```
@@ -904,6 +904,7 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 - **粗分阶段**只管"哪两个相邻区域之间应该有一条边界"（低分辨率，不怕模糊）
 - **边界提取阶段**在原图上沿交界带找高梯度点（不模糊，保持锐利）
 - **拟合阶段**用光滑曲线穿过这些点（消除锯齿和碎片）
+- **调整阶段**只在边界像素附近重标记，内部完全保留 coarse 的分区结构
 
 ### 16.3 技术路线（四阶段算法）
 
@@ -968,26 +969,34 @@ result = lowess(y_boundary, x_coords, frac=0.1)
 
 输出：`boundaries = [boundary_0, boundary_1, ..., boundary_n]`，每条 boundary 是 `(H,)` 的 y 坐标数组
 
-#### Phase D：重分区（Region Re-labeling）+ 质量门控
+#### Phase D：局部边界调整（Boundary Adjustment）+ 质量门控
 
-用拟合后的边界重新划分每个像素的标签：
+用拟合后的边界仅调整 coarse 中**真正和相邻层接壤的边界像素**，远离边界的内部像素完全保留：
 
 ```python
-for x in range(W):
-    y_bounds = [0] + sorted([b[x] for b in boundaries]) + [H]
-    for i, (y_top, y_bottom) in enumerate(zip(y_bounds, y_bounds[1:])):
-        refined_labels[int(y_top):int(y_bottom), x] = spatially_ordered_labels[i]
+for boundary_y, (top_lbl, bot_lbl) in zip(boundaries, boundary_pairs):
+    # 找到 coarse 中 top_lbl 与 bot_lbl 实际接触的像素
+    boundary_top = (coarse == top_lbl) & dilate(coarse == bot_lbl)
+    boundary_bot = (coarse == bot_lbl) & dilate(coarse == top_lbl)
+    zone = dilate(boundary_top | boundary_bot, iterations=blend_width)
+
+    for x in range(W):
+        y_b = fitted_boundary[x]
+        for y in zone[:, x]:
+            if result[y, x] in (top_lbl, bot_lbl):
+                result[y, x] = top_lbl if y <= y_b else bot_lbl
 ```
 
 **关键鲁棒性改进**（实现中发现）：
-- **空间重排序**：K-means 标签不是按垂直位置排序的。实现中先按 median_y 排序，确保边界在真实相邻层之间拟合
+- **空间排序仅用于确定边界对**：按 median_y 排序确定哪些层对之间拟合边界，但**Label ID 永不重命名**
 - **单调性约束**：拟合后按边界 median_y 排序，防止交叉产生碎片
 - **最小层厚检查**：若相邻边界 median 间距 < 3px，判定粗分过于破碎，fallback 返回 coarse
+- **像素变化率门控**：若调整像素超过 15%，判定边界偏离过大，fallback 返回 coarse
 - **质量门控**：若 refined 的碎片化分数 > coarse × 1.5 + 0.01，或层数丢失超过 1 层，fallback 返回 coarse
 
 结果：
-- 每个像素的标签由"它在哪两条边界之间"决定
-- 边界是连续光滑的，不存在碎片化
+- **分区结构完全保留**：内部像素与 coarse 一致，Label ID 不变
+- 边界是连续光滑的，边界附近碎片化被消除
 - 边界位置由原图梯度精确定位，不依赖模糊后的颜色
 - **粗分过差时自动跳过 refinement**，不恶化结果
 

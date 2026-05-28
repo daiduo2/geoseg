@@ -1,13 +1,14 @@
 """Horizon refinement: smooth boundary fitting for fragmented segmentations.
 
 Converts pixel-wise clustering results into geologically plausible layers
-by fitting smooth curves to layer boundaries and re-partitioning the image.
+by fitting smooth curves to layer boundaries and adjusting only boundary
+pixels, preserving the interior partition structure of the coarse result.
 
 Four-phase pipeline:
-1. Coarse segmentation (blur + downsample + k-means)
+1. Coarse segmentation (blur + downsample + k-means) — only if needed
 2. Boundary point extraction (per-column max-gradient sampling)
 3. Curve fitting (Savitzky-Golay / B-spline / LOESS)
-4. Re-labeling (partition by fitted boundaries)
+4. Boundary adjustment (relabel only pixels near fitted boundaries)
 """
 
 from __future__ import annotations
@@ -216,84 +217,48 @@ def _fit_curve(
     return _fit_loess(x, y_clean, smoothness)
 
 
-def _relabel_from_boundaries(
-    h: int,
-    w: int,
-    boundaries: list[np.ndarray],
-    unique_labels: list[int],
-) -> np.ndarray:
-    """Phase D: re-partition image by fitted boundary curves.
-
-    Preserves layer IDs from coarse segmentation. Each column x is divided
-    by the y-positions of boundaries at that x, and intervals are assigned
-    the original coarse label values (not renumbered 0,1,2...).
-    """
-    labels = np.zeros((h, w), dtype=np.int32)
-    n_layers = len(unique_labels)
-
-    for x in range(w):
-        y_bounds = [0]
-        for b in boundaries:
-            if len(b) > x:
-                y = int(np.clip(round(b[x]), 0, h - 1))
-                y_bounds.append(y)
-        y_bounds.append(h)
-        y_bounds = sorted(set(y_bounds))
-
-        # Assign original coarse labels to intervals
-        for i, (y_top, y_bottom) in enumerate(zip(y_bounds, y_bounds[1:])):
-            if i < n_layers and y_top < y_bottom and y_top < h:
-                labels[y_top:y_bottom, x] = unique_labels[i]
-
-        # Fill any remaining bottom area with last layer
-        if y_bounds and y_bounds[-1] < h and n_layers > 0:
-            labels[y_bounds[-1]:h, x] = unique_labels[-1]
-
-    return labels
-
-
-def _blend_with_coarse(
+def _adjust_boundaries(
     coarse_labels: np.ndarray,
-    refined_labels: np.ndarray,
     boundaries: list[np.ndarray],
+    boundary_pairs: list[tuple[int, int]],
     blend_width: int = 5,
 ) -> np.ndarray:
-    """Blend coarse and refined labels: keep coarse in interiors, use refined near boundaries.
+    """Adjust only boundary-adjacent pixels, preserving coarse interior.
 
-    This is the core of "Strategy 2": smooth boundaries without re-partitioning
-    the entire image. Only pixels within `blend_width` of a fitted boundary
-    are allowed to change their label.
+    For each fitted boundary between two layers, we identify the pixels in
+    the coarse result that actually touch the adjacent layer (boundary pixels),
+    dilate slightly to form an adjustment zone, and relabel pixels within
+    that zone based on the smooth boundary position. Pixels far from the
+    true boundary (interior of layers) are never touched.
     """
     h, w = coarse_labels.shape
     result = coarse_labels.copy()
 
-    # Mark boundary-adjacent pixels
-    boundary_zone = np.zeros((h, w), dtype=bool)
-    for b in boundaries:
-        for x in range(w):
-            if len(b) <= x:
-                continue
-            y = int(np.clip(round(b[x]), 0, h - 1))
-            y_min = max(0, y - blend_width)
-            y_max = min(h, y + blend_width + 1)
-            boundary_zone[y_min:y_max, x] = True
-
-    # Within boundary zone, accept refined label ONLY if it matches one of
-    # the coarse labels present in that local neighborhood (prevents wild
-    # label assignments from curve oscillations).
-    for x in range(w):
-        zone_y = np.where(boundary_zone[:, x])[0]
-        if len(zone_y) == 0:
+    for boundary_y, (top_lbl, bot_lbl) in zip(boundaries, boundary_pairs):
+        if len(boundary_y) != w:
             continue
 
-        # Collect coarse labels present in this column's boundary zone
-        local_coarse = coarse_labels[zone_y, x]
-        allowed = set(np.unique(local_coarse))
+        mask_top = coarse_labels == top_lbl
+        mask_bot = coarse_labels == bot_lbl
 
-        for y in zone_y:
-            refined_lbl = refined_labels[y, x]
-            if refined_lbl in allowed:
-                result[y, x] = refined_lbl
+        # Pixels of top_lbl that touch bot_lbl, and vice versa
+        boundary_top = mask_top & ndimage.binary_dilation(mask_bot, iterations=1)
+        boundary_bot = mask_bot & ndimage.binary_dilation(mask_top, iterations=1)
+
+        # Dilate to create a narrow adjustment zone around the true boundary
+        zone = ndimage.binary_dilation(boundary_top | boundary_bot, iterations=blend_width)
+
+        for x in range(w):
+            y_b = int(np.clip(round(boundary_y[x]), 0, h - 1))
+
+            ys = np.where(zone[:, x])[0]
+            if len(ys) == 0:
+                continue
+
+            for y in ys:
+                if result[y, x] not in (top_lbl, bot_lbl):
+                    continue
+                result[y, x] = top_lbl if y <= y_b else bot_lbl
 
     return result
 
@@ -329,10 +294,13 @@ def refine_boundaries(
     """Refine fragmented segmentation by fitting smooth horizons.
 
     Four-phase pipeline:
-    1. Coarse segmentation (blur + downsample + k-means)
+    1. Coarse segmentation (blur + downsample + k-means) — only if needed
     2. Boundary point extraction (per-column max-gradient)
     3. Curve fitting (Savitzky-Golay / B-spline / LOESS)
-    4. Re-labeling (partition by fitted boundaries)
+    4. Boundary adjustment (relabel only pixels near fitted boundaries)
+
+    Key invariant: original coarse label IDs and interior partition structure
+    are preserved. Only boundary-adjacent pixels are adjusted.
 
     Args:
         panel_rgb: Original RGB image (H, W, 3) uint8.
@@ -348,7 +316,8 @@ def refine_boundaries(
         downsample_factor: Downsample ratio for Phase A.
 
     Returns:
-        refined_labels: Re-labeled map with smooth boundaries (H, W).
+        refined_labels: Label map with smoothed boundaries (H, W). Interior
+            pixels match coarse_labels; only boundary zones are adjusted.
         boundaries: List of y-coordinate arrays for each fitted horizon.
     """
     h, w = panel_rgb.shape[:2]
@@ -364,9 +333,9 @@ def refine_boundaries(
     if len(unique) < 2:
         return coarse_labels.copy(), []
 
-    # --- Robustness: spatially order labels (top-to-bottom by median y) ---
-    # Background (0) is kept separate; non-background labels are sorted by
-    # vertical position so boundaries are fitted between truly adjacent layers.
+    # --- Spatially order labels (top-to-bottom by median y) ---
+    # Used only to determine which layer pairs should have boundaries fitted.
+    # Label IDs are preserved — never renamed.
     bg_labels = [u for u in unique if u == 0]
     layer_labels = [u for u in unique if u != 0]
 
@@ -380,9 +349,8 @@ def refine_boundaries(
 
     # Sort by median y (top = smallest y)
     spatial_order = sorted(layer_labels, key=lambda lbl: median_ys[lbl])
-    unique_spatial = bg_labels + spatial_order
 
-    # --- Fit boundaries between spatially adjacent layers ---
+    # --- Fit boundaries between spatially adjacent layers that actually touch ---
     boundaries: list[np.ndarray] = []
     boundary_pairs: list[tuple[int, int]] = []
 
@@ -392,39 +360,34 @@ def refine_boundaries(
 
         points = _extract_boundary_points(panel_rgb, coarse_labels, top_lbl, bot_lbl)
         if points is None:
-            # Fallback: use horizontal line at median transition y
-            mask_top = coarse_labels == top_lbl
-            mask_bot = coarse_labels == bot_lbl
-            transition = ndimage.binary_dilation(mask_top) & mask_bot
-            if not transition.any():
-                transition = mask_top | mask_bot
-            median_y = int(np.median(np.where(transition)[0])) if transition.any() else h // 2
-            boundary_y = np.full(w, median_y, dtype=np.float32)
-        else:
-            xs, ys = points
-            boundary_y = _fit_curve(xs, ys, method, smoothness)
-            # Fill gaps (columns where no point was sampled)
-            full_y = np.full(w, np.nan, dtype=np.float32)
-            full_y[xs] = boundary_y
-            full_y = ndimage.generic_filter(
-                full_y, lambda v: np.nanmedian(v) if np.any(~np.isnan(v)) else h // 2,
-                size=11, mode="nearest"
+            continue
+
+        xs, ys = points
+        boundary_y = _fit_curve(xs, ys, method, smoothness)
+
+        # Fill gaps (columns where no point was sampled)
+        full_y = np.full(w, np.nan, dtype=np.float32)
+        full_y[xs] = boundary_y
+        full_y = ndimage.generic_filter(
+            full_y, lambda v: np.nanmedian(v) if np.any(~np.isnan(v)) else h // 2,
+            size=11, mode="nearest"
+        )
+        nan_mask = np.isnan(full_y)
+        if nan_mask.any() and not nan_mask.all():
+            full_y[nan_mask] = np.interp(
+                np.where(nan_mask)[0],
+                np.where(~nan_mask)[0],
+                full_y[~nan_mask],
             )
-            # Interpolate remaining NaNs
-            nan_mask = np.isnan(full_y)
-            if nan_mask.any() and not nan_mask.all():
-                full_y[nan_mask] = np.interp(
-                    np.where(nan_mask)[0],
-                    np.where(~nan_mask)[0],
-                    full_y[~nan_mask],
-                )
-            boundary_y = full_y
+        boundary_y = full_y
 
         boundaries.append(boundary_y)
         boundary_pairs.append((top_lbl, bot_lbl))
 
+    if not boundaries:
+        return coarse_labels.copy(), []
+
     # --- Enforce monotonicity: sort boundaries by median y ---
-    # This prevents crossing boundaries which create tiny slivers.
     if len(boundaries) > 1:
         medians = [float(np.median(b)) for b in boundaries]
         order = np.argsort(medians)
@@ -432,8 +395,6 @@ def refine_boundaries(
         boundary_pairs = [boundary_pairs[int(i)] for i in order]
 
     # --- Sanity check: minimum boundary separation ---
-    # If boundaries collapsed (gap < 3 px), the coarse labels are too mixed
-    # to support meaningful boundary fitting.
     min_layer_height = max(3, h // 100)
     if len(boundaries) > 1:
         for i in range(len(boundaries) - 1):
@@ -441,20 +402,24 @@ def refine_boundaries(
             if gap < min_layer_height:
                 return coarse_labels.copy(), boundaries
 
-    # --- Re-label using spatially ordered boundaries ---
-    refined_labels = _relabel_from_boundaries(h, w, boundaries, spatial_order)
+    # --- Adjust only boundary-adjacent pixels (preserve coarse interior) ---
+    refined_labels = _adjust_boundaries(coarse_labels, boundaries, boundary_pairs, blend_width=5)
 
-    # --- Quality gate: layer count and fragmentation ---
-    refined_unique = sorted(u for u in np.unique(refined_labels) if u >= 0)
-    expected_layers = len(spatial_order)
-    if len(refined_unique) < expected_layers - 1:
-        # Lost more than 1 layer — refinement failed
+    # --- Quality gate: pixel change ratio ---
+    pixel_change_ratio = np.sum(refined_labels != coarse_labels) / (h * w)
+    if pixel_change_ratio > 0.15:
         return coarse_labels.copy(), boundaries
 
+    # --- Quality gate: layer count preservation ---
+    refined_unique = sorted(u for u in np.unique(refined_labels) if u >= 0)
+    expected_layers = len(layer_labels)
+    if len(refined_unique) < expected_layers - 1:
+        return coarse_labels.copy(), boundaries
+
+    # --- Quality gate: fragmentation ---
     coarse_frag = _compute_fragmentation_score(coarse_labels)
     refined_frag = _compute_fragmentation_score(refined_labels)
     if refined_frag > coarse_frag * 1.5 + 0.01:
-        # Refined result is significantly worse; skip refinement
         return coarse_labels.copy(), boundaries
 
     return refined_labels, boundaries
