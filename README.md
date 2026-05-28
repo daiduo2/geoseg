@@ -169,14 +169,14 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/example3_refined.png" width="100%" alt="Refined Segmentation 3"/>
-      <br/><sub>Refined: horizon refinement, frag 0.0269 → 0.0204</sub>
+      <br/><sub>Refined: curvature-constrained repartitioning, frag 0.0294 → 0.0004</sub>
     </td>
   </tr>
 </table>
 
 > **Note:** All overlays use vivid, perceptually distinct colors (golden-ratio HSV palette) at high opacity (α=0.65) so both VLM and human reviewers can clearly distinguish every segmented region. Three fill modes are available: `blend` (default, shown above), `solid` (near-opaque), and `mask` (pure segmentation map). The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
 >
-> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent fits smooth curves to layer boundaries and adjusts only boundary-adjacent pixels — preserving the interior partition structure of the coarse result. Boundary points are located by image gradients at full resolution, fitted with Savitzky-Golay filters (mode='mirror' to eliminate edge artifacts), then applied as a soft mask over the original coarse labels. If the coarse segmentation is already clean or lacks spatial coherence, the refinement step gracefully falls back to the original result.
+> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent detects whether layers actually touch. For touching layer pairs, it fits smooth curves via Savitzky-Golay with `mode='mirror'` and adjusts only boundary-adjacent pixels. For severely fragmented (non-touching) layer pairs — "archipelagos" of disconnected fragments — it switches to curvature-constrained quintic splines (minimizing |y'''|²) and performs global column-wise repartitioning, redrawing all maritime borders simultaneously. If the coarse segmentation is already clean or lacks spatial coherence, the refinement step gracefully falls back to the original result.
 
 ## Project Structure
 
