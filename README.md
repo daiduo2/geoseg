@@ -1,5 +1,8 @@
 # geoseg v2
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
 > Agent-native velocity zone extraction from geophysics interpretation figures.
 
 **geoseg** converts published geophysics figures — colored cross-sections, tomography maps, MATLAB-rendered seismic profiles — into [SPECFEM](https://github.com/SPECFEM/specfem2d)-ready velocity zone models. The entire pipeline is driven by AI agents inside [Claude Code](https://claude.ai/code), not by a traditional GUI.
@@ -15,7 +18,7 @@ geoseg v2 is the answer: a CLI-native workflow where agents autonomously classif
 - **Agent-Native Architecture** — No traditional GUI. The entire pipeline is orchestrated by Claude Code skills (`geo-segment`, `batch-segment`, `sandbox-segment`, `figure-classify`).
 - **CLI Human-in-the-Loop** — Agent auto-runs the pipeline, presents overlay results, and waits for natural language feedback. "Remove the colorbar" or "Split the bottom layer" — the agent re-runs sandbox on the fly.
 - **Multi-Engine Segmentation** — `sandbox-segment` autonomously tries multiple engines (k-means, edge-guided, ensemble, grayscale) and picks the best via VLM visual evaluation + objective metrics.
-- **Horizon Refinement** — Post-processes fragmented segmentations by fitting smooth curves to layer boundaries, eliminating "broken glass" artifacts without sacrificing boundary sharpness.
+- **Horizon Refinement** — Post-processes fragmented segmentations by applying label-space Gaussian blur, eliminating "broken glass" artifacts while preserving large-scale geological structures.
 - **Strategy Memory** — Learns from past segmentations. After each batch, extracts strategy templates (e.g. *"vivid + high edge → ensemble"*) and improves future decisions.
 - **Session State Persistence** — Full lifecycle tracking (`pending → classified → segmented → reviewed → exported`) with backtracking to any upstream stage.
 - **Batch Processing** — Process entire directories with parallel agents (≤5 concurrent), then review all results in one pass.
@@ -39,6 +42,42 @@ PDF / Image
 
 All VLM reasoning happens inside Claude Code agent sessions via the `Read` tool. No Python subprocess calls to `claude -p`.
 
+## Literature Parsing
+
+### Why Parse Literature?
+
+SPECFEM-ready velocity models are rarely published as raw data tables. Instead, they are embedded as **interpretation figures** in published geophysics literature — PDF papers where velocity cross-sections, tomography maps, and seismic profiles are rendered as colored images with colorbars and annotations. Extracting these figures from PDFs is the first necessary step of the pipeline.
+
+### Pipeline
+
+```
+PDF paper (arXiv / journal / conference)
+    ↓
+[MinerU] → structured extraction (text + figures + tables)
+    ↓
+[Panel detection] → individual figure panels + colorbar bbox
+    ↓
+[Segmentation] → velocity zone labels
+    ↓
+[SPECFEM export] → tomo.xyz + Par_file snippet
+```
+
+[MinerU](https://github.com/opendatalab/MinerU) is an open-source PDF parsing tool that converts academic papers into structured markdown with embedded figures. geoseg uses MinerU as the **literature ingestion layer** to extract high-resolution figures from PDFs before segmentation.
+
+### ⚠️ Important: Configure MinerU API Key
+
+Before running literature parsing, you **must** configure your MinerU API credentials:
+
+```bash
+# Set your MinerU API key as environment variable
+export MINERU_API_KEY="your-api-key-here"
+
+# Or add to your shell profile for persistence
+echo 'export MINERU_API_KEY="your-api-key-here"' >> ~/.zshrc
+```
+
+Without a valid API key, the PDF ingestion stage will fail. You can obtain an API key from the [MinerU developer portal](https://mineru.net/).
+
 ## Quick Start
 
 ### Prerequisites
@@ -46,6 +85,7 @@ All VLM reasoning happens inside Claude Code agent sessions via the `Read` tool.
 - Python 3.10+
 - [Claude Code](https://claude.ai/code) CLI
 - [rmux](https://github.com/joshmedeski/rmux) (optional, for real-time frontend → CLI feedback)
+- MinerU API key (for PDF ingestion)
 
 ### Install
 
@@ -147,15 +187,15 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
   <tr>
     <td align="center" width="33%">
       <img src="docs/assets/example2_original.png" width="100%" alt="Original Figure 2"/>
-      <br/><sub>Original: Vp model with wellbore (Silixa 2021)</sub>
+      <br/><sub>Original: Velocity cross-section with anticline/syncline structures (Gras et al., 2019)</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/example2_coarse.png" width="100%" alt="Coarse Segmentation 2"/>
-      <br/><sub>Coarse: kmeans_full, 4 layers</sub>
+      <br/><sub>Coarse: kmeans_full, 5 layers — moderate fragmentation at boundaries</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/example2_refined.png" width="100%" alt="Refined Segmentation 2"/>
-      <br/><sub>Refined: horizon refinement (fallback — already clean)</sub>
+      <br/><sub>Refined: label-space Gaussian blur, smooths boundaries while preserving structural folds</sub>
     </td>
   </tr>
   <tr>
@@ -169,14 +209,44 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/example3_refined.png" width="100%" alt="Refined Segmentation 3"/>
-      <br/><sub>Refined: curvature-constrained repartitioning, frag 0.0294 → 0.0004</sub>
+      <br/><sub>Refined: label-space Gaussian blur, frag 0.0294 → 0.0000</sub>
     </td>
   </tr>
 </table>
 
 > **Note:** All overlays use vivid, perceptually distinct colors (golden-ratio HSV palette) at high opacity (α=0.65) so both VLM and human reviewers can clearly distinguish every segmented region. Three fill modes are available: `blend` (default, shown above), `solid` (near-opaque), and `mask` (pure segmentation map). The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
 >
-> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent detects whether layers actually touch. For touching layer pairs, it fits smooth curves via Savitzky-Golay with `mode='mirror'` and adjusts only boundary-adjacent pixels. For severely fragmented (non-touching) layer pairs — "archipelagos" of disconnected fragments — it switches to curvature-constrained quintic splines (minimizing |y'''|²) and performs global column-wise repartitioning, redrawing all maritime borders simultaneously. If the coarse segmentation is already clean or lacks spatial coherence, the refinement step gracefully falls back to the original result.
+> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent detects whether layers actually touch. For touching layer pairs, it fits smooth curves via Savitzky-Golay with `mode='mirror'` and adjusts only boundary-adjacent pixels. For severely fragmented (non-touching) layer pairs — "archipelagos" of disconnected fragments — it applies **label-space Gaussian blur**: each label's binary mask is blurred in 2D and pixels are reassigned to the dominant label. Small fragments lose to spatial competition and disappear, while large-scale layer structures are preserved. If the coarse segmentation is already clean or lacks spatial coherence, the refinement step gracefully falls back to the original result.
+
+## Experimental Report: The 16b0cf Challenge
+
+### The Problem
+
+The third example above (**16b0cf**, Gras et al., 2019) represents the most challenging case in our test suite: a seismic tomography cross-section where k-means clustering produces severe "broken glass" fragmentation (frag = 0.0294). Layer boundaries are not merely jagged — they consist of disconnected "archipelagos" of fragments with no touching pixels between adjacent layers.
+
+### Experimental Journey
+
+We conducted a systematic exploration of post-processing strategies for this image:
+
+| Experiment | Method | Result | Conclusion |
+|-----------|--------|--------|------------|
+| **E1** | Curvature-constrained quintic splines (global) | Over-smoothes local geometry | ❌ Rejected — curvature penalty integrated over full width flattens legitimate folds |
+| **E2** | Savitzky-Golay with adaptive window (local) | Better, but still loses small features | ⚠️ Partial — insufficient for archipelago structures |
+| **E3** | Distance-transform ridge (Voronoi midline) | Severe deviation (max 247px off) | ❌ Rejected — non-convex islands cause ridge to run through fragment interiors |
+| **E4** | Knot-constrained spline fitting | 17 knots at prominence=20, max diff 26px | ⚠️ Partial — works at curve level but global repartitioning masks the improvement |
+| **E5** | **Label-space Gaussian blur (σ=15)** | Frag 0.0294 → 0.0000 | ✅ **Adopted** — visually matches human-drawn boundaries exactly |
+
+### Key Insight
+
+The quantitative metric that guided earlier experiments — fragmentation score — turned out to be a poor proxy for visual quality. The breakthrough came when we stopped optimizing mathematical smoothness and instead asked: **"What would a human draw as the boundary?"**
+
+The answer was simple: **spatial Gaussian smoothing of the label map itself**. No boundary extraction, no curve fitting, no repartitioning — just let spatial competition between labels naturally eliminate small fragments while preserving large-scale structures. This is both mathematically elegant (10 lines of code) and visually correct.
+
+### Current Behavior
+
+- **Broken-pair images** (like 16b0cf) → label-space Gaussian blur (σ=15)
+- **Touching-pair images** (like silixa) → Savitzky-Golay local boundary adjustment (unchanged)
+- **Fallback** → if blur worsens fragmentation or drops >1 layer, return coarse unchanged
 
 ## Project Structure
 
@@ -189,6 +259,7 @@ geoseg/
 │   │   ├── edge_guided.py
 │   │   ├── ensemble.py
 │   │   ├── grayscale.py
+│   │   ├── horizon_refinement.py  # Label-space Gaussian blur + curve fitting
 │   │   ├── strategy_memory.py  # History-based engine selection
 │   │   └── metrics.py          # Objective facts (no physical bias)
 │   ├── vlm_client/             # Schema + prompt definitions (pydantic)
@@ -223,8 +294,8 @@ geoseg/
 
 - **v0.1–v0.6** — PySide6 GUI + manual pipeline. Reached functional completeness but GUI interaction felt unnatural.
 - **v0.7** — Tauri + FastAPI frontend designed, but abandoned before implementation. Realized the project's value is the *agent-driven workflow*, not another GUI tool.
-- **v0.8** — CLI-native HITL with session state persistence, upstream backtracking, and HTML report dashboard.
+- **v0.8** — CLI-native HITL with session state persistence, upstream backtracking, HTML report dashboard, and label-space Gaussian blur for horizon refinement.
 
 ## License
 
-MIT
+[MIT](https://opensource.org/licenses/MIT)

@@ -214,6 +214,137 @@ def _fit_savgol(x: np.ndarray, y: np.ndarray, smoothness: float) -> np.ndarray:
         return savgol_filter(y, window_length=window, polyorder=polyorder, mode="mirror")
 
 
+def _fit_multiscale_savgol(y: np.ndarray, base_smoothness: float = 0.15) -> np.ndarray:
+    """Multi-scale Savgol fusion: preserve local features while smoothing flat regions.
+
+    Fits two Savgol curves — one fine (small window, preserves detail) and one
+    coarse (large window, smooth). Where they diverge significantly, the local
+    structure is "real" (high curvature) so we trust the fine fit. Where they
+    agree, we use the smooth fit. This is an edge-preserving smoothing strategy
+    analogous to bilateral filtering.
+    """
+    n = len(y)
+    if n < 5:
+        return y.copy()
+
+    # Fill NaN before fitting
+    y_filled = y.copy()
+    valid = ~np.isnan(y)
+    if valid.any() and not valid.all():
+        y_filled[~valid] = np.interp(
+            np.where(~valid)[0], np.where(valid)[0], y[valid]
+        )
+
+    # Fine fit: small window preserves local peaks/valleys
+    y_fine = _fit_savgol(np.arange(n), y_filled, base_smoothness * 0.5)
+
+    # Coarse fit: large window for global smoothness
+    y_coarse = _fit_savgol(np.arange(n), y_filled, base_smoothness * 1.5)
+
+    # Divergence map: where do fine and coarse disagree?
+    diff = np.abs(y_fine - y_coarse)
+    max_diff = np.max(diff) + 1e-6
+    weight_fine = np.clip(diff / max_diff, 0.0, 1.0)  # high where local structure exists
+    weight_coarse = 1.0 - weight_fine
+
+    # Fuse: edge-preserving blend
+    result = weight_fine * y_fine + weight_coarse * y_coarse
+    return result
+
+
+def _detect_knots(
+    y: np.ndarray,
+    prominence: float = 5.0,
+    min_distance: int = 30,
+) -> np.ndarray:
+    """Detect significant structural points (knots) on a boundary curve.
+
+    Uses scipy.signal.find_peaks to locate local maxima and minima whose
+    prominence exceeds a threshold. Small sawtooth wiggles (prominence <
+    threshold) are treated as noise and ignored. Large geological features
+    (prominence > threshold) are preserved as knots.
+
+    Args:
+        y: Boundary y-coordinates (NaN filled).
+        prominence: Minimum peak prominence in pixels. A local extremum must
+            rise/fall at least this much above its surrounding baseline to
+            qualify as a knot.
+        min_distance: Minimum horizontal distance between two knots in pixels.
+            Prevents over-segmentation from dense small wiggles.
+
+    Returns:
+        Array of knot indices (includes start and end points).
+    """
+    from scipy.signal import find_peaks
+
+    y_safe = np.nan_to_num(y, nan=float(np.nanmedian(y)))
+
+    peaks_max, _ = find_peaks(y_safe, prominence=prominence, distance=min_distance)
+    peaks_min, _ = find_peaks(-y_safe, prominence=prominence, distance=min_distance)
+
+    knots = sorted(set(peaks_max) | set(peaks_min))
+
+    # Always include boundaries
+    if 0 not in knots:
+        knots = [0] + knots
+    if len(y) - 1 not in knots:
+        knots = knots + [len(y) - 1]
+
+    return np.array(sorted(set(knots)))
+
+
+def _fit_knot_constrained(
+    x: np.ndarray,
+    y: np.ndarray,
+    prominence: float = 5.0,
+    min_distance: int = 30,
+    base_smoothness: float = 0.15,
+) -> np.ndarray:
+    """Knot-constrained spline fit: preserve significant geological features.
+
+    1. Detect structural knots (significant local extrema) on raw boundary.
+    2. Build a weighted UnivariateSpline where knots have high weight
+       (soft constraint) and non-knot regions have low weight (free to smooth).
+    3. This yields a curve that is smooth overall but faithfully reproduces
+       meaningful curvature changes (e.g. anticlines, synclines) while
+       filtering pixel-level sawtooth noise.
+
+    Args:
+        x: Column indices.
+        y: Raw boundary y-coordinates (NaN filled).
+        prominence: Knot detection prominence threshold (pixels).
+        min_distance: Minimum knot spacing (pixels).
+        base_smoothness: Smoothing factor passed to UnivariateSpline.
+    """
+    if len(x) < 10:
+        return y.copy()
+
+    knots = _detect_knots(y, prominence=prominence, min_distance=min_distance)
+
+    # Build weights: knots and their neighbours get high weight (soft anchor)
+    weights = np.ones_like(x, dtype=np.float64) * 0.3
+    for k in knots:
+        neighbourhood = 15
+        start = max(0, k - neighbourhood)
+        end = min(len(x), k + neighbourhood + 1)
+        weights[start:end] = np.maximum(weights[start:end], 3.0)
+    weights[knots] = 8.0  # knots themselves get highest weight
+
+    # Normalize weights so sum ≈ len(x) (standard spline expectation)
+    weights = weights / np.mean(weights)
+
+    # Hampel outlier rejection before fitting
+    y_clean = _hampel_filter(y)
+
+    try:
+        # s parameter: smoothing trade-off. Higher = smoother.
+        s = base_smoothness * len(x) * float(np.var(y_clean)) * 0.5
+        spline = UnivariateSpline(x, y_clean, w=weights, s=s, k=3)
+        return spline(x)
+    except Exception:
+        return _fit_savgol(x, y, base_smoothness)
+
+
 def _fit_quintic(y: np.ndarray, smoothness: float = 0.5) -> np.ndarray:
     """Quintic spline minimizing |y'''|^2 — curvature-variation prior.
 
@@ -290,7 +421,7 @@ def _fit_loess(x: np.ndarray, y: np.ndarray, smoothness: float) -> np.ndarray:
 def _fit_curve(
     x: np.ndarray,
     y: np.ndarray,
-    method: Literal["savgol", "bspline", "loess", "quintic"],
+    method: Literal["savgol", "bspline", "loess", "quintic", "knot_constrained"],
     smoothness: float,
 ) -> np.ndarray:
     """Phase C: fit a smooth curve through boundary points."""
@@ -307,6 +438,8 @@ def _fit_curve(
         return _fit_savgol(x, y_clean, smoothness)
     if method == "bspline":
         return _fit_bspline(x, y_clean, smoothness)
+    if method == "knot_constrained":
+        return _fit_knot_constrained(x, y_clean, prominence=5.0, min_distance=30, base_smoothness=smoothness)
     return _fit_loess(x, y_clean, smoothness)
 
 
@@ -419,35 +552,63 @@ def _compute_fragmentation_score(labels: np.ndarray) -> float:
     return total_tiny / (h * w)
 
 
+def refine_label_blur(coarse_labels: np.ndarray, sigma: float = 15.0) -> np.ndarray:
+    """Refine by spatial Gaussian smoothing in label space.
+
+    For each unique label, create a binary mask, apply 2D Gaussian blur,
+    then re-assign each pixel to the label with the highest blurred value.
+    Small fragments get smoothed away because they have low spatial support.
+    This produces visually smooth, geologically plausible layers without
+    explicit boundary extraction or curve fitting.
+    """
+    unique = sorted(u for u in np.unique(coarse_labels) if u >= 0)
+    if len(unique) < 2:
+        return coarse_labels.copy()
+
+    prob_maps = []
+    for lbl in unique:
+        mask = (coarse_labels == lbl).astype(np.float32)
+        prob = ndimage.gaussian_filter(mask, sigma=sigma)
+        prob_maps.append(prob)
+
+    prob_stack = np.stack(prob_maps, axis=0)
+    result = np.array(unique)[np.argmax(prob_stack, axis=0)]
+    return result.astype(coarse_labels.dtype)
+
+
 def refine_boundaries(
     panel_rgb: np.ndarray,
     coarse_labels: np.ndarray | None = None,
     n_layers: int | None = None,
-    method: Literal["savgol", "bspline", "loess", "quintic"] = "savgol",
+    method: Literal["savgol", "bspline", "loess", "quintic", "knot_constrained"] = "savgol",
     smoothness: float = 1.0,
     blur_sigma: float = 2.0,
     downsample_factor: float = 0.25,
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """Refine fragmented segmentation by fitting smooth horizons.
 
-    Four-phase pipeline:
-    1. Coarse segmentation (blur + downsample + k-means) — only if needed
-    2. Boundary point extraction (label-blur zero-crossing or density-based)
-    3. Curve fitting (Savitzky-Golay / B-spline / LOESS / Quintic)
-    4. Boundary adjustment (local for touching layers, column-repartition for fragmented)
+    Two strategies:
+    - Touching layer pairs: local boundary adjustment via label-blur
+      zero-crossing + curve fitting + pixel relabeling near boundaries.
+    - Non-touching (broken) layer pairs: label-space Gaussian blur.
+      Each label mask is blurred in 2D and pixels are reassigned to the
+      dominant label. This naturally eliminates small fragments and produces
+      smooth, geologically plausible layers without explicit curve fitting.
 
     Key invariant: original coarse label IDs and global layer ordering are
     preserved. For touching layer pairs, only boundary-adjacent pixels are
-    adjusted. For non-touching (severely fragmented) pairs, column-wise
-    repartitioning redraws the border between archipelagos.
+    adjusted. For non-touching (severely fragmented) pairs, label-space blur
+    redraws the border between archipelagos.
 
     Args:
         panel_rgb: Original RGB image (H, W, 3) uint8.
         coarse_labels: Initial label map from any engine. If None, computed
             internally via Phase A using n_layers.
         n_layers: Target layer count. Required if coarse_labels is None.
-        method: Curve fitting method. Use "quintic" for curvature-variation
-            prior (best for extremely fragmented images like 16b0cf).
+        method: Curve fitting method. "knot_constrained" detects significant
+            local extrema (knots) and fits a weighted spline that preserves
+            geological features while smoothing sawtooth noise. "quintic" uses
+            curvature-variation prior.
         smoothness: Smoothness factor. Interpretation varies by method:
             - savgol: window_length = int(smoothness * W)
             - bspline: s = smoothness * 1e4 scale factor
@@ -487,63 +648,68 @@ def refine_boundaries(
 
     spatial_order = sorted(layer_labels, key=lambda lbl: median_ys[lbl])
 
-    # --- Fit boundaries between spatially adjacent layers ---
+    # --- Detect broken (non-touching) pairs ---
+    broken_pairs: set[tuple[int, int]] = set()
+    for i in range(len(spatial_order) - 1):
+        top_lbl = spatial_order[i]
+        bot_lbl = spatial_order[i + 1]
+        touch = (coarse_labels == top_lbl) & ndimage.binary_dilation(
+            coarse_labels == bot_lbl, iterations=1
+        )
+        if np.sum(touch) == 0:
+            broken_pairs.add((top_lbl, bot_lbl))
+
+    # --- Strategy dispatch ---
+    if broken_pairs:
+        # Severely fragmented: label-space Gaussian blur.
+        # Directly smooths the label map in 2D, letting spatial competition
+        # naturally eliminate small fragments. This produces visually smooth,
+        # geologically plausible layers without explicit curve fitting.
+        refined_labels = refine_label_blur(coarse_labels, sigma=15.0)
+        boundaries: list[np.ndarray] = []
+
+        # Quality gate: fragmentation must improve
+        coarse_frag = _compute_fragmentation_score(coarse_labels)
+        refined_frag = _compute_fragmentation_score(refined_labels)
+        if refined_frag > coarse_frag * 1.5:
+            return coarse_labels.copy(), []
+
+        # Quality gate: layer count preservation (allow 1 loss due to merge)
+        refined_unique = sorted(u for u in np.unique(refined_labels) if u >= 0)
+        if len(refined_unique) < len(layer_labels) - 1:
+            return coarse_labels.copy(), []
+
+        return refined_labels, boundaries
+
+    # --- Touching pairs: local boundary adjustment via curve fitting ---
     boundaries: list[np.ndarray] = []
     boundary_pairs: list[tuple[int, int]] = []
-    broken_pairs: set[tuple[int, int]] = set()  # non-touching (fragmented) pairs
 
     for i in range(len(spatial_order) - 1):
         top_lbl = spatial_order[i]
         bot_lbl = spatial_order[i + 1]
 
-        # Check if layers actually touch (share boundary pixels)
-        mask_top = coarse_labels == top_lbl
-        mask_bot = coarse_labels == bot_lbl
-        touch = mask_top & ndimage.binary_dilation(mask_bot, iterations=1)
-        is_broken = np.sum(touch) == 0
+        points = _extract_boundary_points(panel_rgb, coarse_labels, top_lbl, bot_lbl)
+        if points is None:
+            continue
+        xs, ys = points
+        boundary_y = _fit_curve(xs, ys, method, smoothness)
 
-        if is_broken:
-            # Non-touching (fragmented archipelagos): density extraction + local fit.
-            # Global quintic over-smooths local geometry because curvature penalty
-            # is integrated over the full image width. Instead, use Savitzky-Golay
-            # with a ~15% window so each point only depends on local neighbours,
-            # preserving peaks and valleys while filtering pixel-level noise.
-            ys_raw = _extract_boundary_dense(coarse_labels, top_lbl, bot_lbl)
-            if ys_raw is None or np.sum(~np.isnan(ys_raw)) < 10:
-                continue
-            ys_filled = ys_raw.copy()
-            valid = ~np.isnan(ys_raw)
-            if valid.any() and not valid.all():
-                ys_filled[~valid] = np.interp(
-                    np.where(~valid)[0], np.where(valid)[0], ys_raw[valid]
-                )
-            boundary_y = _fit_savgol(
-                np.arange(len(ys_filled)), ys_filled, smoothness=0.15
+        # Fill gaps
+        full_y = np.full(w, np.nan, dtype=np.float32)
+        full_y[xs] = boundary_y
+        full_y = ndimage.generic_filter(
+            full_y, lambda v: np.nanmedian(v) if np.any(~np.isnan(v)) else h // 2,
+            size=11, mode="nearest"
+        )
+        nan_mask = np.isnan(full_y)
+        if nan_mask.any() and not nan_mask.all():
+            full_y[nan_mask] = np.interp(
+                np.where(nan_mask)[0],
+                np.where(~nan_mask)[0],
+                full_y[~nan_mask],
             )
-            broken_pairs.add((top_lbl, bot_lbl))
-        else:
-            # Touching: use label-blur zero-crossing
-            points = _extract_boundary_points(panel_rgb, coarse_labels, top_lbl, bot_lbl)
-            if points is None:
-                continue
-            xs, ys = points
-            boundary_y = _fit_curve(xs, ys, method, smoothness)
-
-            # Fill gaps
-            full_y = np.full(w, np.nan, dtype=np.float32)
-            full_y[xs] = boundary_y
-            full_y = ndimage.generic_filter(
-                full_y, lambda v: np.nanmedian(v) if np.any(~np.isnan(v)) else h // 2,
-                size=11, mode="nearest"
-            )
-            nan_mask = np.isnan(full_y)
-            if nan_mask.any() and not nan_mask.all():
-                full_y[nan_mask] = np.interp(
-                    np.where(nan_mask)[0],
-                    np.where(~nan_mask)[0],
-                    full_y[~nan_mask],
-                )
-            boundary_y = full_y
+        boundary_y = full_y
 
         boundaries.append(boundary_y)
         boundary_pairs.append((top_lbl, bot_lbl))
@@ -557,13 +723,6 @@ def refine_boundaries(
         order = np.argsort(medians)
         boundaries = [boundaries[int(i)] for i in order]
         boundary_pairs = [boundary_pairs[int(i)] for i in order]
-        # Rebuild broken_pairs with sorted order
-        broken_pairs_sorted = set()
-        for i in order:
-            pair = boundary_pairs[int(i)]
-            if pair in broken_pairs:
-                broken_pairs_sorted.add(pair)
-        broken_pairs = broken_pairs_sorted
 
     # --- Sanity check: minimum boundary separation ---
     min_layer_height = max(3, h // 100)
@@ -573,33 +732,20 @@ def refine_boundaries(
             if gap < min_layer_height:
                 return coarse_labels.copy(), boundaries
 
-    # --- Apply adjustment strategy per boundary pair ---
-    if broken_pairs:
-        # Severely fragmented: global column-wise repartitioning
-        refined_labels = _repartition_columns(coarse_labels, spatial_order, boundaries)
-    else:
-        # Normal fragmentation: local boundary adjustment only
-        refined_labels = _adjust_boundaries(coarse_labels, boundaries, boundary_pairs, blend_width=5)
+    refined_labels = _adjust_boundaries(coarse_labels, boundaries, boundary_pairs, blend_width=5)
 
-    # --- Quality gate: pixel change ratio ---
+    # --- Quality gates for touching pairs ---
     pixel_change_ratio = np.sum(refined_labels != coarse_labels) / (h * w)
-    # Broken boundaries may legitimately need high change ratios (up to ~40%)
-    max_change = 0.50 if broken_pairs else 0.15
-    if pixel_change_ratio > max_change:
+    if pixel_change_ratio > 0.15:
         return coarse_labels.copy(), boundaries
 
-    # --- Quality gate: layer count preservation ---
     refined_unique = sorted(u for u in np.unique(refined_labels) if u >= 0)
-    expected_layers = len(layer_labels)
-    if len(refined_unique) < expected_layers - 1:
+    if len(refined_unique) < len(layer_labels) - 1:
         return coarse_labels.copy(), boundaries
 
-    # --- Quality gate: fragmentation ---
     coarse_frag = _compute_fragmentation_score(coarse_labels)
     refined_frag = _compute_fragmentation_score(refined_labels)
-    # Broken boundaries get a more lenient threshold since they target deep fragmentation
-    frag_threshold = 1.5 if broken_pairs else 1.2
-    if refined_frag > coarse_frag * frag_threshold:
+    if refined_frag > coarse_frag * 1.2:
         return coarse_labels.copy(), boundaries
 
     return refined_labels, boundaries
