@@ -155,7 +155,7 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/example2_refined.png" width="100%" alt="Refined Segmentation 2"/>
-      <br/><sub>Refined: horizon refinement, frag 0.0069 → 0.0006</sub>
+      <br/><sub>Refined: horizon refinement (fallback — already clean)</sub>
     </td>
   </tr>
   <tr>

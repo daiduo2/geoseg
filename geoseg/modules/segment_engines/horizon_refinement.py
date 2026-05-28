@@ -57,67 +57,73 @@ def _extract_boundary_points(
     coarse_labels: np.ndarray,
     layer_i: int,
     layer_j: int,
-    band_margin: int = 15,
+    label_blur_sigma: float = 5.0,
 ) -> tuple[np.ndarray, np.ndarray] | None:
     """Phase B: sample boundary points between two adjacent layers.
 
-    For each column x, find the y-coordinate of maximum RGB gradient
-    within the transition band between layer_i and layer_j.
+    Creates a signed map from the coarse labels (+1 for layer_i, -1 for
+    layer_j), applies Gaussian blur to smooth out fragmentation, then finds
+    zero-crossing points per column. This is more robust than gradient-based
+    sampling on the original RGB image because it averages out small fragments
+    and finds the visual center of the transition band.
     """
     h, w = panel_rgb.shape[:2]
 
-    # Build transition band mask
-    mask_i = coarse_labels == layer_i
-    mask_j = coarse_labels == layer_j
-    transition = mask_i | mask_j
+    # Signed map: layer_i = +1, layer_j = -1, others = 0
+    signed = np.zeros((h, w), dtype=np.float32)
+    signed[coarse_labels == layer_i] = 1.0
+    signed[coarse_labels == layer_j] = -1.0
 
-    # Dilate to capture transition neighborhood
-    transition = ndimage.binary_dilation(transition, iterations=band_margin)
+    # Gaussian blur to smooth out fragments and noise
+    blurred = ndimage.gaussian_filter(signed, sigma=label_blur_sigma)
 
     xs = []
     ys = []
 
     for x in range(w):
-        col_transition = np.where(transition[:, x])[0]
-        if len(col_transition) < 3:
+        col = blurred[:, x]
+
+        # Find zero-crossing: where col transitions from positive to negative
+        pos_mask = col > 0
+        neg_mask = col < 0
+
+        if not pos_mask.any() or not neg_mask.any():
             continue
 
-        y_min, y_max = col_transition[0], col_transition[-1]
-        y_min = max(0, y_min - band_margin)
-        y_max = min(h - 1, y_max + band_margin)
+        # Find the crossing from + to - (top to bottom)
+        found = False
+        for y in range(h - 1):
+            if col[y] > 0 and col[y + 1] <= 0:
+                denom = col[y] - col[y + 1]
+                if denom > 1e-6:
+                    y_interp = y + col[y] / denom
+                else:
+                    y_interp = y + 0.5
+                xs.append(x)
+                ys.append(float(y_interp))
+                found = True
+                break
 
-        # Compute vertical gradient magnitude in RGB
-        col_rgb = panel_rgb[y_min:y_max, x, :].astype(np.float32)
-        if len(col_rgb) < 2:
-            continue
-
-        grad = np.abs(np.diff(col_rgb, axis=0)).mean(axis=1)
-        if grad.size == 0:
-            continue
-
-        # Find local maxima of gradient, preferring center of band
-        local_max = (grad[1:-1] >= grad[:-2]) & (grad[1:-1] >= grad[2:])
-        candidates = np.where(local_max)[0] + 1
-
-        if len(candidates) == 0:
-            # Fallback: global max
-            y_rel = int(np.argmax(grad))
-        else:
-            # Pick candidate closest to center of band
-            band_center = len(grad) // 2
-            best = candidates[np.argmin(np.abs(candidates - band_center))]
-            y_rel = int(best)
-
-        y = y_min + y_rel
-        y = max(0, min(h - 1, y))
-
-        xs.append(x)
-        ys.append(y)
+        if not found:
+            # Fallback: use bottom edge of positive region
+            pos_ys = np.where(pos_mask)[0]
+            if len(pos_ys) > 0:
+                xs.append(x)
+                ys.append(float(pos_ys[-1]))
 
     if len(xs) < 3:
         return None
 
-    return np.array(xs, dtype=np.int32), np.array(ys, dtype=np.float32)
+    ys_arr = np.array(ys, dtype=np.float32)
+
+    # If the zero-crossing position varies wildly (MAD > h/10), the boundary
+    # is not spatially coherent — this usually means the layers are not truly
+    # adjacent or the coarse segmentation is on a smooth gradient. Skip fitting.
+    mad = float(np.median(np.abs(ys_arr - np.median(ys_arr))))
+    if mad > h / 10:
+        return None
+
+    return np.array(xs, dtype=np.int32), ys_arr
 
 
 def _hampel_filter(y: np.ndarray, window: int = 21, n_sigma: float = 3.0) -> np.ndarray:
@@ -417,9 +423,11 @@ def refine_boundaries(
         return coarse_labels.copy(), boundaries
 
     # --- Quality gate: fragmentation ---
+    # If refined fragmentation increased by more than 20%, the boundary
+    # fitting introduced new artifacts — fall back to coarse.
     coarse_frag = _compute_fragmentation_score(coarse_labels)
     refined_frag = _compute_fragmentation_score(refined_labels)
-    if refined_frag > coarse_frag * 1.5 + 0.01:
+    if refined_frag > coarse_frag * 1.2:
         return coarse_labels.copy(), boundaries
 
     return refined_labels, boundaries

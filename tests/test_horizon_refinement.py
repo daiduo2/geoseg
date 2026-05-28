@@ -148,13 +148,13 @@ def test_fit_curve_method_dispatch() -> None:
 def test_extract_boundary_points_finds_known_boundary() -> None:
     img, labels, true_boundaries = _make_smooth_layers(h=200, w=400, n_layers=3)
     # Extract boundary between layer 1 and 2
-    pts = _extract_boundary_points(img, labels, 1, 2, band_margin=15)
+    pts = _extract_boundary_points(img, labels, 1, 2)
     assert pts is not None
     xs, ys = pts
     true_b = true_boundaries[0][xs]
     rmse = np.sqrt(np.mean((ys - true_b) ** 2))
-    # Should be within ~20px of true boundary (gradient-based sampling is approximate)
-    assert rmse < 25.0
+    # Zero-crossing on blurred labels should be close to true boundary
+    assert rmse < 15.0
 
 
 def test_extract_boundary_points_returns_none_for_nonadjacent() -> None:
@@ -163,8 +163,9 @@ def test_extract_boundary_points_returns_none_for_nonadjacent() -> None:
     labels = np.zeros((100, 100), dtype=np.int32)
     labels[:50, :] = 1
     labels[60:, :] = 2  # gap between 50 and 60
-    pts = _extract_boundary_points(img, labels, 1, 2, band_margin=5)
-    # May return None or find points in the gap; either is acceptable
+    pts = _extract_boundary_points(img, labels, 1, 2)
+    # With label-blur method, a wide gap may still produce a zero-crossing
+    # inside the gap region. Either None or valid points are acceptable.
     if pts is not None:
         assert len(pts[0]) > 0
 
