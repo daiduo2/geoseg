@@ -15,6 +15,7 @@ geoseg v2 is the answer: a CLI-native workflow where agents autonomously classif
 - **Agent-Native Architecture** — No traditional GUI. The entire pipeline is orchestrated by Claude Code skills (`geo-segment`, `batch-segment`, `sandbox-segment`, `figure-classify`).
 - **CLI Human-in-the-Loop** — Agent auto-runs the pipeline, presents overlay results, and waits for natural language feedback. "Remove the colorbar" or "Split the bottom layer" — the agent re-runs sandbox on the fly.
 - **Multi-Engine Segmentation** — `sandbox-segment` autonomously tries multiple engines (k-means, edge-guided, ensemble, grayscale) and picks the best via VLM visual evaluation + objective metrics.
+- **Horizon Refinement** — Post-processes fragmented segmentations by fitting smooth curves to layer boundaries, eliminating "broken glass" artifacts without sacrificing boundary sharpness.
 - **Strategy Memory** — Learns from past segmentations. After each batch, extracts strategy templates (e.g. *"vivid + high edge → ensemble"*) and improves future decisions.
 - **Session State Persistence** — Full lifecycle tracking (`pending → classified → segmented → reviewed → exported`) with backtracking to any upstream stage.
 - **Batch Processing** — Process entire directories with parallel agents (≤5 concurrent), then review all results in one pass.
@@ -130,38 +131,52 @@ python3 -m geoseg.feedback_bridge --rmux-session=geoseg
 
 <table>
   <tr>
-    <td align="center" width="50%">
-      <img src="docs/assets/example1_original.jpg" width="100%" alt="Original Figure 1"/>
-      <br/><sub>Original: 5-layer velocity cross-section (Gras et al., 2019)</sub>
+    <td align="center" width="33%">
+      <img src="docs/assets/example1_original.png" width="100%" alt="Original Figure 1"/>
+      <br/><sub>Original: velocity cross-section (Gras et al., 2019)</sub>
     </td>
-    <td align="center" width="50%">
-      <img src="docs/assets/example1_overlay.png" width="100%" alt="Segmentation Overlay 1"/>
-      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, ensemble engine</sub>
+    <td align="center" width="33%">
+      <img src="docs/assets/example1_coarse.png" width="100%" alt="Coarse Segmentation 1"/>
+      <br/><sub>Coarse: kmeans_full, 4 layers</sub>
     </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="docs/assets/example2_original.jpg" width="100%" alt="Original Figure 2"/>
-      <br/><sub>Original: 5-layer Vp model with wellbore (Silixa 2021)</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/assets/example2_overlay.png" width="100%" alt="Segmentation Overlay 2"/>
-      <br/><sub>Overlay: vivid distinct colors (α=0.65), 5 layers, v4_colorbar-guided</sub>
+    <td align="center" width="33%">
+      <img src="docs/assets/example1_refined.png" width="100%" alt="Refined Segmentation 1"/>
+      <br/><sub>Refined: horizon refinement (fallback — already clean)</sub>
     </td>
   </tr>
   <tr>
-    <td align="center" width="50%">
-      <img src="docs/assets/example3_original.jpg" width="100%" alt="Original Figure 3"/>
-      <br/><sub>Original: Seismic tomography cross-section (Gras et al., 2019)</sub>
+    <td align="center" width="33%">
+      <img src="docs/assets/example2_original.png" width="100%" alt="Original Figure 2"/>
+      <br/><sub>Original: Vp model with wellbore (Silixa 2021)</sub>
     </td>
-    <td align="center" width="50%">
-      <img src="docs/assets/example3_overlay.png" width="100%" alt="Segmentation Overlay 3"/>
-      <br/><sub>Overlay: vivid distinct colors (α=0.65), 8 layers, kmeans_full</sub>
+    <td align="center" width="33%">
+      <img src="docs/assets/example2_coarse.png" width="100%" alt="Coarse Segmentation 2"/>
+      <br/><sub>Coarse: kmeans_full, 4 layers</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/example2_refined.png" width="100%" alt="Refined Segmentation 2"/>
+      <br/><sub>Refined: horizon refinement, frag 0.0069 → 0.0000</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/assets/example3_original.png" width="100%" alt="Original Figure 3"/>
+      <br/><sub>Original: seismic tomography (Gras et al., 2019)</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/example3_coarse.png" width="100%" alt="Coarse Segmentation 3"/>
+      <br/><sub>Coarse: kmeans_full, 4 layers — severe fragmentation</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/example3_refined.png" width="100%" alt="Refined Segmentation 3"/>
+      <br/><sub>Refined: horizon refinement, frag 0.0269 → 0.0000</sub>
     </td>
   </tr>
 </table>
 
 > **Note:** All overlays use vivid, perceptually distinct colors (golden-ratio HSV palette) at high opacity (α=0.65) so both VLM and human reviewers can clearly distinguish every segmented region. Three fill modes are available: `blend` (default, shown above), `solid` (near-opaque), and `mask` (pure segmentation map). The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
+>
+> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent automatically applies smooth curve fitting to layer boundaries. This decouples noise suppression from boundary sharpening — boundaries are located by image gradients at full resolution, then fitted with Savitzky-Golay filters. If the coarse segmentation is already clean, the refinement step gracefully falls back to the original result.
 
 ## Project Structure
 

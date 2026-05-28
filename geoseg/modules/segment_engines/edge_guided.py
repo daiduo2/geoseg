@@ -101,7 +101,7 @@ def segment(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,
-    max_auto_k: int = 2,
+    max_auto_k: int = 0,
     edge_weight: float = 0.5,
     sigma: float = 3.0,
 ) -> dict:

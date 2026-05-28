@@ -30,6 +30,7 @@ Each engine is a Python function; you construct the call inline:
 | `edge_grow` | Region growing from edges | `python -c "from geoseg.modules.segment_engines.edge_grow import segment; ..."` |
 | `ensemble` | Best quality (slow) | `python -c "from geoseg.modules.segment_engines.ensemble import segment; ..."` |
 | `grayscale` | Near-zero saturation | `python -c "from geoseg.modules.segment_engines.grayscale import segment; ..."` |
+| `horizon_refinement` | Post-process: smooth boundaries | `python -c "from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries; ..."` |
 
 Each `segment()` call returns a dict with:
 - `labels`: int32 numpy array (0 = background/unassigned)
@@ -158,6 +159,33 @@ Decision hierarchy (VLM judgment overrides everything):
 
 You may **fuse results**: e.g., use A's coarse segmentation + B's edge refinement.
 
+### Step 5b: Repair Playbook (Self-Healing)
+
+When you detect a problem, apply ONE specific repair strategy and re-run.
+Do NOT randomly tweak — diagnose first, then pick the matching strategy.
+Maximum 2 repair iterations per panel.
+
+**CRITICAL: All engines now default to `max_auto_k=0`.** Do NOT enable auto_k unless
+you have strong evidence (e.g., VLM clearly sees a layer that ALL engines miss).
+Auto_k tends to over-segment smooth jet-colormap gradients.
+
+| Problem Detected | Root Cause | Repair Strategy | Implementation |
+|-----------------|------------|-----------------|----------------|
+| **Under-segmented: too few layers** | n_layers too low or background swallowed a layer | **Strategy A**: Increase `n_layers` by 1-2. Try `kmeans_full` or `v4_colorbar_guided` (if colorbar present). Do NOT enable auto_k. | `segment(panel, n_layers=n+1, max_auto_k=0)` |
+| **Top layer missing / merged with background** | Background color similar to top sediment color | **Strategy B**: Try `edge_guided` with lower `edge_weight=0.2` to capture subtle gradients. Or use `v4_colorbar_guided` with explicit colorbar seeds. | `segment(panel, n_layers=n, max_auto_k=0, edge_weight=0.2)` |
+| **Bottom layer truncated** | Background label occupies bottom edge | **Strategy C**: Increase `n_layers` by 1. Try `kmeans_full` (more sensitive to bottom transitions). Post-process: check if background covers bottom row — if so, expand nearest layer downward. | `segment(panel, n_layers=n+1, max_auto_k=0)` or post-process |
+| **Over-segmentation / "broken glass" fragmentation** | Jet colormap smooth gradients + vertical noise | **Strategy D**: Pre-process with Gaussian blur before segmentation. Start with `sigma=1.0`, increase to `sigma=2.0` or `sigma=3.5` if still fragmented. Then use `kmeans_full` with `n_layers` visually estimated count and `max_auto_k=0`. Alternatively, accept the best coarse result and apply `horizon_refinement` post-processing. | `cv2.GaussianBlur(panel, (0,0), sigmaX=sigma)` then `segment(...)` or `refine_boundaries(img, coarse_labels=labels)` |
+| **Wellbore / annotation splits layers** | Vertical bright artifact cuts through layers | **Strategy E**: Mask out the artifact column before segmentation. Detect bright orange/red vertical strip, set to excluded label. Or post-process: merge left/right components of the same layer across the wellbore. | Create mask, exclude column, then segment |
+| **Boundaries zigzag / not smooth** | Edge weight too high or noise | **Strategy F**: Use `edge_guided` with higher `sigma=4.0`. Or pre-process with Gaussian blur `sigma=1.5`. | `segment(panel, n_layers=n, max_auto_k=0, sigma=4.0)` |
+
+**Repair iteration protocol:**
+1. Run initial segmentation with 2+ engines
+2. Evaluate all results
+3. If best result quality < 0.90 → pick ONE strategy from table above
+4. Re-run with fix applied
+5. Re-evaluate. If still < 0.90 → pick a DIFFERENT strategy (do not repeat same fix)
+6. Report final result with repair log documenting each iteration's {problem, strategy, outcome}
+
 ### Step 6: Final Selection
 
 Choose the result where:
@@ -166,6 +194,61 @@ Choose the result where:
 3. **Objective metrics**: no red flags (no massive noise inclusion, no total misalignment)
 
 If no result is satisfactory, pick the least-bad and note specific issues in `strategy.log`.
+
+### Step 6b: Horizon Refinement (Optional Post-Process)
+
+After selecting the best engine result, check if boundaries need smoothing:
+
+```bash
+python -c "
+import numpy as np
+from PIL import Image
+from geoseg.modules.segment_engines.metrics import compute_all
+
+labels = np.load('runs/sandbox/{panel_id}/labels.npy')
+img = np.array(Image.open('{panel_path}').convert('RGB'))
+metrics = compute_all(labels, img)
+frag = metrics.get('total_fragment_area_fraction', 0)
+print(f'Fragmentation: {frag:.4f}')
+if frag > 0.02:
+    print('TRIGGER_REFINEMENT')
+else:
+    print('SKIP_REFINEMENT')
+"
+```
+
+**Trigger condition**: `total_fragment_area_fraction > 0.02`
+- Based on batch test analysis: 90% of clean results have frag < 0.01; fragmented results cluster at 0.03+
+- This is a **programmatic** trigger, not a VLM judgment
+
+**If triggered**, run horizon refinement:
+```bash
+python -c "
+import numpy as np
+from PIL import Image
+from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries
+
+labels = np.load('runs/sandbox/{panel_id}/labels.npy')
+img = np.array(Image.open('{panel_path}').convert('RGB'))
+
+refined, boundaries = refine_boundaries(img, coarse_labels=labels, method='savgol')
+np.save('runs/sandbox/{panel_id}/labels_refined.npy', refined)
+print(f'Refined: {len(boundaries)} boundaries fitted')
+print(f'Same as coarse: {np.array_equal(labels, refined)}')
+"
+```
+
+**VLM Re-evaluation after refinement** (MANDATORY):
+Read both overlays side-by-side:
+- `runs/sandbox/{panel_id}/overlay.png` (coarse)
+- Create refined overlay and compare
+
+Judge:
+- Are boundaries SMOOTHER without losing geological accuracy?
+- Did any thin layer disappear?
+- Did any fault/unconformity get incorrectly smoothed?
+
+**Acceptance rule**: Accept refinement ONLY if VLM judges it visually better or equal. Otherwise keep coarse.
 
 ### Step 7: Save Results + Update Memory
 
@@ -194,10 +277,14 @@ print('Memory updated.')
 ```
 
 Files to save:
-- `labels.npy` — best label map
-- `overlay.png` — colored overlay
-- `meta.json` — engine name, color_names, n_layers
-- `strategy.log` — which engines were tried, scores, why this one was chosen
+- `labels.npy` — best label map (refined if accepted, otherwise coarse)
+- `overlay.png` — colored overlay for visual verification
+- `meta.json` — engine name, color_names, n_layers, refinement_applied (bool)
+- `strategy.log` — which engines were tried, scores, why this one was chosen, whether horizon refinement was triggered/accepted
+
+If horizon refinement was applied and accepted, also save:
+- `labels_coarse.npy` — pre-refinement label map (for audit/comparison)
+- `overlay_coarse.png` — pre-refinement overlay
 
 Also write the objective metrics to `metrics.json` for audit:
 ```json

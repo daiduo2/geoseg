@@ -77,7 +77,7 @@ def segment(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,
-    max_auto_k: int = 2,
+    max_auto_k: int = 0,
     edge_penalty: float = 150.0,
 ) -> dict:
     """Edge-enhanced multi-source region growing for vivid jet-colormap panels.

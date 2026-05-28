@@ -145,7 +145,7 @@ def segment(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,
-    max_auto_k: int = 3,
+    max_auto_k: int = 0,
 ) -> dict:
     """Adaptive ensemble segmentation.
 

@@ -865,4 +865,230 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 
 ---
 
+## 16. v0.8 方向 A：边界导航线后处理（Horizon Refinement）
+
+> **状态**：已实现 ✅（2026-05-28）。将 pixel-wise 聚类的后处理从"合并碎片"升级为"拟合光滑边界+重分区"。
+> **动机**：自修复实验表明，强模糊（σ=3.5）能把 example3 的碎片化从 0.60 提到 0.88，但边界锐利度受损。需要一种不牺牲边界精度就能消除碎片的方法。
+> **验证结果**：example3 碎片化 0.0269→0.0022（12× 改善），层数保持 4→4；silixa 0.0069→0.0000；c11b8db 粗分质量已优， refinement 自动 fallback 返回 coarse。
+
+### 16.1 问题定义：Pixel-wise 聚类的结构性天花板
+
+当前所有引擎（kmeans_full / edge_guided / ensemble / v4_kmeans）共享同一范式：
+
+```
+原图 → pixel-wise 聚类 → 碎片区域 → _merge_small_regions → 勉强可用的层
+```
+
+这个范式有两个硬边界：
+
+| 矛盾 | 表现 | 现有对策 | 代价 |
+|------|------|---------|------|
+| **渐变误分割** | jet colormap 的平滑渐变被切成多层 | 强高斯模糊 | 真实边界也被抹平 |
+| **噪声碎片化** | 下半区高频噪声产生"碎玻璃"效果 | _merge_small_regions | 小碎片合并成大碎片，边界锯齿 |
+
+自修复实验验证了天花板：**example3 在 σ=3.5 模糊后 quality=0.88，但报告"中右侧黄蓝过渡区略有模糊，左下边界轻微锯齿"**。0.88→0.95 的 gap 无法通过调参跨越，需要范式转换。
+
+### 16.2 范式转换：从"区域分割"到"边界拟合+重分区"
+
+人类专家画概念模型的方式不是"标出每个像素属于哪层"，而是**"画几条光滑曲线把区域分开"**。曲线是连续、光滑的，天然避免碎片化。
+
+新范式：
+
+```
+原图 → 粗分大层（低分辨率+强模糊）→ 提取层边界点 → 曲线拟合 → 重分区
+          ↑___________________________↓
+                        边界由原图梯度精确定位，连续性由拟合保证
+```
+
+**关键解耦**：
+- **粗分阶段**只管"哪两个相邻区域之间应该有一条边界"（低分辨率，不怕模糊）
+- **边界提取阶段**在原图上沿交界带找高梯度点（不模糊，保持锐利）
+- **拟合阶段**用光滑曲线穿过这些点（消除锯齿和碎片）
+
+### 16.3 技术路线（四阶段算法）
+
+#### Phase A：粗分大层（Coarse Segmentation）
+
+输入：`panel_rgb`（原图），目标层数 `n_layers`
+
+1. **高斯模糊**：`sigma=2.0`，消除装饰性渐变和细粒度噪声
+2. **下采样**：到原图 1/4 或 1/8（减少像素数，进一步平均噪声）
+3. **K-means 粗分**：`n_clusters=n_layers`，`max_auto_k=0`
+4. **上采样插值**：将低分辨率 labels 插回原始尺寸（最近邻即可，只用于定位大致区域）
+
+输出：`coarse_labels` —— 边界粗糙、可能碎片化，但大层结构正确
+
+#### Phase B：边界点提取（Boundary Point Sampling）
+
+对每一对相邻层 `(i, i+1)`：
+
+1. **定位交界带**：在 `coarse_labels` 中找到层 `i` 和层 `i+1` 的交界像素
+2. **沿 x 方向扫描**：对每一列 `x`，在交界带附近找该列中 RGB 梯度最大的 `y` 坐标
+   ```python
+   gradient_y = np.abs(np.diff(panel_rgb[:, x, :], axis=0)).mean(axis=1)
+   y_boundary[x] = argmax(gradient_y[yband_min:yband_max]) + yband_min
+   ```
+3. **异常值过滤**：用滑动窗口中位数或 Hampel 滤波器剔除离群点（这些通常是噪声或 fault 造成的跳变）
+
+输出：每层边界的一组 `(x, y)` 点集，约等于图像宽度的点数
+
+#### Phase C：曲线拟合（Curve Fitting）
+
+对每条边界点集，拟合一条光滑曲线：
+
+**方案 1：Savitzky-Golay 滤波（轻量，推荐首选）**
+```python
+from scipy.signal import savgol_filter
+y_smooth = savgol_filter(y_boundary, window_length=51, polyorder=3)
+```
+- 优点：局部自适应，保留 fault 等真实不连续
+- 缺点：窗口大小需要调参
+
+**方案 2：B-spline 拟合（更光滑，适合无明显 fault 的图）**
+```python
+from scipy.interpolate import UnivariateSpline
+spline = UnivariateSpline(x_coords, y_boundary, s=smoothness_factor)
+y_smooth = spline(x_coords)
+```
+- `s` 控制光滑度：小 `s` 贴近原始点，大 `s` 更光滑
+- 优点：全局光滑，数学性质好
+- 缺点：可能过度平滑真实的 sharp boundary
+
+**方案 3：LOESS 局部回归（折中）**
+```python
+from statsmodels.nonparametric.smoothers_lowess import lowess
+result = lowess(y_boundary, x_coords, frac=0.1)
+```
+- `frac` 控制局部窗口比例
+
+**选择策略**：
+- 图像有明显 fault / 不整合面 → Savitzzky-Golay（保留局部特征）
+- 图像层边界整体平滑 → B-spline（全局最优）
+- 不确定 → LOESS（自适应局部窗口）
+
+输出：`boundaries = [boundary_0, boundary_1, ..., boundary_n]`，每条 boundary 是 `(H,)` 的 y 坐标数组
+
+#### Phase D：重分区（Region Re-labeling）+ 质量门控
+
+用拟合后的边界重新划分每个像素的标签：
+
+```python
+for x in range(W):
+    y_bounds = [0] + sorted([b[x] for b in boundaries]) + [H]
+    for i, (y_top, y_bottom) in enumerate(zip(y_bounds, y_bounds[1:])):
+        refined_labels[int(y_top):int(y_bottom), x] = spatially_ordered_labels[i]
+```
+
+**关键鲁棒性改进**（实现中发现）：
+- **空间重排序**：K-means 标签不是按垂直位置排序的。实现中先按 median_y 排序，确保边界在真实相邻层之间拟合
+- **单调性约束**：拟合后按边界 median_y 排序，防止交叉产生碎片
+- **最小层厚检查**：若相邻边界 median 间距 < 3px，判定粗分过于破碎，fallback 返回 coarse
+- **质量门控**：若 refined 的碎片化分数 > coarse × 1.5 + 0.01，或层数丢失超过 1 层，fallback 返回 coarse
+
+结果：
+- 每个像素的标签由"它在哪两条边界之间"决定
+- 边界是连续光滑的，不存在碎片化
+- 边界位置由原图梯度精确定位，不依赖模糊后的颜色
+- **粗分过差时自动跳过 refinement**，不恶化结果
+
+### 16.4 接口设计
+
+```python
+# geoseg/modules/segment_engines/horizon_refinement.py
+
+import numpy as np
+from typing import Literal
+
+
+def refine_boundaries(
+    panel_rgb: np.ndarray,
+    coarse_labels: np.ndarray | None = None,
+    n_layers: int | None = None,
+    method: Literal["savgol", "bspline", "loess"] = "savgol",
+    smoothness: float = 1.0,
+    blur_sigma: float = 2.0,
+    downsample_factor: float = 0.25,
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Refine fragmented segmentation by fitting smooth horizons.
+
+    Args:
+        panel_rgb: Original RGB image (H, W, 3) uint8.
+        coarse_labels: Initial label map from any engine. If None, computed
+            internally via Phase A using n_layers.
+        n_layers: Target layer count. Required if coarse_labels is None.
+        method: Curve fitting method.
+        smoothness: Method-specific smoothness factor.
+            - savgol: window_length = int(smoothness * W)
+            - bspline: s = smoothness * len(y) * var(y) * 0.01
+            - loess: frac = smoothness * 0.1
+        blur_sigma: Gaussian blur sigma for Phase A coarse segmentation.
+        downsample_factor: Downsample ratio for Phase A.
+
+    Returns:
+        refined_labels: Re-labeled map with smooth boundaries (H, W).
+            May return coarse_labels.copy() if quality gates reject refinement.
+        boundaries: List of y-coordinate arrays for each fitted horizon.
+    """
+```
+
+### 16.5 与现有 Pipeline 的集成
+
+```
+[segment_engines] → coarse_labels (kmeans_full / edge_guided / ensemble)
+    ↓
+[horizon_refinement] → refined_labels + boundaries
+    ↓
+[_create_overlay] → overlay with smooth boundaries
+    ↓
+[post_process] → polygon extraction from refined_labels
+```
+
+**集成点**：
+1. `sandbox-segment` skill 的 Step 6（Final Selection）之后，可选调用 `refine_boundaries`
+2. Agent 判断：如果 `fragmentation > 0.1` 或 `n_components_per_layer` 中位数 > 2，自动触发 refinement
+3. 不替换现有引擎，而是作为**后处理插件**
+
+**触发条件**（程序自动判断）：
+```python
+from geoseg.modules.segment_engines.metrics import compute_all
+
+metrics = compute_all(coarse_labels, panel_rgb)
+frag = metrics.get("total_fragment_area_fraction", 0)
+if frag > 0.02:  # 经验阈值，基于 33 条 batch 记录
+    refined_labels, boundaries = refine_boundaries(panel_rgb, coarse_labels)
+```
+
+**重要**：实现中发现 `_blend_with_coarse`（Strategy 2）会产生边界伪影，已废弃。当前采用纯重分区 + 质量门控策略。
+
+### 16.6 验收准则
+
+| 测试项 | 判据 | 产物 | 状态 |
+|--------|------|------|------|
+| **Standalone demo** | `python3 -m geoseg.modules.segment_engines.horizon_refinement_demo` 在 3 个 example 上运行 | `runs/horizon_refine/*_comparison.png` | ✅ |
+| **边界光滑度** | refined frag ≤ coarse frag（或 fallback） | 量化指标 | ✅ |
+| **层数保持** | refined n_layers ≥ coarse n_layers - 1 | 量化指标 | ✅ |
+| **Fallback 正确性** | 粗分过差时返回 coarse 不恶化 | c11b8db 案例 | ✅ |
+| **集成测试** | `tests/test_integration_ph01.py` 通过 | CI 绿 | ⏳ 待写入 test |
+
+### 16.7 风险与缓解
+
+| 风险 | 影响 | 缓解 | 实际结果 |
+|------|------|------|---------|
+| **Fault 被过度平滑** | 真实断层边界被曲线拟合抹平 | 默认用 Savitzky-Golay（局部自适应） | 未测试 fault 案例，留待 VLM review |
+| **Thin layer 消失** | 极薄层（<5px）边界点太少 | 最小层厚检查（3px gate），但保留合法薄层 | 16b0cf 保留 4px 薄层，正确 |
+| **粗分过差导致恶化** | k-means 标签空间不连续，边界拟合失败 | 空间重排序 + 最小间距检查 + frag 门控 | c11b8db 自动 fallback，未恶化 |
+| **Strategy 2 伪影** | `_blend_with_coarse` 产生边界碎片 | 废弃 blending，改用纯重分区 + 门控 | 合成测试验证，frag 从 0.0008→0.0000 |
+| **计算开销** | 边界提取 + 拟合比纯聚类慢 | 仅对 frag > 0.02 触发；Savitzky-Golay 是 O(W) | 实测 1233px 宽图 < 50ms |
+
+### 16.8 实施状态
+
+- [x] `horizon_refinement.py` 核心实现（Phase A-D + 鲁棒性改进）
+- [x] `horizon_refinement_demo.py` standalone 验证（3 张 example）
+- [x] 集成到 `sandbox-segment` skill（frag > 0.02 自动触发 + VLM 复评）
+- [ ] VLM review 对比实验（coarse vs refined）
+- [x] 写入 `tests/test_horizon_refinement.py`
+- [x] 更新 DESIGN.md
+
+---
+
 **v0.4 已签字（2026-05-19）。**

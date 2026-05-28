@@ -187,7 +187,7 @@ def segment_jet_vivid(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,
-    max_auto_k: int = 1,
+    max_auto_k: int = 0,
 ) -> dict:
     """Nearest-median segmentation for vivid jet-colormap panels.
 
@@ -378,7 +378,7 @@ def segment(
     reps: list[dict] | None = None,
     colorbar_rgb: np.ndarray | None = None,
     n_layers: int = 5,
-    max_auto_k: int = 1,
+    max_auto_k: int = 0,
     n_color_zones: int = 0,
 ) -> dict:
     """Dispatcher: pick jet_vivid or colorbar-guided by saturation ratio.
