@@ -503,12 +503,23 @@ def refine_boundaries(
         is_broken = np.sum(touch) == 0
 
         if is_broken:
-            # Non-touching: use density-based extraction + quintic spline
+            # Non-touching (fragmented archipelagos): density extraction + local fit.
+            # Global quintic over-smooths local geometry because curvature penalty
+            # is integrated over the full image width. Instead, use Savitzky-Golay
+            # with a ~15% window so each point only depends on local neighbours,
+            # preserving peaks and valleys while filtering pixel-level noise.
             ys_raw = _extract_boundary_dense(coarse_labels, top_lbl, bot_lbl)
             if ys_raw is None or np.sum(~np.isnan(ys_raw)) < 10:
                 continue
-            # Force quintic for broken boundaries (curvature-variation prior)
-            boundary_y = _fit_quintic(ys_raw, smoothness)
+            ys_filled = ys_raw.copy()
+            valid = ~np.isnan(ys_raw)
+            if valid.any() and not valid.all():
+                ys_filled[~valid] = np.interp(
+                    np.where(~valid)[0], np.where(valid)[0], ys_raw[valid]
+                )
+            boundary_y = _fit_savgol(
+                np.arange(len(ys_filled)), ys_filled, smoothness=0.15
+            )
             broken_pairs.add((top_lbl, bot_lbl))
         else:
             # Touching: use label-blur zero-crossing
