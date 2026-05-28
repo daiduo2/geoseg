@@ -136,8 +136,8 @@ def _extract_boundary_dense(
     When two layers are so fragmented that they don't share any touching
     pixels, the label-blur zero-crossing method fails. Instead, we sample
     per-column using percentile-based edge detection on the raw label map:
-    - top layer's lower edge = 90th percentile of its pixels in the column
-    - bottom layer's upper edge = 10th percentile of its pixels in the column
+    - top layer's lower edge = 50th percentile (median) of its pixels in the column
+    - bottom layer's upper edge = 50th percentile (median) of its pixels in the column
     - boundary candidate = midpoint between these edges
 
     This treats each layer's fragments as an "archipelago" and finds the
@@ -157,9 +157,12 @@ def _extract_boundary_dense(
         top_ys = np.where(top_mask)[0]
         bot_ys = np.where(bot_mask)[0]
 
-        # Use percentiles to be robust to fragments
-        top_lower = float(np.percentile(top_ys, 90))
-        bot_upper = float(np.percentile(bot_ys, 10))
+        # Use median (50th percentile) to locate the visual center of mass
+        # of each fragmented layer. More accurate than 90/10 for highly
+        # fragmented archipelagos where extreme percentiles are biased
+        # by sparse outlier fragments.
+        top_lower = float(np.percentile(top_ys, 50))
+        bot_upper = float(np.percentile(bot_ys, 50))
 
         if bot_upper > top_lower:
             # Normal separation: boundary is in the gap
@@ -211,7 +214,7 @@ def _fit_savgol(x: np.ndarray, y: np.ndarray, smoothness: float) -> np.ndarray:
         return savgol_filter(y, window_length=window, polyorder=polyorder, mode="mirror")
 
 
-def _fit_quintic(y: np.ndarray, smoothness: float = 1.0) -> np.ndarray:
+def _fit_quintic(y: np.ndarray, smoothness: float = 0.5) -> np.ndarray:
     """Quintic spline minimizing |y'''|^2 — curvature-variation prior.
 
     A quintic (k=5) spline naturally minimizes the integral of the squared

@@ -40,6 +40,15 @@ Agent 自主执行（Bash/Read/Write/Edit 工具）
 - **并行上限**：≤5 个 segmenter agent（Mac mini M4 16GB）
 - **Skill 索引**：`.claude/skills/README.md`
 
+## Agent 视觉能力
+
+**所有 agent（主 agent 与 background agent）均具备原生视觉输入能力。** 这不是通过独立 VLM 服务实现的，而是 Claude Code Agent 的底座 LLM 本身已具备视觉理解（image → text）。因此：
+
+- Agent 可直接 `Read` 图像文件进行视觉评估
+- Background agent 可并行查看 overlay 结果并返回视觉判断
+- 无需额外的 "VLM client" 或 "vision API" 封装
+- 视觉评估是 agent 工作流的一等公民，与代码生成、文件编辑同等重要
+
 ## 全局约束
 
 - **Schema 改动 = 一次 PR 内更新所有 consumer + 跑 `tests/test_integration_ph01.py`**
