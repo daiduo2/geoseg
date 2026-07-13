@@ -83,9 +83,20 @@ Without a valid API key, the PDF ingestion stage will fail. You can obtain an AP
 ### Prerequisites
 
 - Python 3.10+
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [pnpm](https://pnpm.io/) (TS/JS package manager — used for Claude Code workflows)
 - [Claude Code](https://claude.ai/code) CLI
 - [rmux](https://github.com/joshmedeski/rmux) (optional, for real-time frontend → CLI feedback)
 - MinerU API key (for PDF ingestion)
+
+### Package manager rules
+
+| Ecosystem | Tool | Command examples |
+|-----------|------|------------------|
+| Python    | **uv** | `uv sync`, `uv run python -m geoseg...` |
+| TS/JS     | **pnpm** | `pnpm install`, `pnpm exec ...` |
+
+**Do not mix:** do not use `python3 -m venv`/`pip`, `npm`, or `yarn` inside this project. The virtual environment is managed exclusively by `uv`.
 
 ### Install
 
@@ -93,9 +104,21 @@ Without a valid API key, the PDF ingestion stage will fail. You can obtain an AP
 git clone https://github.com/daiduo2/geoseg.git
 cd geoseg
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Create/sync the uv-managed virtual environment
+uv sync
+
+# Verify the environment
+uv run scripts/env_check.py
+
+# Optional: install workflow JS dependencies when present
+pnpm install
+```
+
+All Python commands below assume `uv run` prefix. For example:
+
+```bash
+uv run python -m geoseg.controller_demo
+uv run pytest tests/
 ```
 
 ### Single Figure
@@ -148,7 +171,7 @@ Agent: [exports 1,2,4; re-segments 3; skips 5]
 
 ```bash
 # After batch processing, generate an HTML dashboard
-python3 -m geoseg.generate_report runs/sessions/batch_xxx.json
+uv run python -m geoseg.generate_report runs/sessions/batch_xxx.json
 open runs/reports/batch_xxx.html
 ```
 
@@ -160,7 +183,7 @@ rmux new-session -s geoseg
 # (inside rmux) cd /path/to/geoseg && cc
 
 # Terminal 2: start the feedback bridge
-python3 -m geoseg.feedback_bridge --rmux-session=geoseg
+uv run python -m geoseg.feedback_bridge --rmux-session=geoseg
 
 # Now type feedback in the HTML report chatbox — it appears directly in the CLI session
 ```
@@ -252,33 +275,38 @@ The answer was simple: **spatial Gaussian smoothing of the label map itself**. N
 
 ```
 geoseg/
-├── modules/
-│   ├── cv_detect/              # Panel detection, colorbar extraction
-│   ├── segment_engines/        # Multi-engine segmentation + strategy memory
-│   │   ├── v4_kmeans.py
-│   │   ├── edge_guided.py
-│   │   ├── ensemble.py
-│   │   ├── grayscale.py
-│   │   ├── horizon_refinement.py  # Label-space Gaussian blur + curve fitting
-│   │   ├── strategy_memory.py  # History-based engine selection
-│   │   └── metrics.py          # Objective facts (no physical bias)
-│   ├── vlm_client/             # Schema + prompt definitions (pydantic)
-│   │   ├── prompts.py          # Single source of truth for schemas
-│   │   └── client.py           # DEPRECATED (agent-native only)
-│   ├── post_process/           # Polygon extraction, property assignment
-│   └── exporter/               # SPECFEM tomography_file + Par_file
-├── session_state.py            # Persistent session state with backtracking
-├── generate_report.py          # HTML dashboard generator
-├── feedback_bridge.py          # Browser → rmux → CLI real-time bridge
-├── pipeline_interfaces.py      # Inter-module contracts (TypedDict + Protocol)
-├── controller.py               # Pipeline orchestration
-└── batch_processor.py          # Batch processing wrapper
-
-.claude/skills/
-├── geo-segment/                # End-to-end single figure skill
-├── batch-segment/              # Batch processing skill (5-stage pipeline)
-├── sandbox-segment/            # Autonomous segmentation skill
-└── figure-classify/            # Figure classification skill
+├── src/
+│   └── geoseg/
+│       ├── modules/
+│       │   ├── cv_detect/              # Panel detection, colorbar extraction
+│       │   ├── segment_engines/        # Multi-engine segmentation + strategy memory
+│       │   │   ├── v4_kmeans.py
+│       │   │   ├── edge_guided.py
+│       │   │   ├── ensemble.py
+│       │   │   ├── grayscale.py
+│       │   │   ├── horizon_refinement.py  # Label-space Gaussian blur + curve fitting
+│       │   │   ├── strategy_memory.py  # History-based engine selection
+│       │   │   └── metrics.py          # Objective facts (no physical bias)
+│       │   ├── vlm_client/             # Schema + prompt definitions (pydantic)
+│       │   │   ├── prompts.py          # Single source of truth for schemas
+│       │   │   └── client.py           # DEPRECATED (agent-native only)
+│       │   ├── post_process/           # Polygon extraction, property assignment
+│       │   └── exporter/               # SPECFEM tomography_file + Par_file
+│       ├── session_state.py            # Persistent session state with backtracking
+│       ├── generate_report.py          # HTML dashboard generator
+│       ├── feedback_bridge.py          # Browser → rmux → CLI real-time bridge
+│       ├── pipeline_interfaces.py      # Inter-module contracts (TypedDict + Protocol)
+│       ├── controller.py               # Pipeline orchestration
+│       └── batch_processor.py          # Batch processing wrapper
+│
+├── tests/                              # Unit and integration tests
+├── docs/                               # Design documents and specs
+├── .claude/skills/
+│   ├── geo-segment/                    # End-to-end single figure skill
+│   ├── batch-segment/                  # Batch processing skill (5-stage pipeline)
+│   ├── sandbox-segment/                # Autonomous segmentation skill
+│   └── figure-classify/                # Figure classification skill
+└── README.md
 ```
 
 ## Design Philosophy

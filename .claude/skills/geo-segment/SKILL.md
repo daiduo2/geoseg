@@ -1,10 +1,9 @@
 ---
 name: geo-segment
 description: >
-  Convert a published geophysics interpretation figure into a SPECFEM-ready
-  velocity zone model. CLI-native end-to-end entry point with human-in-the-loop
-  at overlay review. Agent auto-runs pipeline, presents result, waits for user
-  feedback in natural language. Supports backtracking to upstream stages.
+  [WORKFLOW] Convert a published geophysics interpretation figure into a SPECFEM-ready
+  velocity zone model. End-to-end pipeline orchestrated via Dynamic Workflows.
+  Stages: classify → detect → segment → present → (HITL) → export.
   Triggers: "速度分区", "解释图", "SPEFEM", "SEM 输入", "断面图分区",
   "segment this figure", "geo-segment", "process this figure"
 argument-hint: <image_path> [--n-layers=N] [--output-dir=path] [--session=path]
@@ -29,9 +28,44 @@ User: 接受
 Agent: [exports SPECFEM]
 ```
 
-## Workflow
+## Workflow Orchestration
 
-### Step 0: Initialize Session State
+This skill is designed for **Dynamic Workflows**. Claude generates a JS
+orchestration script with the following stage graph:
+
+```
+STAGE 0: init_session
+  ↓
+STAGE 1: classify (agent — Read image → JSON)
+  ↓ [if proceed]
+STAGE 2: detect_panels (Bash — cv_detect)
+  ↓
+STAGE 3: select_panel + crop (agent — Read + Bash)
+  ↓
+STAGE 4: segment (agent — sandbox-segment behavior)
+  ↓
+STAGE 5: present (agent — Read overlay → summary)
+  ↓ [HITL pause]
+STAGE 6: napari_review (Bash — launch editor, block until close)
+  ↓ [on Accept]
+STAGE 7: export (Bash — post_process)
+  ↓ [on Modify]
+STAGE 4b: re-segment (agent — sandbox with mask/layer adjustments)
+  ↓
+STAGE 5b: re-present
+  ↓
+STAGE 6b: napari_review (re-open editor)
+```
+
+**Parallelizable**: None within single-figure pipeline (stages are sequential
+with data dependencies). Parallelism happens at the **batch** level
+(`batch-segment` skill).
+
+**Backtrack edges**: Stage 6 (Modify) → Stage 4b; Stage 6 (Backtrack) → any upstream.
+
+## Stage Definitions
+
+### STAGE 0: Initialize Session State
 
 If `--session` provided, load existing session; else create a new one.
 Save path defaults to `runs/sessions/{timestamp}.json`.
@@ -43,21 +77,45 @@ state = create_session([image_path])
 save_session(state, session_path)
 ```
 
-### Step 1: Auto-Run Pipeline (Silent)
+### STAGE 1: Classify
 
-Execute without user interaction:
+**Type**: agent (Read → reasoning → JSON)
+**Tool**: Read, Write
+**Output**: `classification.json`, state update
 
-1. **Classify** — Read image, decide if velocity_model / geological_cross_section.
-   - If skip: update state → `SKIPPED`, report reason, STOP.
-2. **Detect Panels** — Bash inline `cv_detect.panel_detector`.
-3. **Identify Target Panel** — Read image, pick primary panel (e.g. "inverted model").
-4. **Crop + Remove Colorbar** — Bash inline crop + `colorbar_extractor`.
-5. **Autonomous Segmentation** — Activate `sandbox-segment` behavior.
-   - Try ≥2 engines, evaluate visually, pick best.
-   - Save to `runs/sandbox/{figure_id}/`.
-6. **Update State** — `update_figure(status=SEGMENTED, segmentation=...)`.
+Read image, decide if velocity_model / geological_cross_section.
+- If skip: update state → `SKIPPED`, report reason, STOP.
 
-### Step 2: Present Result
+### STAGE 2: Detect Panels
+
+**Type**: Bash (Python tool)
+**Tool**: Bash
+**Output**: panel bbox list
+
+Bash inline `cv_detect.panel_detector`.
+
+### STAGE 3: Select Target Panel + Crop
+
+**Type**: agent (Read → reasoning) + Bash
+**Tool**: Read, Bash
+**Output**: cropped panel path
+
+Read image, pick primary panel (e.g. "inverted model").
+Bash inline crop + `colorbar_extractor`.
+
+### STAGE 4: Segment
+
+**Type**: agent (Bash → Read → evaluate → iterative)
+**Tool**: Bash, Read
+**Output**: `labels.npz`, `overlay.jpg`, `meta.json`
+
+Activate `sandbox-segment` behavior.
+- Try ≥2 engines, evaluate visually, pick best.
+- Save to `runs/sandbox/{figure_id}/`.
+
+Update state → `update_figure(status=SEGMENTED, segmentation=...)`.
+
+### STAGE 5: Present Result
 
 Show a concise summary + overlay image:
 
@@ -69,7 +127,7 @@ Show a concise summary + overlay image:
    引擎: kmeans_full → 5 层
    质量: 0.85
 
-[Read 展示 overlay.png]
+[Read 展示 overlay.jpg]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -93,60 +151,103 @@ Default is `blend`. The agent may switch to `solid` or `mask` when:
 Background label is auto-detected and skipped. Tiny fragments (<0.2% area)
 are merged before boundary drawing. Boundaries are drawn thin (`mode="thin"`).
 
-### Step 3: Ask for Feedback
+### STAGE 6: Review via Napari Editor (HITL)
 
-Present choices:
+**Type**: HITL — agent launches napari, blocks until user closes window
+**Tool**: Bash (launch napari)
+**Output**: edited labels (via `--output-labels`)
 
+Launch napari editor with auto-save on exit:
+
+```bash
+uv run python -m geoseg.modules.editor.napari_app \
+  --session {session_path} \
+  --figure {figure_id}
 ```
-请选择：
-[1] ✅ 接受 → 导出 SPECFEM
-[2] ✏️  修改 → 描述问题（自然语言）
-[3] ⏭️  跳过 → 标记为 SKIPPED
-[4] 🔙 回溯 → 重新 classify / panel / segment
+
+`napari.run()` blocks until the user closes the window. The editor auto-saves
+shapes to `--output-shapes` and recomputed labels to `--output-labels` on exit.
+
+**User workflow in napari**:
+1. **Inspect** — view overlay, zoom/pan to verify boundaries
+2. **Edit** — use native napari tools:
+   - `L` Add Line — draw open boundary to split a region
+   - `P` Add Polygon — draw closed boundary to create isolated region
+   - `S` Select + `Delete` — remove boundary to merge regions
+   - `D` Direct — drag vertices to reshape boundaries
+3. **Save** — shapes auto-save on window close (no manual action needed)
+4. **Close** — close napari window to return to agent
+
+**After napari closes**, agent:
+1. Read `labels_edited.npz` (or fallback to original if user made no edits)
+2. Generate new overlay from edited labels
+3. Present updated result in conversation:
+   ```
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   📊 fig1.png  编辑完成
+      变化: 新增 1 条边界，合并 0 个区域
+      [展示编辑后的 overlay]
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ```
+4. Ask for confirmation:
+   ```
+   请选择：
+   [1] ✅ 接受 → 导出 SPECFEM
+   [2] ✏️  重新编辑 → 再次启动 napari（加载已保存的 shapes）
+   [3] ⏭️  跳过 → 标记为 SKIPPED
+   [4] 🔙 回溯 → 重新 classify / panel / segment
+   ```
+
+**Choice 1 — Accept** → STAGE 7: Export. Use `labels_edited.npz` as source.
+Update state → `EXPORTED`.
+
+**Choice 2 — Re-open napari** → Re-launch napari with edited labels:
+```bash
+uv run python -m geoseg.modules.editor.napari_app \
+  --session {session_path} \
+  --figure {figure_id}
 ```
+Napari re-extracts boundary shapes from the edited labels automatically.
 
-**Choice 1 — Accept**: Run post-process + export. Update state → `EXPORTED`.
+**Choice 3 — Skip** → Update state → `SKIPPED`.
 
-**Choice 2 — Modify**: Parse natural language into actionable changes.
-
-| User says | Agent parses | Sandbox action |
-|-----------|-------------|----------------|
-| "去掉右上角颜色条" | Exclude colorbar region | Mask colorbar bbox, re-segment |
-| "底层应分两层" | Increase layer count | `n_layers += 1`, retry engine |
-| "中间断层不要拆开" | Merge two layers | `merge_labels(a, b)` |
-| "边界太粗糙" | Prefer smooth boundaries | Switch to `edge_guided` |
-| "用灰度分割试试" | Different engine strategy | Retry with `grayscale` |
-| "左边panel才是目标" | Wrong target panel | `target_panel_id -= 1`, re-crop, re-segment |
-| "红色区域Vp值不对" | Wrong property mapping | Fix color→Vp/Vs mapping |
-
-After modify: re-run sandbox, present new overlay, ask again.
-
-**Choice 3 — Skip**: Update state → `SKIPPED`. Ask for skip reason (optional).
-
-**Choice 4 — Backtrack**: Ask which stage to backtrack to.
-
+**Choice 4 — Backtrack** → Ask which stage to backtrack to:
 ```
 回溯到：
 [a] classify — 重新判断 figure 类型
 [p] panel    — 重新检测/选择 panel
 [s] segment  — 重新分割（保留 panel）
 ```
-
 Use `backtrack(state, figure_id, to_stage=...)` to clear downstream data,
 then re-run from that stage.
 
-### Step 4: Export (on Accept)
+### STAGE 7: Export (on Accept)
+
+**Type**: Bash (Python tool)
+**Tool**: Bash
+**Output**: SPECFEM files
+
+Use `labels_edited.npz` if it exists (user edited in napari), otherwise fall back
+to original `labels.npz`:
 
 ```bash
-python -c "
+uv run python -c "
+from pathlib import Path
 from geoseg.session_state import load_session, update_figure, FigureStatus, ExportRecord
 from geoseg.controller import run_post_process_and_export
 
 state = load_session('{session_path}')
 entry = ...  # find figure
+
+# Prefer edited labels if napari was used
+labels_path = entry.segmentation.labels_path
+edited = labels_path.parent / 'labels_edited.npz'
+if edited.exists():
+    labels_path = edited
+
+labels = np.load(str(labels_path))["labels"]
 result = run_post_process_and_export(
-    labels_path=entry.segmentation.labels_path,
-    panel_path=entry.source_path,
+    labels=labels,
     output_dir='{output_dir}',
 )
 state = update_figure(state, '{figure_id}',
@@ -195,16 +296,15 @@ save_session(state, session_path)
 ```
 {output_dir}/
   {figure_id}/
-    report.json
-    panel/
-      labels.npy
-      overlay.png
+    panel0/
+      labels.npz
+      overlay.jpg
       meta.json
       strategy.log
       polygons.geojson
       properties.json
       tomo.xyz
-      Par_file_snippet.txt
+      parfile_snippet.txt
 runs/sessions/
   {timestamp}.json   # persistent session state
 ```

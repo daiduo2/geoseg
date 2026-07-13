@@ -51,9 +51,17 @@ CLAUDE.md.bak-*
 
 # Misc
 .mcp.json
-scripts/
 papers_new/
 *.pdf
 
+# Keep env check script tracked
+!scripts/env_check.py
+
 # Deprecated
 geoseg-gui/
+
+# Build artifacts
+src/geoseg.egg-info/
+
+# Test environments
+.venv-test/

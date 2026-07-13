@@ -1,5 +1,16 @@
+# Runtime dependency reference for geoseg
+#
+# Authoritative source: pyproject.toml
+# Install command: uv sync
+# Do NOT use pip install -r requirements.txt directly.
+
 numpy>=1.26
 pillow>=10.0
 pydantic>=2.0
 scikit-image>=0.22
 scipy>=1.11
+scikit-learn>=1.0
+opencv-python-headless>=4.0
+napari>=0.5
+pymupdf>=1.24
+requests>=2.31

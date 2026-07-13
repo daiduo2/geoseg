@@ -1,0 +1,158 @@
+<mxfile host="app.diagrams.net" modified="2026-06-19T00:00:00.000Z" agent="geoseg-docs" etag="hitl_interaction_slide7" version="24.0.0" type="device">
+  <diagram name="人机交互 PPT" id="hitl_interaction_slide7">
+    <mxGraphModel dx="760" dy="740" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="760" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="lane_user" value="用户" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="200" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_agent" value="Agent" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="30" width="200" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_system" value="System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="520" y="30" width="200" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u1" value="调用 skill" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="70" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a1" value="图面分类" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="70" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1" value="velocity?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="345" y="120" width="70" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u2" value="确认/纠正" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="124" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="skip1" value="SKIP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="350" y="190" width="60" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a2" value="面板检测 + 选择" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u3" value="选择目标面板" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a3" value="自动分割" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a4" value="展示 overlay + 指标" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="380" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u4" value="接受/修改/重跑/跳过" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="380" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a5" value="启动 napari" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="450" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1" value="napari 编辑器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="560" y="450" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u5" value="画线/删线/调顶点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="450" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2" value="保存 shapes + 重算 labels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="540" y="520" width="160" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a6" value="展示更新 overlay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="590" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="u6" value="确认接受" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="80" y="590" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a7" value="导出 SPECFEM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="660" width="120" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u1" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a1" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="低置信" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="d1" target="u2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u2" target="d1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="141" as="sourcePoint" />
+            <mxPoint x="345" y="141" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="d1" target="skip1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="d1" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a2" target="u3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u3" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a2" target="a3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a3" target="a4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a4" target="u4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="修改" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u4" target="a5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a5" target="s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u5" target="s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="s1" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="s2" target="a6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6" target="u6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u6" target="a7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" value="重跑" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="u4" target="a3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="397" as="sourcePoint" />
+            <mxPoint x="320" y="327" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" value="跳过" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="u4" target="skip1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="397" as="sourcePoint" />
+            <mxPoint x="350" y="203" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

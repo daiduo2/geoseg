@@ -5,20 +5,12 @@ Half-automatic conversion of geophysics interpretation figures into SPECFEM-read
 ## Quick Start
 
 ```bash
-cd ~/.claude/skills/geo-segment
-source .venv/bin/activate
-
-# Basic usage (VLM JSON from Claude Code session)
-geo-segment figure.jpg --vlm-json reply.json --panel=0 --zones=5
-
-# With colorbar-guided segmentation (recommended for pastel figures)
-geo-segment figure.jpg --vlm-json reply.json --colorbar colorbar_crop.png --zones=5
-
-# Full pipeline with physical coordinates
-geo-segment figure.jpg --vlm-json reply.json \
-    --x-range "0,700" --z-range "0,250" --dx 2 --dz 2 \
-    --properties-json my_props.json
+# Use project uv environment from the geoseg root
+uv run scripts/env_check.py
+uv run python -m geoseg.controller_demo
 ```
+
+See `geo-segment/SKILL.md` for the active end-to-end skill.
 
 ## Segmentation Algorithms
 
@@ -73,10 +65,13 @@ review.json                   # Human correction stub (with --interactive)
 
 ## Environment
 
+> **DEPRECATED**: This README describes the old e026 standalone skill layout. The active end-to-end skill is `geo-segment/SKILL.md`.
+> Use `uv` to manage the environment:
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
+uv run scripts/env_check.py
+uv run python -m geoseg.modules.<module>.demo
 ```
 
-Dependencies: numpy, pillow, scikit-image, scipy
+Do **not** use `python3 -m venv`/`pip` or `npm`/`yarn` in this project.

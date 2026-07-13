@@ -1,0 +1,331 @@
+============================================================
+Phase 1: Panel 3 sweep
+============================================================
+
+=== p3_ma800_asp10_mi10 ===
+  panel_3 -> mask coverage 4.38%
+
+=== p3_ma800_asp10_mi30 ===
+  panel_3 -> mask coverage 4.33%
+
+=== p3_ma800_asp10_mi50 ===
+  panel_3 -> mask coverage 4.30%
+
+=== p3_ma800_asp15_mi10 ===
+  panel_3 -> mask coverage 4.38%
+
+=== p3_ma800_asp15_mi30 ===
+  panel_3 -> mask coverage 4.33%
+
+=== p3_ma800_asp15_mi50 ===
+  panel_3 -> mask coverage 4.30%
+
+=== p3_ma800_asp20_mi10 ===
+  panel_3 -> mask coverage 4.39%
+
+=== p3_ma800_asp20_mi30 ===
+  panel_3 -> mask coverage 4.33%
+
+=== p3_ma800_asp20_mi50 ===
+  panel_3 -> mask coverage 4.30%
+
+=== p3_ma1200_asp10_mi10 ===
+  panel_3 -> mask coverage 5.07%
+
+=== p3_ma1200_asp10_mi30 ===
+  panel_3 -> mask coverage 5.03%
+
+=== p3_ma1200_asp10_mi50 ===
+  panel_3 -> mask coverage 5.02%
+
+=== p3_ma1200_asp15_mi10 ===
+  panel_3 -> mask coverage 5.07%
+
+=== p3_ma1200_asp15_mi30 ===
+  panel_3 -> mask coverage 5.03%
+
+=== p3_ma1200_asp15_mi50 ===
+  panel_3 -> mask coverage 5.02%
+
+=== p3_ma1200_asp20_mi10 ===
+  panel_3 -> mask coverage 5.07%
+
+=== p3_ma1200_asp20_mi30 ===
+  panel_3 -> mask coverage 5.03%
+
+=== p3_ma1200_asp20_mi50 ===
+  panel_3 -> mask coverage 5.02%
+
+=== p3_ma1500_asp10_mi10 ===
+  panel_3 -> mask coverage 5.26%
+
+=== p3_ma1500_asp10_mi30 ===
+  panel_3 -> mask coverage 5.23%
+
+=== p3_ma1500_asp10_mi50 ===
+  panel_3 -> mask coverage 5.21%
+
+=== p3_ma1500_asp15_mi10 ===
+  panel_3 -> mask coverage 5.26%
+
+=== p3_ma1500_asp15_mi30 ===
+  panel_3 -> mask coverage 5.23%
+
+=== p3_ma1500_asp15_mi50 ===
+  panel_3 -> mask coverage 5.21%
+
+=== p3_ma1500_asp20_mi10 ===
+  panel_3 -> mask coverage 5.26%
+
+=== p3_ma1500_asp20_mi30 ===
+  panel_3 -> mask coverage 5.23%
+
+=== p3_ma1500_asp20_mi50 ===
+  panel_3 -> mask coverage 5.21%
+
+=== p3_ma2000_asp10_mi10 ===
+  panel_3 -> mask coverage 5.36%
+
+=== p3_ma2000_asp10_mi30 ===
+  panel_3 -> mask coverage 5.34%
+
+=== p3_ma2000_asp10_mi50 ===
+  panel_3 -> mask coverage 5.32%
+
+=== p3_ma2000_asp15_mi10 ===
+  panel_3 -> mask coverage 5.36%
+
+=== p3_ma2000_asp15_mi30 ===
+  panel_3 -> mask coverage 5.34%
+
+=== p3_ma2000_asp15_mi50 ===
+  panel_3 -> mask coverage 5.32%
+
+=== p3_ma2000_asp20_mi10 ===
+  panel_3 -> mask coverage 5.36%
+
+=== p3_ma2000_asp20_mi30 ===
+  panel_3 -> mask coverage 5.34%
+
+=== p3_ma2000_asp20_mi50 ===
+  panel_3 -> mask coverage 5.32%
+
+============================================================
+Phase 2: Panel 1 + 2 validation (best params)
+============================================================
+
+=== p1_ma800_asp10_mi10 ===
+  panel_1 -> mask coverage 2.54%
+
+=== p1_ma800_asp10_mi30 ===
+  panel_1 -> mask coverage 2.51%
+
+=== p1_ma800_asp10_mi50 ===
+  panel_1 -> mask coverage 2.50%
+
+=== p1_ma800_asp15_mi10 ===
+  panel_1 -> mask coverage 2.54%
+
+=== p1_ma800_asp15_mi30 ===
+  panel_1 -> mask coverage 2.51%
+
+=== p1_ma800_asp15_mi50 ===
+  panel_1 -> mask coverage 2.50%
+
+=== p1_ma800_asp20_mi10 ===
+  panel_1 -> mask coverage 2.54%
+
+=== p1_ma800_asp20_mi30 ===
+  panel_1 -> mask coverage 2.51%
+
+=== p1_ma800_asp20_mi50 ===
+  panel_1 -> mask coverage 2.50%
+
+=== p1_ma1200_asp10_mi10 ===
+  panel_1 -> mask coverage 2.93%
+
+=== p1_ma1200_asp10_mi30 ===
+  panel_1 -> mask coverage 2.90%
+
+=== p1_ma1200_asp10_mi50 ===
+  panel_1 -> mask coverage 2.89%
+
+=== p1_ma1200_asp15_mi10 ===
+  panel_1 -> mask coverage 2.93%
+
+=== p1_ma1200_asp15_mi30 ===
+  panel_1 -> mask coverage 2.90%
+
+=== p1_ma1200_asp15_mi50 ===
+  panel_1 -> mask coverage 2.89%
+
+=== p1_ma1200_asp20_mi10 ===
+  panel_1 -> mask coverage 2.93%
+
+=== p1_ma1200_asp20_mi30 ===
+  panel_1 -> mask coverage 2.90%
+
+=== p1_ma1200_asp20_mi50 ===
+  panel_1 -> mask coverage 2.89%
+
+=== p1_ma1500_asp10_mi10 ===
+  panel_1 -> mask coverage 3.19%
+
+=== p1_ma1500_asp10_mi30 ===
+  panel_1 -> mask coverage 3.17%
+
+=== p1_ma1500_asp10_mi50 ===
+  panel_1 -> mask coverage 3.16%
+
+=== p1_ma1500_asp15_mi10 ===
+  panel_1 -> mask coverage 3.19%
+
+=== p1_ma1500_asp15_mi30 ===
+  panel_1 -> mask coverage 3.17%
+
+=== p1_ma1500_asp15_mi50 ===
+  panel_1 -> mask coverage 3.16%
+
+=== p1_ma1500_asp20_mi10 ===
+  panel_1 -> mask coverage 3.19%
+
+=== p1_ma1500_asp20_mi30 ===
+  panel_1 -> mask coverage 3.17%
+
+=== p1_ma1500_asp20_mi50 ===
+  panel_1 -> mask coverage 3.16%
+
+=== p1_ma2000_asp10_mi10 ===
+  panel_1 -> mask coverage 3.61%
+
+=== p1_ma2000_asp10_mi30 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p1_ma2000_asp10_mi50 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p1_ma2000_asp15_mi10 ===
+  panel_1 -> mask coverage 3.61%
+
+=== p1_ma2000_asp15_mi30 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p1_ma2000_asp15_mi50 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p1_ma2000_asp20_mi10 ===
+  panel_1 -> mask coverage 3.61%
+
+=== p1_ma2000_asp20_mi30 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p1_ma2000_asp20_mi50 ===
+  panel_1 -> mask coverage 3.59%
+
+=== p2_ma800_asp10_mi10 ===
+  panel_2 -> mask coverage 3.20%
+
+=== p2_ma800_asp10_mi30 ===
+  panel_2 -> mask coverage 3.16%
+
+=== p2_ma800_asp10_mi50 ===
+  panel_2 -> mask coverage 3.13%
+
+=== p2_ma800_asp15_mi10 ===
+  panel_2 -> mask coverage 3.22%
+
+=== p2_ma800_asp15_mi30 ===
+  panel_2 -> mask coverage 3.18%
+
+=== p2_ma800_asp15_mi50 ===
+  panel_2 -> mask coverage 3.14%
+
+=== p2_ma800_asp20_mi10 ===
+  panel_2 -> mask coverage 3.22%
+
+=== p2_ma800_asp20_mi30 ===
+  panel_2 -> mask coverage 3.18%
+
+=== p2_ma800_asp20_mi50 ===
+  panel_2 -> mask coverage 3.14%
+
+=== p2_ma1200_asp10_mi10 ===
+  panel_2 -> mask coverage 3.60%
+
+=== p2_ma1200_asp10_mi30 ===
+  panel_2 -> mask coverage 3.58%
+
+=== p2_ma1200_asp10_mi50 ===
+  panel_2 -> mask coverage 3.56%
+
+=== p2_ma1200_asp15_mi10 ===
+  panel_2 -> mask coverage 3.61%
+
+=== p2_ma1200_asp15_mi30 ===
+  panel_2 -> mask coverage 3.59%
+
+=== p2_ma1200_asp15_mi50 ===
+  panel_2 -> mask coverage 3.58%
+
+=== p2_ma1200_asp20_mi10 ===
+  panel_2 -> mask coverage 3.61%
+
+=== p2_ma1200_asp20_mi30 ===
+  panel_2 -> mask coverage 3.59%
+
+=== p2_ma1200_asp20_mi50 ===
+  panel_2 -> mask coverage 3.58%
+
+=== p2_ma1500_asp10_mi10 ===
+  panel_2 -> mask coverage 3.80%
+
+=== p2_ma1500_asp10_mi30 ===
+  panel_2 -> mask coverage 3.79%
+
+=== p2_ma1500_asp10_mi50 ===
+  panel_2 -> mask coverage 3.78%
+
+=== p2_ma1500_asp15_mi10 ===
+  panel_2 -> mask coverage 3.82%
+
+=== p2_ma1500_asp15_mi30 ===
+  panel_2 -> mask coverage 3.81%
+
+=== p2_ma1500_asp15_mi50 ===
+  panel_2 -> mask coverage 3.80%
+
+=== p2_ma1500_asp20_mi10 ===
+  panel_2 -> mask coverage 3.82%
+
+=== p2_ma1500_asp20_mi30 ===
+  panel_2 -> mask coverage 3.81%
+
+=== p2_ma1500_asp20_mi50 ===
+  panel_2 -> mask coverage 3.80%
+
+=== p2_ma2000_asp10_mi10 ===
+  panel_2 -> mask coverage 3.87%
+
+=== p2_ma2000_asp10_mi30 ===
+  panel_2 -> mask coverage 3.87%
+
+=== p2_ma2000_asp10_mi50 ===
+  panel_2 -> mask coverage 3.86%
+
+=== p2_ma2000_asp15_mi10 ===
+  panel_2 -> mask coverage 3.89%
+
+=== p2_ma2000_asp15_mi30 ===
+  panel_2 -> mask coverage 3.89%
+
+=== p2_ma2000_asp15_mi50 ===
+  panel_2 -> mask coverage 3.88%
+
+=== p2_ma2000_asp20_mi10 ===
+  panel_2 -> mask coverage 3.89%
+
+=== p2_ma2000_asp20_mi30 ===
+  panel_2 -> mask coverage 3.89%
+
+=== p2_ma2000_asp20_mi50 ===
+  panel_2 -> mask coverage 3.88%

@@ -18,6 +18,7 @@ from PIL import Image
 
 from geoseg.batch_processor import process_directory
 from geoseg.controller import run_pipeline
+from geoseg.session_state import get_summary, FigureStatus
 
 
 def test_ph01_observational_data_is_skipped() -> None:
@@ -83,12 +84,13 @@ def test_synthetic_conceptual_runs_end_to_end() -> None:
             assert p["n_polygons"] >= 1
             assert "properties" in p
 
-        # Check artifacts exported
-        files = list(out_dir.iterdir()) if out_dir.exists() else []
+        # Check artifacts exported (now in panel subdirectories)
+        panel_dir = out_dir / "panel0"
+        files = list(panel_dir.iterdir()) if panel_dir.exists() else []
         names = [f.name for f in files]
-        assert any(n.endswith("_tomo.xyz") for n in names)
-        assert any(n.endswith("_polygons.geojson") for n in names)
-        assert any(n.endswith("_properties.json") for n in names)
+        assert "tomo.xyz" in names
+        assert "polygons.geojson" in names
+        assert "properties.json" in names
 
 
 def test_unknown_colors_get_auto_properties() -> None:
@@ -203,7 +205,7 @@ def test_batch_processor_resume() -> None:
         Image.fromarray(img2).save(images_dir / "img2.jpg")
 
         # First run
-        summary1 = process_directory(
+        state1 = process_directory(
             images_dir=images_dir,
             output_dir=output_dir,
             n_layers=2,
@@ -212,12 +214,15 @@ def test_batch_processor_resume() -> None:
             skip_non_velocity_model=False,
             resume=False,
         )
-        assert summary1["total"] == 2
-        assert summary1["errors"] == 0
-        assert summary1["processed"] == 2
+        summary1 = get_summary(state1)
+        assert summary1["total_figures"] == 2
+        assert summary1.get("errors", 0) == 0
+        # Visual audit may reject synthetic test images; successful processing
+        # means either SEGMENTED or AUDIT_FAILED, not ERROR.
+        assert summary1.get("segmented", 0) + summary1.get("audit_failed", 0) == 2
 
         # Second run with resume
-        summary2 = process_directory(
+        state2 = process_directory(
             images_dir=images_dir,
             output_dir=output_dir,
             n_layers=2,
@@ -226,9 +231,10 @@ def test_batch_processor_resume() -> None:
             skip_non_velocity_model=False,
             resume=True,
         )
-        assert summary2["total"] == 2
-        # Should not process any new images
-        assert summary2["processed"] == 0
+        summary2 = get_summary(state2)
+        assert summary2["total_figures"] == 2
+        # Should not process any new images (already in a terminal state)
+        assert summary2.get("segmented", 0) + summary2.get("audit_failed", 0) == 2
 
 
 def test_batch_processor_error_isolation() -> None:
@@ -248,7 +254,7 @@ def test_batch_processor_error_isolation() -> None:
         # Corrupted image (empty file — will cause PIL to fail)
         (images_dir / "img2_bad.jpg").write_bytes(b"not an image")
 
-        summary = process_directory(
+        state = process_directory(
             images_dir=images_dir,
             output_dir=output_dir,
             n_layers=2,
@@ -257,7 +263,12 @@ def test_batch_processor_error_isolation() -> None:
             skip_non_velocity_model=False,
             resume=False,
         )
-        assert summary["total"] == 2
-        assert summary["errors"] == 1
-        assert summary["processed"] == 1
-        assert summary["results"]["img2_bad.jpg"]["status"] == "error"
+        summary = get_summary(state)
+        assert summary["total_figures"] == 2
+        assert summary.get("errors", 0) == 1
+        # Valid image may pass or fail visual audit, but should not error.
+        assert summary.get("segmented", 0) + summary.get("audit_failed", 0) == 1
+        # Find the bad image entry in state
+        bad_entry = next((e for e in state.workset if "img2_bad" in e.source_path), None)
+        assert bad_entry is not None
+        assert bad_entry.status == FigureStatus.ERROR

@@ -1,0 +1,165 @@
+============================================================
+Round 2: Aggressive max_area + brightness sweep
+============================================================
+
+=== p3_ma400_bt180_asp10 ===
+  panel_3 -> mask coverage 3.49%
+
+=== p3_ma400_bt180_asp15 ===
+  panel_3 -> mask coverage 3.49%
+
+=== p3_ma400_bt200_asp10 ===
+  panel_3 -> mask coverage 2.78%
+
+=== p3_ma400_bt200_asp15 ===
+  panel_3 -> mask coverage 2.78%
+
+=== p3_ma400_bt220_asp10 ===
+  panel_3 -> mask coverage 1.99%
+
+=== p3_ma400_bt220_asp15 ===
+  panel_3 -> mask coverage 1.99%
+
+=== p3_ma600_bt180_asp10 ===
+  panel_3 -> mask coverage 3.92%
+
+=== p3_ma600_bt180_asp15 ===
+  panel_3 -> mask coverage 3.92%
+
+=== p3_ma600_bt200_asp10 ===
+  panel_3 -> mask coverage 3.13%
+
+=== p3_ma600_bt200_asp15 ===
+  panel_3 -> mask coverage 3.13%
+
+=== p3_ma600_bt220_asp10 ===
+  panel_3 -> mask coverage 2.25%
+
+=== p3_ma600_bt220_asp15 ===
+  panel_3 -> mask coverage 2.25%
+
+=== p3_ma800_bt180_asp10 ===
+  panel_3 -> mask coverage 4.33%
+
+=== p3_ma800_bt180_asp15 ===
+  panel_3 -> mask coverage 4.33%
+
+=== p3_ma800_bt200_asp10 ===
+  panel_3 -> mask coverage 3.41%
+
+=== p3_ma800_bt200_asp15 ===
+  panel_3 -> mask coverage 3.41%
+
+=== p3_ma800_bt220_asp10 ===
+  panel_3 -> mask coverage 2.48%
+
+=== p3_ma800_bt220_asp15 ===
+  panel_3 -> mask coverage 2.48%
+
+=== p1_ma400_bt180_asp10 ===
+  panel_1 -> mask coverage 1.97%
+
+=== p1_ma400_bt180_asp15 ===
+  panel_1 -> mask coverage 1.97%
+
+=== p1_ma400_bt200_asp10 ===
+  panel_1 -> mask coverage 1.67%
+
+=== p1_ma400_bt200_asp15 ===
+  panel_1 -> mask coverage 1.67%
+
+=== p1_ma400_bt220_asp10 ===
+  panel_1 -> mask coverage 1.36%
+
+=== p1_ma400_bt220_asp15 ===
+  panel_1 -> mask coverage 1.36%
+
+=== p1_ma600_bt180_asp10 ===
+  panel_1 -> mask coverage 2.26%
+
+=== p1_ma600_bt180_asp15 ===
+  panel_1 -> mask coverage 2.26%
+
+=== p1_ma600_bt200_asp10 ===
+  panel_1 -> mask coverage 1.90%
+
+=== p1_ma600_bt200_asp15 ===
+  panel_1 -> mask coverage 1.90%
+
+=== p1_ma600_bt220_asp10 ===
+  panel_1 -> mask coverage 1.54%
+
+=== p1_ma600_bt220_asp15 ===
+  panel_1 -> mask coverage 1.54%
+
+=== p1_ma800_bt180_asp10 ===
+  panel_1 -> mask coverage 2.51%
+
+=== p1_ma800_bt180_asp15 ===
+  panel_1 -> mask coverage 2.51%
+
+=== p1_ma800_bt200_asp10 ===
+  panel_1 -> mask coverage 2.08%
+
+=== p1_ma800_bt200_asp15 ===
+  panel_1 -> mask coverage 2.08%
+
+=== p1_ma800_bt220_asp10 ===
+  panel_1 -> mask coverage 1.66%
+
+=== p1_ma800_bt220_asp15 ===
+  panel_1 -> mask coverage 1.66%
+
+=== p2_ma400_bt180_asp10 ===
+  panel_2 -> mask coverage 2.49%
+
+=== p2_ma400_bt180_asp15 ===
+  panel_2 -> mask coverage 2.51%
+
+=== p2_ma400_bt200_asp10 ===
+  panel_2 -> mask coverage 1.97%
+
+=== p2_ma400_bt200_asp15 ===
+  panel_2 -> mask coverage 1.99%
+
+=== p2_ma400_bt220_asp10 ===
+  panel_2 -> mask coverage 1.57%
+
+=== p2_ma400_bt220_asp15 ===
+  panel_2 -> mask coverage 1.58%
+
+=== p2_ma600_bt180_asp10 ===
+  panel_2 -> mask coverage 2.89%
+
+=== p2_ma600_bt180_asp15 ===
+  panel_2 -> mask coverage 2.91%
+
+=== p2_ma600_bt200_asp10 ===
+  panel_2 -> mask coverage 2.31%
+
+=== p2_ma600_bt200_asp15 ===
+  panel_2 -> mask coverage 2.33%
+
+=== p2_ma600_bt220_asp10 ===
+  panel_2 -> mask coverage 1.82%
+
+=== p2_ma600_bt220_asp15 ===
+  panel_2 -> mask coverage 1.82%
+
+=== p2_ma800_bt180_asp10 ===
+  panel_2 -> mask coverage 3.16%
+
+=== p2_ma800_bt180_asp15 ===
+  panel_2 -> mask coverage 3.18%
+
+=== p2_ma800_bt200_asp10 ===
+  panel_2 -> mask coverage 2.50%
+
+=== p2_ma800_bt200_asp15 ===
+  panel_2 -> mask coverage 2.52%
+
+=== p2_ma800_bt220_asp10 ===
+  panel_2 -> mask coverage 1.92%
+
+=== p2_ma800_bt220_asp15 ===
+  panel_2 -> mask coverage 1.92%

@@ -36,6 +36,9 @@
 | e025 | Multimodal vs Pixel | 保留 | 像素 + caption/colorbar OCR，4 篇文献验证成功 |
 | e026 | PH01 Conceptual | 当前 | 对 ph01 有效，但泛化性差 |
 | e027 | SLIC + Graph Cut | 保留 | 边界更平滑，conceptual model panels 首选 |
+| e028 | FH + SLIC segmentation | **放弃** | 真实图像上 FH 严重过度分割（72 segment vs 目标 5），SLIC+K-Means 碎片为零但欠分割严重 |
+| e029 | Spatial regularized clustering | **部分** | x-y-LAB 五维 K-Means **完全无效**；SLIC 超像素级聚类 **强力替代**（fragments→0）；median 后处理立即可集成 |
+| e030 | Anisotropic preprocessing | **保留** | row_median(size=5) 替换 adaptive_blur 为最佳预处理；水平开运算有方向性局限；直方图过滤效果有限 |
 
 ---
 
@@ -47,7 +50,8 @@
 |------|------|------|------|------|
 | **e026** | KMeans RGB + NN | 简单 jet-colormap，已知 n_layers | ~0.1s | 中 |
 | **e027** | SLIC + Graph Cut (ICM) | Conceptual model panels，需平滑边界 | ~0.3s | 高 |
-| **v4_kmeans** | KMeans LAB + shape filter | Vivid jet/rainbow，有/无 VLM seeds | ~0.2s | 高 |
+| **v4_kmeans** | KMeans LAB + shape filter + row_median + median_post | Vivid jet/rainbow，有/无 VLM seeds，**文字鲁棒** | ~0.2s | 高 |
+| **slic_kmeans** | SLIC superpixel + K-Means | 文字覆盖严重的 panel，碎片零容忍 | ~0.3s | 中（欠分割） |
 | **region_merge** | Mean Shift overseg + Ward | Vivid 图，需自动确定 k | ~3s | 高 |
 
 ### B. VLM-seed 驱动引擎
@@ -89,7 +93,8 @@ Algorithm Selector
   ├─ 多 panel → detect_panels → 每个 sub-panel 递归路由
   ├─ 单 panel + vivid + 需最高精度 → ensemble (slow)
   ├─ 单 panel + vivid + 需平滑边界 → SLIC+Graph Cut (e027)
-  ├─ 单 panel + vivid + 平衡速度/质量 → v4_kmeans
+  ├─ 单 panel + vivid + 文字覆盖严重 + 碎片零容忍 → slic_kmeans (e029)
+  ├─ 单 panel + vivid + 平衡速度/质量 → v4_kmeans (row_median + median_post)
   ├─ 单 panel + vivid + 渐变边界 → edge_guided
   ├─ 单 panel + pastel + 有 colorbar → pastel_faded
   ├─ 单 panel + grayscale → grayscale_agglomerative
@@ -151,5 +156,7 @@ Algorithm Selector
 | P1 | multimodal (e025) | 已在 4 篇文献验证，整合进 v2 pipeline |
 | P2 | edge_grow (e016) | Dijkstra 替代 K-means，测试边界保持 |
 | P2 | e026 (当前) | 保留为轻量 fallback，对比 v4_kmeans |
+| P0 | row_median + median_post (e030) | **已验证**：6 张真实图像 + 视觉确认，碎片 -50%~-70%，立即集成 |
+| P0 | SLIC superpixel + K-Means (e029) | **已验证**：文字鲁棒性极佳，但欠分割严重，仅作辅助引擎 |
 | P3 | GMM (e011) | 虽然之前结论负面，但 multimodal 提供更好种子后可能改善 |
 | P3 | Mean Shift (e008) | 自动 k 发现，新种子质量下可能改善 |

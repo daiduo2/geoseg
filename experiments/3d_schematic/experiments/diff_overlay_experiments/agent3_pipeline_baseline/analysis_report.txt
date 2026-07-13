@@ -1,0 +1,30 @@
+Diff-Overlay Pipeline Baseline Analysis
+==================================================
+
+Parameters:
+  blur_ksize: 15
+  blur_sigma: 3.0
+  diff_thresh: 20.0
+  expand_radius: 15
+  felz_scale: 300.0
+  felz_sigma: 0.5
+  overlay_label: -1
+
+Panel 1:
+  v3 label count: 8
+  diff label count: 5
+  v3 small regions (<1% area): 0
+  overlay coverage: 5.4%
+
+Panel 2:
+  v3 label count: 11
+  diff label count: 8
+  v3 small regions (<1% area): 0
+  overlay coverage: 8.6%
+
+Panel 3:
+  v3 label count: 4
+  diff label count: 6
+  v3 small regions (<1% area): 0
+  overlay coverage: 2.9%
+

@@ -1,0 +1,58 @@
+{
+  "panel_id": "panel_1",
+  "source": "nl8_mak0 refined v4_kmeans n=8",
+  "frozen_labels": [
+    0,
+    2,
+    4
+  ],
+  "retry_labels": [
+    1,
+    3,
+    5,
+    6,
+    7
+  ],
+  "text_labels": [],
+  "repair_strategy": "merge_labels",
+  "notes": "nl8_mak0 over-segments the panel into 8 labels. Visual audit: L3 is the mantle plume body; L7 is internal flow streaks inside the plume and must merge into L3. L1 (left mantle), L6 (right middle mantle), and L5 (bottom mantle) are all the same surrounding mantle layer and must merge into L6. L0 (crust), L2 (mantle lithosphere), and L4 (MLD layer) are geologically distinct and frozen. Additional user feedback: L1 (mantle lithosphere) and L3 (MLD layer) in the upper region are over-segmented and merged into L1.",
+  "local_fixes": [
+    {
+      "action": "merge_labels",
+      "label_ids": [
+        3,
+        7
+      ],
+      "target_id": 3,
+      "reason": "plume body + internal flow streaks"
+    },
+    {
+      "action": "merge_labels",
+      "label_ids": [
+        1,
+        6,
+        5
+      ],
+      "target_id": 6,
+      "reason": "surrounding mantle fragments"
+    },
+    {
+      "action": "merge_labels",
+      "label_ids": [
+        1,
+        3
+      ],
+      "target_id": 1,
+      "reason": "upper lithosphere and MLD layer are over-segmented; merge into single upper mantle/lithosphere layer"
+    },
+    {
+      "action": "merge_components",
+      "notes": "Component-level cleanup of upper region: keep largest L0 crust component; merge small L0 strips under lithosphere into L1; merge tiny L1/L2 top fragments into L0 or L1."
+    },
+    {
+      "action": "merge_components",
+      "notes": "Merge small L0 crust component embedded inside plume head into L2 (plume)."
+    }
+  ],
+  "iteration": 4
+}

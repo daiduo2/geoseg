@@ -1,0 +1,42 @@
+# Agent-4: Aggressive vs Conservative Diff-Overlay Pipeline Report
+
+## Parameters
+
+### Aggressive
+  blur_ksize=21
+  blur_sigma=5.0
+  diff_thresh=10
+  expand_radius=25
+  felz_scale=300
+  felz_sigma=0.5
+  overlay_label=-1
+
+### Conservative
+  blur_ksize=11
+  blur_sigma=2.0
+  diff_thresh=30
+  expand_radius=10
+  felz_scale=300
+  felz_sigma=0.5
+  overlay_label=-1
+
+## Per-Panel Statistics
+
+### panel_1_front.png
+  Aggressive overlay:  49.2% | geo labels: 45
+  Conservative overlay: 1.4% | geo labels: 151
+  Detail inside/outside (agg): 13.8 / 2.5
+  Detail inside/outside (cons): 31.1 / 4.2
+
+### panel_2_front.png
+  Aggressive overlay:  51.7% | geo labels: 56
+  Conservative overlay: 0.4% | geo labels: 180
+  Detail inside/outside (agg): 15.8 / 3.4
+  Detail inside/outside (cons): 28.7 / 5.0
+
+### panel_3_front.png
+  Aggressive overlay:  46.9% | geo labels: 45
+  Conservative overlay: 0.1% | geo labels: 176
+  Detail inside/outside (agg): 13.8 / 3.0
+  Detail inside/outside (cons): 28.6 / 4.4
+
