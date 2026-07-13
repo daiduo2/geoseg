@@ -1,5 +1,6 @@
 # Python
 .venv/
+.venv_ocr/
 __pycache__/
 *.pyc
 *.pyo
@@ -14,6 +15,8 @@ geoseg-gui/dist/
 
 # Generated artifacts
 runs/
+docs/all_overlays/
+docs/all_overlays.zip
 *.png
 !tests/fixtures/**/*.png
 *.jpg
@@ -22,9 +25,6 @@ runs/
 *.jpeg
 !tests/fixtures/**/*.jpeg
 !docs/assets/**/*.jpeg
-*.png
-!tests/fixtures/**/*.png
-!docs/assets/**/*.png
 *.npz
 *.npy
 
@@ -48,11 +48,24 @@ debug_*.png
 
 # Claude Code backups
 CLAUDE.md.bak-*
+.claude/.doc_sync_stamp
+.claude/scheduled_tasks.lock
+.claude/*.bak-*
 
 # Misc
 .mcp.json
+.superpowers/
+PY
+_tmp*.py
+tmp*.py
 papers_new/
 *.pdf
+
+# External repositories used by experiments should be cloned on demand or
+# tracked explicitly as submodules, not committed as nested git worktrees.
+experiments/3d_schematic/external_repos/PyPatchMatch/
+experiments/3d_schematic/external_repos/ViTEraser/
+experiments/3d_schematic/external_repos/lama/
 
 # Keep env check script tracked
 !scripts/env_check.py

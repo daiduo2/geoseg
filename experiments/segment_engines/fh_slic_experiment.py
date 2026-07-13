@@ -5,7 +5,7 @@ Evaluates whether graph-based / superpixel methods are more robust than
 pixel-level K-means when text overlays are present.
 
 Usage:
-    python -m geoseg.modules.segment_engines.experiments.fh_slic_experiment
+    python experiments/segment_engines/fh_slic_experiment.py
 
 Output:
     runs/experiments/fh_slic/   -- overlays, labels, and report.md
@@ -30,16 +30,16 @@ from geoseg.modules.segment_engines import v4_kmeans
 from geoseg.modules.segment_engines import metrics as seg_metrics
 from geoseg.modules.segment_engines._shared import _create_overlay
 
-from geoseg.modules.segment_engines.experiments.fh_slic_engines import (
+from fh_slic_engines import (
     run_fh,
     run_slic_clustering,
     run_v4_baseline,
 )
-from geoseg.modules.segment_engines.experiments.fh_slic_images import (
+from fh_slic_images import (
     _load_real_image,
     _synthetic_panel_with_text,
 )
-from geoseg.modules.segment_engines.experiments.fh_slic_report import (
+from fh_slic_report import (
     generate_report,
     _fmt_table,
 )
