@@ -14,18 +14,33 @@ dependencies = [
     "scipy>=1.11",
     "scikit-learn>=1.0",
     "opencv-python-headless>=4.0",
-    "napari>=0.5",
-    "pymupdf>=1.24",
-    "requests>=2.31",
 ]
 
+[project.scripts]
+geoseg-preprocess-artifact = "geoseg.cli.preprocess_artifact:main"
+
 [project.optional-dependencies]
+pdf = [
+    "pymupdf>=1.24",
+]
+vlm = [
+    "requests>=2.31",
+]
 server = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
 ]
 gui = [
+    "napari>=0.5",
     "PySide6>=6.6",
+]
+full = [
+    "fastapi>=0.110",
+    "napari>=0.5",
+    "pymupdf>=1.24",
+    "PySide6>=6.6",
+    "requests>=2.31",
+    "uvicorn>=0.29",
 ]
 
 [dependency-groups]
