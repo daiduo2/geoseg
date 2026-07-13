@@ -1,8 +1,4 @@
-"""Backward-compatible imports for pipeline contracts.
-
-New code should import these contracts from ``geoseg.core.models``. This
-module remains so existing scripts and tests can migrate gradually.
-"""
+"""Core contracts shared across geoseg modules."""
 
 from geoseg.core.models import (
     FigureClassification,

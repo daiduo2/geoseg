@@ -32,7 +32,7 @@ def _classify_hint(path: str) -> dict:
     try:
         import numpy as np
 
-        from geoseg.modules.segment_engines._shared import saturation_ratio
+        from geoseg.core.image_ops import saturation_ratio
 
         img = np.array(Image.open(path).convert("RGB"))
         result = classify(img)

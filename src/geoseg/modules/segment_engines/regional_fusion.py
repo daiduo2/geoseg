@@ -192,9 +192,9 @@ def _run_engine_by_name(
     colorbar_rgb: np.ndarray | None = None,
 ) -> dict:
     """Run a segmentation engine by name."""
-    from geoseg.modules.segment_engines.router import _run_engine
+    from geoseg.modules.segment_engines.runner import run_engine
 
-    return _run_engine(engine, panel_rgb, reps, colorbar_rgb, n_layers)
+    return run_engine(engine, panel_rgb, reps, colorbar_rgb, n_layers)
 
 
 def regional_segment(

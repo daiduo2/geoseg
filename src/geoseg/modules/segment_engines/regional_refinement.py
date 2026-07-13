@@ -16,7 +16,7 @@ from geoseg.modules.segment_engines.regional_fusion import (
     fuse_with_freeze,
     generate_overlay_with_legend,
 )
-from geoseg.modules.segment_engines.router import _run_engine
+from geoseg.modules.segment_engines.runner import run_engine
 from geoseg.modules.segment_engines.v4_kmeans import _reorder_labels_by_median_y
 
 
@@ -114,7 +114,7 @@ def refine_by_residual_mask(
     )
     x0, y0, x1, y1 = bbox
 
-    result_b = _run_engine(
+    result_b = run_engine(
         config.secondary_engine,
         crop_rgb,
         reps,

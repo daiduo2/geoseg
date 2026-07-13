@@ -14,10 +14,7 @@ from skimage.color import rgb2gray
 from skimage.filters import sobel
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines._shared import (
-    _create_overlay,
-    _distinct_colors,
-)
+from geoseg.core.image_ops import create_overlay, distinct_colors
 from geoseg.modules.visual_audit.color_residual import (
     compute_color_residual_map,
     create_color_residual_overlay,
@@ -67,7 +64,7 @@ def create_pure_mask(
     n = int(labels.max()) + 1
 
     if overlay_colors is None:
-        colors = _distinct_colors(n)
+        colors = distinct_colors(n)
     else:
         colors = overlay_colors.astype(np.uint8)
         if len(colors) < n:

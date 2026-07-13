@@ -13,7 +13,7 @@ Project-level skills for geophysics figure segmentation.
 | `visual-audit` | Agent-driven visual critic: reads overlay-with-legend, outputs structured RegionalAudit | After segmentation, before export |
 | `segment-export` | Export accepted segmentation to txt labels/palette + reconstructed + original-vs-reconstructed comparison | After visual-audit, before archiving |
 | `preprocess-artifact` | Absorb red fault lines / black crosses before segmentation | Single figure, parameter-driven |
-| `module-demo` | Run a module's demo.py to verify it works | Module testing |
+| `module-demo` | Run an example under `examples/geoseg/` to verify a module workflow | Example testing |
 | `schema-bump` | Schema change protocol with consumer sync | Schema updates |
 
 ## Usage
@@ -43,11 +43,12 @@ geo-segment (end-to-end orchestrator)
 batch-segment (coordinator)
     ├── spawn multiple sandbox-segment agents (≤5 concurrent)
     ├── collect results
-    └── meta-learning: analyze batch → update strategy_templates
+    └── summarize batch behavior; strategy template changes require explicit review
 ```
 
 ## Rules
 
 - **All VLM/semantic reasoning happens inside Claude Code agent sessions.** Agent directly reads images with the Read tool; no Python subprocess calls to `claude -p`.
 - **`vlm_client/` is schema-only.** `client.py` functions (`_call_claude_cli`, `classify_figure`, etc.) are DEPRECATED. New code uses skill + agent-native reasoning.
-- Agent communicates with Python tools via inline Bash scripts (`uv run python -c "..."`) and file system (约定路径 in `runs/sandbox/`).
+- Agent communicates with Python tools via packaged CLI entry points, `uv run python -m ...`, or short inline Bash scripts, plus file-system artifacts under agreed `runs/` paths.
+- Product code must not depend on private engine helpers such as `_run_engine` or `_shared`; experiments may do so temporarily but must graduate through the project promotion rules in `CLAUDE.md`.

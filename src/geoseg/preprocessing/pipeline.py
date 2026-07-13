@@ -15,7 +15,7 @@ from geoseg.modules.segment_engines.v4_kmeans import (
     segment as v4_segment,
 )
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
-from geoseg.modules.segment_engines._shared import _create_overlay
+from geoseg.core.image_ops import create_overlay
 from geoseg.preprocessing.absorption import absorb_artifacts, visualize_mask_on_image
 from geoseg.preprocessing.detectors import (
     detect_black_crosses,
@@ -190,7 +190,7 @@ def _run_segmentation(
 
         # Rebuild overlay with merged labels.
         palette = np.array(cb_clean_seg["seeds"], dtype=np.uint8)
-        merged_overlay = _create_overlay(
+        merged_overlay = create_overlay(
             cleaned, merged_labels, palette, skip_background=False
         )
 
@@ -267,7 +267,7 @@ def _run_per_panel_segmentation(
 
         audit_overlay = generate_overlay_with_legend(panel_clean, labels)
         palette = np.array(seg["seeds"], dtype=np.uint8)
-        panel_overlay = _create_overlay(
+        panel_overlay = create_overlay(
             panel_clean, labels, palette, skip_background=True, overlay_colors=palette
         )
         full_overlay[y : y + ph, x : x + pw] = panel_overlay

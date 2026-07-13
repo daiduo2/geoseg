@@ -27,7 +27,7 @@ def test_refine_by_residual_mask_preserves_frozen_pixels():
     refine_mask = np.zeros((h, w), dtype=bool)
     refine_mask[5:15, 5:15] = True
 
-    # _run_engine is called on the cropped region, so mock labels must match
+    # run_engine is called on the cropped region, so mock labels must match
     # the crop shape (refine_mask bbox + margin).
     crop_h, crop_w = 25, 25
     patch_labels = np.full((crop_h, crop_w), 3, dtype=np.int32)
@@ -35,7 +35,7 @@ def test_refine_by_residual_mask_preserves_frozen_pixels():
     patch_labels[:, crop_w // 2 :] = 5
 
     with patch(
-        "geoseg.modules.segment_engines.regional_refinement._run_engine",
+        "geoseg.modules.segment_engines.regional_refinement.run_engine",
         return_value={"labels": patch_labels},
     ):
         result = refine_by_residual_mask(
@@ -88,7 +88,7 @@ def test_refine_by_residual_mask_full_mask_uses_secondary_result():
     patch_labels[h // 2 :] = 2
 
     with patch(
-        "geoseg.modules.segment_engines.regional_refinement._run_engine",
+        "geoseg.modules.segment_engines.regional_refinement.run_engine",
         return_value={"labels": patch_labels},
     ):
         result = refine_by_residual_mask(
@@ -137,7 +137,7 @@ def test_refine_by_candidate_regions_processes_each_bbox():
         return {"labels": patch}
 
     with patch(
-        "geoseg.modules.segment_engines.regional_refinement._run_engine",
+        "geoseg.modules.segment_engines.regional_refinement.run_engine",
         side_effect=mock_run_engine,
     ):
         result = refine_by_candidate_regions(
