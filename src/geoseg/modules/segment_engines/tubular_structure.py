@@ -15,7 +15,7 @@ from skimage.color import rgb2lab, rgb2gray
 from skimage.filters import frangi, threshold_otsu, threshold_yen
 from skimage.morphology import remove_small_objects, remove_small_holes
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     _estimate_background_color,
 )

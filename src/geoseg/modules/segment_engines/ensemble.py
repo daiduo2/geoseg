@@ -15,7 +15,7 @@ from scipy import ndimage
 from skimage.color import rgb2lab
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     _estimate_background_color,
     saturation_ratio,

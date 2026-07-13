@@ -7,11 +7,12 @@
 - 提供多算法分割引擎族，供 agent / controller 按需调用
 - 支持 `n_layers`、`reps`（种子点）、`colorbar_rgb` 等参数
 - 返回标准 `SegmentationResult`（`labels` + `overlay` + `meta`）
-- `metrics.py`：多引擎评估与对比
+- `registry.py` / `policy.py` / `runner.py` / `retry.py`：稳定调度边界
+- `diagnostics/metrics.py`：多引擎评估与对比
 - `strategy_memory.py`：agent 策略学习（引擎选择历史与效果追踪）
-- `_shared.py`：引擎间共享工具函数
-- `batch_test.py`：批量测试 runner
-- `compare_results.py`：多结果对比可视化
+- `internal/shared.py`：引擎间内部共享工具函数
+- `diagnostics/batch_test.py`：批量测试 runner
+- `diagnostics/compare_results.py`：多结果对比可视化
 
 ## 实现 Protocol
 
@@ -31,8 +32,14 @@
 | `kmeans_full.py` | K-Means 全图版 |
 | `grayscale.py` | 灰度 agglomerative |
 | `ensemble.py` | 多引擎融合 |
+| `registry.py` | 引擎注册表 |
+| `policy.py` | 路由策略 |
+| `runner.py` | 按名称执行引擎 |
+| `retry.py` | retry 策略 |
 | `full_pipeline.py` | 完整流水线组合 |
 | `vlm_reps.py` | VLM 种子点辅助 |
+| `internal/shared.py` | engine family 内部工具 |
+| `diagnostics/` | metrics、batch、comparison 诊断工具 |
 
 ## 预处理策略（2026-06-01 更新）
 
@@ -54,7 +61,7 @@
 
 ### 集成决策
 
-1. **`_shared.py` 预处理**：`adaptive_blur` → `row_median_filter(size=5)`
+1. **`internal/shared.py` 预处理**：`adaptive_blur` → `row_median_filter(size=5)`
    - 利用地球物理图像**水平分层**先验：行内中值滤波去除水平文字脉冲，保留垂直层边界
    - 对垂直文字（y 轴标签）效果弱，但不破坏其周围地层
 
@@ -81,16 +88,16 @@
 ## 测试
 
 ```bash
-# 模块 demo
-python -m geoseg.modules.segment_engines.demo
+# 示例
+python examples/geoseg/modules/segment_engines/demo.py
 
 # 视觉对比（baseline vs improved）
-python test_visual_comparison.py
+python experiments/test_visual_comparison.py
 ```
 
 ## 实验目录
 
-- `experiments/fh_slic_experiment.py` — e028：FH + SLIC 分割实验
-- `experiments/spatial_regularized_experiment.py` — e029：空间正则化聚类实验
-- `experiments/anisotropic_preprocessing_experiment.py` — e030：各向异性预处理实验
+- `experiments/segment_engines/fh_slic_experiment.py` — e028：FH + SLIC 分割实验
+- `experiments/segment_engines/spatial_regularized_experiment.py` — e029：空间正则化聚类实验
+- `experiments/segment_engines/anisotropic_preprocessing_experiment.py` — e030：各向异性预处理实验
 - `runs/visual_comparison/` — 视觉对比 overlay 输出

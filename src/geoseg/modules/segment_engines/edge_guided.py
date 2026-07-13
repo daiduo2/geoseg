@@ -15,7 +15,7 @@ from skimage.feature import canny
 from skimage.morphology import closing, disk
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     _shape_filter,
     _merge_small_regions,

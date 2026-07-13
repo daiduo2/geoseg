@@ -23,7 +23,7 @@ from geoseg.modules.cv_detect.figure_classifier import classify
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar, extract_colorbar_bbox
 from geoseg.modules.segment_engines.router import route_and_segment
-from geoseg.modules.segment_engines._shared import saturation_ratio
+from geoseg.modules.segment_engines.internal.shared import saturation_ratio
 from geoseg.modules.segment_engines.vlm_reps import color_zones_to_reps
 
 
@@ -57,7 +57,7 @@ def _panel_complexity_score(panel_rgb: np.ndarray) -> float:
         grad_uniformity = float(np.clip(mag.std() / mean_mag / 3.0, 0.0, 1.0))
 
     # Color saturation: velocity models usually have vivid colors
-    from geoseg.modules.segment_engines._shared import saturation_ratio
+    from geoseg.modules.segment_engines.internal.shared import saturation_ratio
     sat = saturation_ratio(panel_rgb)
 
     # Score: reward edges and saturation, penalize uniform gradients

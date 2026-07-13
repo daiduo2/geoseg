@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay as _engine_create_overlay,
     _distinct_colors as _engine_distinct_colors,
     saturation_ratio as _engine_saturation_ratio,

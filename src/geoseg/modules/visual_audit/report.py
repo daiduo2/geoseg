@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from geoseg.modules.segment_engines.metrics import compute_all
+from geoseg.modules.segment_engines.diagnostics.metrics import compute_all
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
 from geoseg.modules.visual_audit.crops import create_audit_crops, save_crops
 from geoseg.modules.visual_audit.semantic import (

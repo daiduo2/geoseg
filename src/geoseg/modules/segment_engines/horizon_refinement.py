@@ -22,7 +22,7 @@ from scipy.interpolate import UnivariateSpline
 from scipy.signal import savgol_filter
 from skimage.transform import resize
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     row_median_filter,
 )

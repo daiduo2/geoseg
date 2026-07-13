@@ -26,7 +26,7 @@ def _ensure_dir(path: Path) -> None:
 
 def _extract_features(panel_rgb: np.ndarray) -> dict:
     """Extract lightweight image features for similarity matching."""
-    from geoseg.modules.segment_engines._shared import saturation_ratio
+    from geoseg.modules.segment_engines.internal.shared import saturation_ratio
     from skimage.filters import sobel
 
     h, w = panel_rgb.shape[:2]

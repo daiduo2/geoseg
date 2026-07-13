@@ -20,7 +20,7 @@ from geoseg.modules.segment_engines.regional_fusion import (
     generate_overlay_with_legend,
     regional_segment,
 )
-from geoseg.modules.segment_engines.metrics import per_label_metrics
+from geoseg.modules.segment_engines.diagnostics.metrics import per_label_metrics
 
 
 # ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from geoseg.modules.segment_engines._shared import saturation_ratio
+from geoseg.modules.segment_engines.internal.shared import saturation_ratio
 
 
 def _is_grayscale(panel_rgb: np.ndarray, threshold: float = 15.0) -> bool:

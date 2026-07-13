@@ -9,7 +9,7 @@
 | 路径 | 职责 | 备注 |
 |------|------|------|
 | `core/models.py` | 稳定数据契约：`PanelInput`、`SegmentationResult`、`FigureClassification` 等 | 新代码优先从这里导入 |
-| `core/image_ops.py` | 跨模块图像工具 facade：overlay、distinct colors、saturation ratio | 产品代码不要直接依赖 `segment_engines/_shared.py` |
+| `core/image_ops.py` | 跨模块图像工具 facade：overlay、distinct colors、saturation ratio | 产品代码不要直接依赖 `segment_engines/internal/shared.py` 或旧 `_shared.py` |
 | `pipeline/segment.py` | segmentation stage wrapper | 调用 engine family，不内嵌算法细节 |
 | `pipeline/export.py` | post-process + SPECFEM export stage | `controller.py` 通过它导出 panel |
 | `controller.py` | 兼容入口：`run_pipeline`、`run_post_process_and_export` | 新 stage 编排优先放 `pipeline/` |
@@ -23,7 +23,9 @@
 | `pdf_extractor/` | **M0.5-Fallback**：PyMuPDF 提取 `{XObject(Image) + 页面文字块}`；`rasterize_page()` 整页/区域 rasterize。MinerU 拆分 figure 或提取尺寸过小时 fallback | `extract.py`, `vector_extract.py` | [pdf_extractor/CLAUDE.md](../src/geoseg/modules/pdf_extractor/CLAUDE.md) |
 | `cv_detect/` | **M1b**：CV 检测 panel 候选 bbox。子模块：figure 分类器、panel 检测器（含 e026 版）、colorbar 提取器、质量过滤器 | `detect.py`, `figure_classifier.py`, `panel_detector.py`, `panel_detector_e026.py`, `colorbar_extractor.py`, `quality_filter.py` | [cv_detect/CLAUDE.md](../src/geoseg/modules/cv_detect/CLAUDE.md) |
 | `vlm_client/` | **Schema + Prompt 定义库**。VLM 调用已全面迁移至 agent skill（`figure-classify` / `sandbox-segment`），本模块不再作为 LLM 调用出口。保留 schema（pydantic）和 prompt 模板供 skill 与 legacy code 引用 | `client.py`（`_call_claude_cli` 已 DEPRECATED）, `prompts.py` | [vlm_client/CLAUDE.md](../src/geoseg/modules/vlm_client/CLAUDE.md) |
-| `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。含 registry / policy / runner / retry 边界、metrics 评估和 strategy_memory | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `ensemble.py`, `v4_kmeans.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `full_pipeline.py`, `vlm_reps.py`, `metrics.py`, `strategy_memory.py`, `_shared.py` | — |
+| `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。核心引擎 + registry / policy / runner / retry 边界 | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `ensemble.py`, `v4_kmeans.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `full_pipeline.py`, `vlm_reps.py`, `strategy_memory.py` | [segment_engines/CLAUDE.md](../src/geoseg/modules/segment_engines/CLAUDE.md) |
+| `segment_engines/internal/` | engine family 内部工具 | `shared.py`；旧 `_shared.py` 仅兼容 re-export | — |
+| `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py`；旧同名文件仅兼容 re-export/entrypoint | — |
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
 | `exporter/` | **M4**：SPECFEM2D/3D 模型导出。`tomography_file.xyz` + `Par_file` snippet | `specfem.py` | [exporter/CLAUDE.md](../src/geoseg/modules/exporter/CLAUDE.md) |
 | `e026_algo/` | ~~已弃用。`segment_engines/` 已完全替代~~ | ~~`core.py`, `components.py`~~ | [e026_algo/CLAUDE.md](../src/geoseg/modules/e026_algo/CLAUDE.md) |
@@ -32,10 +34,10 @@
 
 ## 私有依赖边界
 
-- 产品代码不得直接导入 `geoseg.modules.segment_engines._shared` 或 `router._run_engine`。
+- 产品代码不得直接导入 `geoseg.modules.segment_engines._shared`、`segment_engines.internal` 或 `router._run_engine`。
 - 需要 overlay/colors/saturation 等跨模块能力时，从 `geoseg.core.image_ops` 导入。
 - 需要按名称运行分割引擎时，从 `geoseg.modules.segment_engines.runner import run_engine` 导入。
-- `segment_engines/` 内部可以继续使用 `_shared.py`，因为它是 engine family 的内部工具。
+- `segment_engines/` 内部可以使用 `internal/shared.py`，旧 `_shared.py` 只保留给历史代码兼容。
 - `experiments/`、`scripts/`、`examples/` 中仍有历史私有依赖，允许暂留；若要晋升进 `src/geoseg/`，必须先改为稳定 API。
 
 ## 组装层（`src/geoseg/` 根级）

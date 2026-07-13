@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _estimate_background_color,
     _find_pixel_for_color,
 )

@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage
 
 from geoseg.modules.post_process.split import split_label_by_color_components
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     _distinct_colors,
 )

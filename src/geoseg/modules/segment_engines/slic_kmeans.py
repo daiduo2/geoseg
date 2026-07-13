@@ -18,7 +18,7 @@ from scipy.cluster.vq import kmeans2
 from skimage.color import rgb2lab
 from skimage.segmentation import slic
 
-from geoseg.modules.segment_engines._shared import (
+from geoseg.modules.segment_engines.internal.shared import (
     _create_overlay,
     _distinct_colors,
 )
