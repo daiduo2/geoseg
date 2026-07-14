@@ -25,7 +25,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.vlm_client.client import classify_figure
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.pipeline.segment import run_segmentation_stage
 
 VLM_RESULTS_FILE = Path("runs/new_papers_vlm/vlm_selective_results.json")
 PIPELINE_RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
@@ -92,7 +92,7 @@ def run_pipeline_optimized(
     img_rgb = np.array(Image.open(img_path).convert("RGB"))
 
     # Run with custom parameters
-    result = process_figure(
+    result = run_segmentation_stage(
         img_rgb,
         caption="",
         n_layers=n_layers,

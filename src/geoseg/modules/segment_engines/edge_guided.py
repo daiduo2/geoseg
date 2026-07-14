@@ -15,15 +15,19 @@ from skimage.feature import canny
 from skimage.morphology import closing, disk
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
-    _shape_filter,
-    _merge_small_regions,
+from geoseg.modules.segment_engines.internal.color import (
     _estimate_background_color,
+    saturation_ratio,
+)
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
+from geoseg.modules.segment_engines.internal.regions import (
+    _merge_small_regions,
+    _shape_filter,
+)
+from geoseg.modules.segment_engines.internal.seeds import (
+    _auto_k,
     _cv_seeds,
     _refine_vlm_seeds,
-    _auto_k,
-    saturation_ratio,
 )
 
 

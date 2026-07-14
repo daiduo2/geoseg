@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Protocol, TypedDict, runtime_checkable
+from collections.abc import Sequence
+from typing import NotRequired, Protocol, TypedDict, runtime_checkable
 
 import numpy as np
 
 
-class PanelInput(TypedDict, total=False):
+BBoxXYWH = tuple[int, int, int, int]
+RGBColor = tuple[int, int, int]
+
+
+class PanelInput(TypedDict):
     """A detected or manually-drawn panel bounding box."""
 
     id: int
-    bbox: tuple[int, int, int, int]
-    source: str
-    confidence: float | None
+    bbox: BBoxXYWH
+    source: NotRequired[str]
+    confidence: NotRequired[float | None]
 
 
 class RegionalAudit(TypedDict, total=False):
@@ -25,31 +30,32 @@ class RegionalAudit(TypedDict, total=False):
     iteration: int
 
 
-class SegmentationMeta(TypedDict, total=False):
+class SegmentationMeta(TypedDict):
     """Metadata describing how a segmentation was produced."""
 
     engine: str
-    color_names: list[str]
-    n_layers: int
-    quality_score: float | None
-    edited: bool
-    editor_version: str | None
-    parent_engine: str | None
-    fusion_applied: bool
-    primary_engine: str | None
-    secondary_engine: str | None
-    frozen_labels: list[int]
-    retry_labels: list[int]
-    fusion_notes: str
-    iteration: int
+    color_names: NotRequired[list[str]]
+    n_layers: NotRequired[int]
+    quality_score: NotRequired[float | None]
+    edited: NotRequired[bool]
+    editor_version: NotRequired[str | None]
+    parent_engine: NotRequired[str | None]
+    fusion_applied: NotRequired[bool]
+    primary_engine: NotRequired[str | None]
+    secondary_engine: NotRequired[str | None]
+    frozen_labels: NotRequired[list[int]]
+    retry_labels: NotRequired[list[int]]
+    fusion_notes: NotRequired[str]
+    iteration: NotRequired[int]
 
 
-class SegmentationResult(TypedDict, total=False):
+class SegmentationResult(TypedDict):
     """Universal output of any segmentation step."""
 
     labels: np.ndarray
-    overlay: np.ndarray | None
     meta: SegmentationMeta
+    overlay: NotRequired[np.ndarray | None]
+    seeds: NotRequired[list | np.ndarray]
 
 
 class QualityReview(TypedDict, total=False):
@@ -61,12 +67,12 @@ class QualityReview(TypedDict, total=False):
     suggested_action: str
 
 
-class FigureClassification(TypedDict, total=False):
+class FigureClassification(TypedDict):
     """Figure classification output."""
 
     figure_type: str
-    confidence: float
-    reason: str
+    confidence: NotRequired[float]
+    reason: NotRequired[str]
 
 
 class PageOverview(TypedDict, total=False):
@@ -99,7 +105,7 @@ class Segmenter(Protocol):
         img_rgb: np.ndarray,
         *,
         n_layers: int = 5,
-        reps: list[tuple[int, int, int]] | None = None,
+        reps: list[RGBColor] | None = None,
         colorbar_rgb: np.ndarray | None = None,
         **kwargs: object,
     ) -> SegmentationResult:
@@ -122,15 +128,42 @@ class PipelineStep(Protocol):
         """Execute the step and return standardized output."""
 
 
+def coerce_bbox_xywh(bbox: Sequence[int]) -> BBoxXYWH:
+    """Validate and normalize an ``x, y, width, height`` bbox."""
+    if len(bbox) != 4:
+        raise ValueError(f"bbox must contain 4 values, got {len(bbox)}")
+
+    x, y, w, h = (int(v) for v in bbox)
+    if x < 0 or y < 0:
+        raise ValueError(f"bbox origin must be non-negative, got {(x, y)}")
+    if w <= 0 or h <= 0:
+        raise ValueError(f"bbox width and height must be positive, got {(w, h)}")
+    return x, y, w, h
+
+
+def make_panel_input(
+    panel_id: int,
+    bbox: Sequence[int],
+    *,
+    source: str | None = None,
+    confidence: float | None = None,
+) -> PanelInput:
+    """Create a validated PanelInput."""
+    panel: PanelInput = {
+        "id": int(panel_id),
+        "bbox": coerce_bbox_xywh(bbox),
+    }
+    if source is not None:
+        panel["source"] = source
+    if confidence is not None:
+        panel["confidence"] = float(confidence)
+    return panel
+
+
 def make_whole_image_panel(img_rgb: np.ndarray) -> PanelInput:
     """Create a fallback PanelInput covering the entire image."""
     h, w = img_rgb.shape[:2]
-    return {
-        "id": 0,
-        "bbox": (0, 0, w, h),
-        "source": "fallback_whole",
-        "confidence": 1.0,
-    }
+    return make_panel_input(0, (0, 0, w, h), source="fallback_whole", confidence=1.0)
 
 
 def empty_segmentation_result(img_shape: tuple[int, ...]) -> SegmentationResult:
@@ -147,7 +180,43 @@ def empty_segmentation_result(img_shape: tuple[int, ...]) -> SegmentationResult:
     }
 
 
+def validate_segmentation_result(
+    result: dict,
+    *,
+    image_shape: tuple[int, ...] | None = None,
+) -> SegmentationResult:
+    """Validate the minimum runtime contract for a segmentation result."""
+    labels = result.get("labels")
+    if not isinstance(labels, np.ndarray):
+        raise TypeError("segmentation labels must be a numpy.ndarray")
+    if labels.ndim != 2:
+        raise ValueError(f"segmentation labels must be 2D, got shape {labels.shape}")
+    if image_shape is not None and labels.shape != tuple(image_shape[:2]):
+        raise ValueError(
+            f"segmentation labels shape {labels.shape} "
+            f"does not match image shape {image_shape[:2]}"
+        )
+
+    meta = result.get("meta")
+    if not isinstance(meta, dict):
+        raise TypeError("segmentation meta must be a dict")
+    if not isinstance(meta.get("engine"), str) or not meta["engine"]:
+        raise ValueError("segmentation meta.engine must be a non-empty string")
+
+    overlay = result.get("overlay")
+    if overlay is not None:
+        if not isinstance(overlay, np.ndarray):
+            raise TypeError("segmentation overlay must be a numpy.ndarray or None")
+        if overlay.shape[:2] != labels.shape:
+            raise ValueError(
+                f"segmentation overlay shape {overlay.shape[:2]} does not match labels {labels.shape}"
+            )
+
+    return result  # type: ignore[return-value]
+
+
 __all__ = [
+    "BBoxXYWH",
     "FigureClassification",
     "PageOverview",
     "PanelDetector",
@@ -156,9 +225,13 @@ __all__ = [
     "QualityReview",
     "QualityReviewer",
     "RegionalAudit",
+    "RGBColor",
     "Segmenter",
     "SegmentationMeta",
     "SegmentationResult",
+    "coerce_bbox_xywh",
     "empty_segmentation_result",
+    "make_panel_input",
     "make_whole_image_panel",
+    "validate_segmentation_result",
 ]

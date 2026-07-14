@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines.router import route_and_segment, _run_engine
+from geoseg.modules.segment_engines import route_and_segment, run_engine
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 
@@ -110,7 +110,7 @@ def process(img_path: Path, desc: str, n_hint: int, engine: str | None = None, p
 
     n_layers = len(reps)
     if engine:
-        seg = _run_engine(engine, panel_img, reps, None, n_layers)
+        seg = run_engine(engine, panel_img, reps, None, n_layers)
     else:
         seg = route_and_segment(
             panel_img, reps=reps, n_layers=n_layers,

@@ -20,7 +20,7 @@ from geoseg.modules.segment_engines.retry import RETRY_CHAIN as _RETRY_CHAIN
 from geoseg.modules.segment_engines.retry import retry_undersegmentation
 from geoseg.modules.segment_engines.runner import _normalize_result
 from geoseg.modules.segment_engines.runner import run_engine as _run_engine
-from geoseg.pipeline_interfaces import SegmentationResult
+from geoseg.core.models import SegmentationResult
 
 
 def route_and_segment(

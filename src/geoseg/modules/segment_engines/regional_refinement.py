@@ -17,7 +17,7 @@ from geoseg.modules.segment_engines.regional_fusion import (
     generate_overlay_with_legend,
 )
 from geoseg.modules.segment_engines.runner import run_engine
-from geoseg.modules.segment_engines.v4_kmeans import _reorder_labels_by_median_y
+from geoseg.modules.segment_engines.internal.regions import _reorder_labels_by_median_y
 
 
 @dataclass

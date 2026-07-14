@@ -24,7 +24,7 @@ from geoseg.modules.segment_engines.horizon_refinement import (
     _repartition_columns,
     _compute_fragmentation_score,
 )
-from geoseg.modules.segment_engines._shared import _create_overlay
+from geoseg.core.image_ops import create_overlay
 
 
 def kmeans_segment(img: np.ndarray, n_layers: int) -> np.ndarray:
@@ -136,7 +136,7 @@ def run_experiment():
     print(f"Baseline (no closing) fragmentation: {baseline_frag:.4f}")
 
     # Save baseline overlay
-    baseline_overlay = _create_overlay(panel_rgb, coarse, np.empty((0, 3), dtype=np.uint8))
+    baseline_overlay = create_overlay(panel_rgb, coarse, np.empty((0, 3), dtype=np.uint8))
     from imageio.v3 import imwrite
     imwrite(out_dir / "r_0.png", baseline_overlay)
 
@@ -175,9 +175,9 @@ def run_experiment():
         repartitioned_frag = _compute_fragmentation_score(repartitioned)
 
         # Save both closed-only and repartitioned overlays
-        closed_overlay = _create_overlay(panel_rgb, closed, np.empty((0, 3), dtype=np.uint8))
+        closed_overlay = create_overlay(panel_rgb, closed, np.empty((0, 3), dtype=np.uint8))
         imwrite(out_dir / f"r_{r}_closed.png", closed_overlay)
-        overlay = _create_overlay(panel_rgb, repartitioned, np.empty((0, 3), dtype=np.uint8))
+        overlay = create_overlay(panel_rgb, repartitioned, np.empty((0, 3), dtype=np.uint8))
         imwrite(out_dir / f"r_{r}.png", overlay)
 
         change_ratio = float(np.sum(repartitioned != closed) / closed.size)

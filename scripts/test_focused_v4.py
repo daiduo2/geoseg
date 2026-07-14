@@ -12,7 +12,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.router import _run_engine
+from geoseg.modules.segment_engines import run_engine
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 
@@ -106,7 +106,7 @@ def process_v4(img_path: Path, desc: str, n_layers: int) -> dict | None:
     print(f"  [Panel {pb['id']}] shape={panel_img.shape}")
 
     # Use v4_kmeans without reps (falls through to pastel_faded or colorbar_guided)
-    seg = _run_engine("v4_kmeans", panel_img, reps=None, colorbar_rgb=None, n_layers=n_layers)
+    seg = run_engine("v4_kmeans", panel_img, reps=None, colorbar_rgb=None, n_layers=n_layers)
     labels = seg["labels"]
     n_found = len(set(labels.flatten()) - {0})
     print(f"  Segmented: {n_found} layers, engine={seg['meta']['engine']} path={seg['meta'].get('path', 'unknown')}")

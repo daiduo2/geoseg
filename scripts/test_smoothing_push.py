@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines.router import _run_engine
+from geoseg.modules.segment_engines import run_engine
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 
@@ -141,7 +141,7 @@ def test_candidate(img_path: Path, desc: str, n_hint: int, engine: str, smooth_s
         return None
 
     n_layers = len(reps)
-    seg = _run_engine(engine, panel_img, reps, None, n_layers)
+    seg = run_engine(engine, panel_img, reps, None, n_layers)
     labels = seg["labels"]
 
     if merge_min:

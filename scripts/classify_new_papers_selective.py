@@ -21,7 +21,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.vlm_client.client import classify_figure
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.pipeline.segment import run_segmentation_stage
 
 PAPERS_DIR = Path("papers_new/to_process")
 OUTPUT_ROOT = Path("runs/new_papers_vlm")
@@ -78,7 +78,7 @@ def run_vlm_classification(img_path: Path, paper: str) -> dict:
 def run_pipeline(img_path: Path, paper: str, fig_name: str) -> dict:
     """Run full segmentation pipeline on an image."""
     img_rgb = np.array(Image.open(img_path).convert("RGB"))
-    result = process_figure(
+    result = run_segmentation_stage(
         img_rgb,
         caption="",
         n_layers=5,

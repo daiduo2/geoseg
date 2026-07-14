@@ -15,11 +15,9 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage
 
 from geoseg.modules.post_process.split import split_label_by_color_components
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
-    _distinct_colors,
-)
-from geoseg.modules.segment_engines.v4_kmeans import _reorder_labels_by_median_y
+from geoseg.modules.segment_engines.internal.color import _distinct_colors
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
+from geoseg.modules.segment_engines.regions import reorder_labels_top_to_bottom
 
 
 @dataclass
@@ -173,6 +171,23 @@ def _draw_legend(
     return np.array(img.convert("RGB"))
 
 
+def draw_legend(
+    overlay_rgb: np.ndarray,
+    labels: np.ndarray,
+    label_colors: dict[int, np.ndarray] | None = None,
+    box_size: int = 12,
+    font_size: int = 10,
+) -> np.ndarray:
+    """Draw label legend on overlay bottom-right corner."""
+    return _draw_legend(
+        overlay_rgb,
+        labels,
+        label_colors=label_colors,
+        box_size=box_size,
+        font_size=font_size,
+    )
+
+
 def generate_overlay_with_legend(
     panel_rgb: np.ndarray,
     labels: np.ndarray,
@@ -181,7 +196,7 @@ def generate_overlay_with_legend(
 ) -> np.ndarray:
     """Create overlay with bottom-right label legend for agent audit."""
     overlay = _create_overlay(panel_rgb, labels, seeds_rgb, alpha=alpha)
-    return _draw_legend(overlay, labels)
+    return draw_legend(overlay, labels)
 
 
 def _run_engine_by_name(
@@ -237,7 +252,7 @@ def regional_segment(
 
     labels_a = primary_result["labels"]
     # Align both engines to consistent top-to-bottom label ordering
-    labels_a = _reorder_labels_by_median_y(labels_a)
+    labels_a = reorder_labels_top_to_bottom(labels_a)
 
     # Apply local fixes (e.g. label merges / colour-component splits) before any regional fusion.
     if audit is not None and audit.local_fixes:
@@ -271,7 +286,7 @@ def regional_segment(
         else (config.secondary_engines[0] if config.secondary_engines else "v4_kmeans")
     )
     result_b = _run_engine_by_name(secondary, panel_rgb, n_layers, reps, colorbar_rgb)
-    labels_b = _reorder_labels_by_median_y(result_b["labels"])
+    labels_b = reorder_labels_top_to_bottom(result_b["labels"])
 
     fused = fuse_with_freeze(
         labels_a,

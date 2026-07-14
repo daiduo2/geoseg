@@ -6,14 +6,14 @@ from collections.abc import Callable
 
 import numpy as np
 
+from geoseg.core.models import SegmentationResult
 from geoseg.modules.segment_engines.registry import get_engine_spec
-from geoseg.pipeline_interfaces import SegmentationResult
 
 
 def _normalize_result(raw: dict, engine_name: str, n_layers: int) -> SegmentationResult:
     """Normalize engine output to SegmentationResult."""
     meta = raw.get("meta", {})
-    return {
+    result: SegmentationResult = {
         "labels": raw["labels"],
         "overlay": raw.get("overlay"),
         "meta": {
@@ -23,6 +23,9 @@ def _normalize_result(raw: dict, engine_name: str, n_layers: int) -> Segmentatio
             "quality_score": meta.get("quality_score"),
         },
     }
+    if "seeds" in raw:
+        result["seeds"] = raw["seeds"]
+    return result
 
 
 def _run_with_fallback(

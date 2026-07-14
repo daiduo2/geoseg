@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines.router import route_and_segment, _run_engine
+from geoseg.modules.segment_engines import route_and_segment, run_engine
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 

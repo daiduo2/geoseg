@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines.router import _run_engine
+from geoseg.modules.segment_engines import run_engine
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 from geoseg.modules.cv_detect.panel_detector import detect_panels
 
@@ -153,7 +153,7 @@ def main() -> None:
 
     reps = vertical_scan_reps(panel_img, n_layers_hint=6)
     n_layers = len(reps)
-    seg = _run_engine("kmeans_full", panel_img, reps, None, n_layers)
+    seg = run_engine("kmeans_full", panel_img, reps, None, n_layers)
     labels = seg["labels"]
     n_found = len(set(labels.flatten()) - {0})
     print(f"Original: {n_found} layers")

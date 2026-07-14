@@ -1,7 +1,7 @@
 """Batch test segmentation pipeline on literature figures.
 
-Uses full_pipeline (classify + panel_detect + colorbar_extract + segment)
-instead of calling individual engines directly.
+Uses the stable segmentation pipeline facade instead of calling individual
+engines directly.
 
 Usage:
     python -m geoseg.modules.segment_engines.diagnostics.batch_test \
@@ -21,8 +21,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
-from geoseg.modules.segment_engines.internal.shared import saturation_ratio
+from geoseg.core.image_ops import saturation_ratio
+from geoseg.pipeline.segment import run_segmentation_stage
 
 
 def main() -> int:
@@ -66,9 +66,9 @@ def main() -> int:
         sat = saturation_ratio(arr)
         print(f"  Size: {arr.shape[1]}x{arr.shape[0]}, Saturation: {sat:.3f}")
 
-        # Run full pipeline
+        # Run segmentation stage pipeline
         t0 = time.perf_counter()
-        result = process_figure(
+        result = run_segmentation_stage(
             arr,
             n_layers=args.n_layers,
             quality_preference=args.quality,

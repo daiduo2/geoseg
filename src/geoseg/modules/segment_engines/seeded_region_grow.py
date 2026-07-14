@@ -15,7 +15,7 @@ from skimage import filters
 from skimage.color import rgb2lab
 from skimage.segmentation import watershed
 
-from geoseg.modules.segment_engines.internal.shared import _create_overlay
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
 
 def _parse_seeds(

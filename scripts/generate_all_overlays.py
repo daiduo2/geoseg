@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate vivid overlays for target panels from velocity_model figures.
 
-Uses the full pipeline (process_figure) so that figure classification,
+Uses the segmentation stage so that figure classification,
 target-panel filtering, and colorbar cropping are all applied.
 Only the VLM-identified target panel (or the largest panel as fallback)
 is processed per figure, enforcing one figure = one model.
@@ -18,7 +18,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.pipeline.segment import run_segmentation_stage
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 OUT_DIR = Path("runs/new_papers_vlm/all_overlays")
@@ -112,7 +112,7 @@ def main() -> int:
         # skip_non_velocity_model=False because we already filtered by vlm_type.
         vlm_target_id = record.get("vlm_target_panel_id", -1)
         n_layers = max(2, record.get("total_layers", 5))
-        seg_result = process_figure(
+        seg_result = run_segmentation_stage(
             img_rgb,
             caption="",
             text_blocks=[],
@@ -143,7 +143,7 @@ def main() -> int:
         else:
             # target_panel_id mismatched: no panel was segmented.
             # Re-run without target filtering and pick the best panel.
-            seg_result = process_figure(
+            seg_result = run_segmentation_stage(
                 img_rgb,
                 caption="",
                 text_blocks=[],
@@ -175,7 +175,7 @@ def main() -> int:
             print(f"  panel {target_panel['panel_id']}: only {n_found} layers, skip")
             continue
 
-        # Use the cropped panel image from process_figure if available,
+        # Use the cropped panel image from the segmentation stage if available,
         # otherwise fall back to original bbox crop.
         x, y, pw, ph = target_panel["bbox"]
         panel_img = img_rgb[y:y+ph, x:x+pw]

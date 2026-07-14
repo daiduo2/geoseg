@@ -22,7 +22,8 @@ from skimage.feature import peak_local_max
 from skimage.measure import label, regionprops
 from skimage.segmentation import watershed as sk_watershed, find_boundaries
 
-from geoseg.modules.segment_engines.internal.shared import _create_overlay, saturation_ratio
+from geoseg.modules.segment_engines.internal.color import saturation_ratio
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
 
 def _gray_histogram_peaks(

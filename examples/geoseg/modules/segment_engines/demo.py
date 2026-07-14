@@ -23,8 +23,8 @@ from geoseg.modules.segment_engines import edge_guided
 from geoseg.modules.segment_engines import edge_grow
 from geoseg.modules.segment_engines import ensemble
 from geoseg.modules.segment_engines import grayscale
-from geoseg.modules.segment_engines.router import route_and_segment
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.modules.segment_engines import route_and_segment
+from geoseg.pipeline.segment import run_segmentation_stage
 
 
 def _synthetic_panel(h: int = 400, w: int = 600, n_layers: int = 5) -> np.ndarray:
@@ -147,9 +147,9 @@ def main() -> int:
     )
     _save_result(result, "router_balanced", output_dir)
 
-    # --- Full pipeline ---
-    print("\nRunning full pipeline (classify + detect panels + segment)...")
-    pipeline_result = process_figure(img, n_layers=n_layers, skip_non_velocity_model=False)
+    # --- Segmentation stage ---
+    print("\nRunning segmentation stage (classify + detect panels + segment)...")
+    pipeline_result = run_segmentation_stage(img, n_layers=n_layers, skip_non_velocity_model=False)
     print(f"  classification: {pipeline_result['classification']['figure_type']}")
     print(f"  panels: {pipeline_result['summary']['n_panels']}")
     for p in pipeline_result['panels']:
@@ -157,7 +157,7 @@ def main() -> int:
         if seg:
             print(f"    panel {p['panel_id']}: engine={seg['meta']['engine']}, "
                   f"layers={len(np.unique(seg['labels']))}")
-    pipeline_dir = output_dir / "full_pipeline"
+    pipeline_dir = output_dir / "segmentation_stage"
     pipeline_dir.mkdir(parents=True, exist_ok=True)
     for p in pipeline_result['panels']:
         seg = p['segmentation']

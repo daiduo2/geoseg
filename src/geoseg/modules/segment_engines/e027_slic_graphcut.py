@@ -11,7 +11,7 @@ from skimage import segmentation, morphology, color
 from scipy import ndimage
 from sklearn.cluster import KMeans
 
-from geoseg.modules.segment_engines.internal.shared import _distinct_colors
+from geoseg.modules.segment_engines.internal.color import _distinct_colors
 
 
 # Defaults tuned on ph01 conceptual model panels

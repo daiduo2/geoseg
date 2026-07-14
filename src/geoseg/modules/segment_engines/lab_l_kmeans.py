@@ -12,7 +12,7 @@ from PIL import Image
 from skimage.color import rgb2lab
 from sklearn.cluster import KMeans
 
-from geoseg.modules.segment_engines.internal.shared import _create_overlay
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
 
 def segment(

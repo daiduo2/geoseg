@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines.router import route_and_segment
+from geoseg.modules.segment_engines import route_and_segment
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 
 OUT_DIR = Path("runs/new_papers_vlm/vertical_scan_test")

@@ -2,8 +2,8 @@
 """Generate v6 hue-matched overlays, 3-up comparisons, and PM artifact fixes.
 
 Minimal standalone script. Uses existing library functions only:
-- _create_overlay for overlay/mask generation with custom colors.
-- _draw_legend for overlay legend.
+- create_overlay for overlay/mask generation with custom colors.
+- draw_overlay_legend for overlay legend.
 - merge_labels_by_ids is not needed here because we merge at the component level.
 """
 
@@ -18,8 +18,8 @@ from scipy import ndimage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from geoseg.modules.segment_engines._shared import _create_overlay
-from geoseg.modules.segment_engines.regional_fusion import _draw_legend
+from geoseg.core.image_ops import create_overlay
+from geoseg.modules.visual_audit.rendering import draw_overlay_legend
 
 
 PANELS = [f"fig6_profile_{i:02d}" for i in range(3, 8)]
@@ -113,7 +113,7 @@ def create_comparison_image(
     overlay_colors = colors_to_array(colors)
     seeds = np.empty((0, 3), dtype=np.uint8)
 
-    overlay = _create_overlay(
+    overlay = create_overlay(
         panel_rgb,
         labels,
         seeds,
@@ -122,7 +122,7 @@ def create_comparison_image(
         overlay_colors=overlay_colors,
         skip_background=False,
     )
-    mask = _create_overlay(
+    mask = create_overlay(
         panel_rgb,
         labels,
         seeds,
@@ -174,7 +174,7 @@ def main() -> None:
         overlay_colors = colors_to_array(colors)
         seeds = np.empty((0, 3), dtype=np.uint8)
 
-        overlay = _create_overlay(
+        overlay = create_overlay(
             panel,
             labels,
             seeds,
@@ -183,7 +183,7 @@ def main() -> None:
             overlay_colors=overlay_colors,
             skip_background=False,
         )
-        overlay_legend = _draw_legend(overlay, labels, label_colors=colors)
+        overlay_legend = draw_overlay_legend(overlay, labels, label_colors=colors)
         comparison = create_comparison_image(panel, labels, colors)
 
         panel_out = OUT_DIR / panel_id

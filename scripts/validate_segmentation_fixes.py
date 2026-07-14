@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate segmentation fixes on key panels.
 
-Re-runs process_figure with improved params for 3-4 representative panels,
+Re-runs the segmentation stage with improved params for 3-4 representative panels,
 generates vivid overlays, and runs VLM segmentation quality review.
 """
 
@@ -16,7 +16,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.pipeline.segment import run_segmentation_stage
 from geoseg.modules.vlm_client.client import review_segmentation_quality
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
@@ -115,7 +115,7 @@ def main() -> None:
         img_rgb = np.array(Image.open(img_path).convert("RGB"))
 
         # Re-run with improved pipeline
-        result = process_figure(
+        result = run_segmentation_stage(
             img_rgb,
             caption="",
             n_layers=target.get("total_layers", 5),

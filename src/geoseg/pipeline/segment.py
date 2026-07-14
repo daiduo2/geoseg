@@ -1,7 +1,7 @@
 """Segmentation stage orchestration.
 
 This module owns the controller-facing segmentation stage and composes the
-legacy pipeline from smaller helpers in ``modules.segment_engines``.
+pipeline from focused stage helpers.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from typing import Any
 
 import numpy as np
 
-from geoseg.modules.segment_engines.pipeline_stages import (
+from geoseg.pipeline.stages import (
     classify_figure_stage,
     detect_panels_stage,
     maybe_skip_tiny_image,
@@ -30,6 +30,7 @@ def run_segmentation_stage(
     quality_preference: str = "balanced",
     skip_non_velocity_model: bool = True,
     use_vlm: bool = True,
+    target_panel_id: int = -1,
 ) -> dict[str, Any]:
     """Run classification, panel detection, and segmentation for one figure."""
     review_warnings: list[str] = []
@@ -53,7 +54,7 @@ def run_segmentation_stage(
         caption=caption,
         text_blocks=text_blocks,
         panel_bboxes=panel_bboxes,
-        target_panel_id=-1,
+        target_panel_id=target_panel_id,
         use_vlm=use_vlm,
         review_warnings=review_warnings,
     )

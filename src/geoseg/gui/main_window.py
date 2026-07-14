@@ -40,8 +40,8 @@ from geoseg.modules.exporter.specfem import (
     write_tomography_file,
 )
 from geoseg.modules.post_process.properties import generate_properties_for_layers
-from geoseg.modules.segment_engines.full_pipeline import process_figure
-from geoseg.modules.segment_engines.router import route_and_segment
+from geoseg.modules.segment_engines import route_and_segment
+from geoseg.pipeline.segment import run_segmentation_stage
 
 
 class MainWindow(QMainWindow):
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
             if page_idx is not None:
                 text_blocks = self._current_text_blocks_map.get(page_idx, [])
 
-        result = process_figure(
+        result = run_segmentation_stage(
             img,
             caption=caption,
             text_blocks=text_blocks,

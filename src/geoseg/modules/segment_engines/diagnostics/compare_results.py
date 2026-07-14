@@ -1,6 +1,6 @@
 """Generate visual comparison grids for segmentation pipeline results.
 
-Uses full_pipeline (classify + panel_detect + segment) instead of individual engines.
+Uses the stable segmentation pipeline facade instead of individual engines.
 
 Usage:
     python -m geoseg.modules.segment_engines.diagnostics.compare_results \
@@ -20,8 +20,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
-from geoseg.modules.segment_engines.internal.shared import saturation_ratio
+from geoseg.core.image_ops import saturation_ratio
+from geoseg.pipeline.segment import run_segmentation_stage
 
 
 def _make_grid(original: np.ndarray, pipeline_result: dict, title: str) -> Image.Image:
@@ -129,8 +129,8 @@ def main() -> int:
             img = img.resize((int(img.width * ratio), int(img.height * ratio)), Image.LANCZOS)
         arr = np.array(img)
 
-        # Run full pipeline
-        result = process_figure(
+        # Run segmentation stage pipeline
+        result = run_segmentation_stage(
             arr,
             n_layers=args.n_layers,
             skip_non_velocity_model=False,

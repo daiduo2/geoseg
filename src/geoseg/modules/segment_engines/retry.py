@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from geoseg.modules.segment_engines.runner import run_engine
-from geoseg.pipeline_interfaces import SegmentationResult
+from geoseg.core.models import SegmentationResult
 
 
 RETRY_CHAIN: dict[str, str] = {

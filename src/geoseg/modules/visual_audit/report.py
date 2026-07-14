@@ -18,9 +18,9 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from geoseg.modules.segment_engines.diagnostics.metrics import compute_all
-from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
+from geoseg.modules.segment_engines.metrics import compute_all
 from geoseg.modules.visual_audit.crops import create_audit_crops, save_crops
+from geoseg.modules.visual_audit.rendering import create_overlay_with_legend
 from geoseg.modules.visual_audit.semantic import (
     _find_manual_gt_mask,
     compute_semantic_fidelity,
@@ -168,7 +168,7 @@ def create_audit_report(
     metrics = compute_all(labels, panel_rgb)
     semantic = compute_semantic_fidelity(labels, panel_rgb, gt_mask)
 
-    overlay_legend = generate_overlay_with_legend(panel_rgb, labels)
+    overlay_legend = create_overlay_with_legend(panel_rgb, labels)
     label_color_map = {}
     for lbl in sorted(set(labels.flatten()) - {0}):
         mask = labels == lbl

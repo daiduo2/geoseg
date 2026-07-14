@@ -18,15 +18,13 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.modules.segment_engines.metrics import compute_all
+from geoseg.modules.segment_engines.runner import run_engine
 from geoseg.modules.segment_engines.strategy_memory import record_attempt
-from geoseg.modules.segment_engines.v4_kmeans import segment as v4_segment
-from geoseg.modules.segment_engines.ensemble import segment as ensemble_segment
-from geoseg.modules.segment_engines.grayscale import segment as gray_segment
-from geoseg.modules.segment_engines._shared import (
+from geoseg.core.image_ops import (
     saturation_ratio,
     adaptive_blur,
     estimate_noise_level,
-    _create_overlay,
+    create_overlay,
 )
 from geoseg.modules.segment_engines.vlm_reps import color_zones_to_reps
 from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar
@@ -46,14 +44,9 @@ def _run_engine(
     img: np.ndarray,
     reps: list,
 ) -> dict | None:
-    """Run a single engine and return raw result dict."""
+    """Run a single registered engine."""
     try:
-        if eng_name == "v4_kmeans":
-            return v4_segment(img, n_layers=5)
-        elif eng_name == "ensemble":
-            return ensemble_segment(img, reps=reps, n_layers=5)
-        elif eng_name == "grayscale":
-            return gray_segment(img, n_layers=5)
+        return run_engine(eng_name, img, reps or None, None, 5)
     except Exception as exc:
         print(f"  [{eng_name}] FAILED: {exc}")
     return None
@@ -75,7 +68,7 @@ def process_panel(image_path: str, panel_id: str) -> dict:
     if sat >= 0.5:
         engines_to_try = ["v4_kmeans", "ensemble"]
     elif sat < 0.1:
-        engines_to_try = ["grayscale", "v4_kmeans"]
+        engines_to_try = ["grayscale_agglomerative", "v4_kmeans"]
     else:
         engines_to_try = ["v4_kmeans", "ensemble"]
 
@@ -101,7 +94,7 @@ def process_panel(image_path: str, panel_id: str) -> dict:
             seeds_arr = np.array(raw.get("seeds", []), dtype=np.uint8)
             if seeds_arr.size == 0:
                 seeds_arr = np.zeros((0, 3), dtype=np.uint8)
-            overlay = _create_overlay(img_orig, labels, seeds_arr)
+            overlay = create_overlay(img_orig, labels, seeds_arr)
             results.append({
                 "engine": eng_name,
                 "preprocess": "none",
@@ -127,7 +120,7 @@ def process_panel(image_path: str, panel_id: str) -> dict:
                 seeds_b = np.array(raw_b.get("seeds", []), dtype=np.uint8)
                 if seeds_b.size == 0:
                     seeds_b = np.zeros((0, 3), dtype=np.uint8)
-                overlay_b = _create_overlay(img_orig, labels_b, seeds_b)
+                overlay_b = create_overlay(img_orig, labels_b, seeds_b)
                 results.append({
                     "engine": eng_name,
                     "preprocess": "blur",

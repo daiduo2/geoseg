@@ -21,7 +21,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
+from geoseg.pipeline.segment import run_segmentation_stage
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 RETRY_FILE = Path("runs/new_papers_vlm/retry_results.json")
@@ -99,7 +99,7 @@ def main() -> None:
 
         # Run pipeline
         img_rgb = np.array(Image.open(img_path).convert("RGB"))
-        result = process_figure(
+        result = run_segmentation_stage(
             img_rgb,
             caption="",
             n_layers=target.get("total_layers", 5),

@@ -10,8 +10,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.full_pipeline import process_figure
-from geoseg.modules.segment_engines._shared import saturation_ratio
+from geoseg.pipeline.segment import run_segmentation_stage
+from geoseg.core.image_ops import saturation_ratio
 
 PAPERS: dict[str, str] = {
     "ph01": "runs/M0.5/images",
@@ -31,7 +31,7 @@ for paper, img_dir in PAPERS.items():
         fig_name = img_file.stem
         try:
             img_rgb = np.array(Image.open(img_file).convert("RGB"))
-            result = process_figure(img_rgb, n_layers=5, use_vlm=False, skip_non_velocity_model=False)
+            result = run_segmentation_stage(img_rgb, n_layers=5, use_vlm=False, skip_non_velocity_model=False)
             status = result["summary"]["status"]
             warnings = result["summary"]["review_warnings"]
             engines = result["summary"].get("engines_used", [])

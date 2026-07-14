@@ -1,4 +1,4 @@
-"""Demo for pipeline_interfaces Protocol compatibility.
+"""Demo for core model Protocol compatibility.
 
 Verifies that existing modules conform to the defined Protocols.
 Runs without external API calls (stub mode).
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from geoseg.pipeline_interfaces import (
+from geoseg.core.models import (
     PanelInput,
     SegmentationResult,
     QualityReview,
@@ -23,7 +23,7 @@ from geoseg.pipeline_interfaces import (
     empty_segmentation_result,
 )
 from geoseg.modules.cv_detect.panel_detector import detect_panels
-from geoseg.modules.segment_engines.router import route_and_segment
+from geoseg.modules.segment_engines import route_and_segment
 from geoseg.modules.vlm_client import quality_review
 
 
@@ -100,15 +100,15 @@ def test_helpers():
     print("  Helpers: make_whole_image_panel + empty_segmentation_result work")
 
 
-def test_full_pipeline_interface():
-    """Test that full_pipeline works with adapted interfaces."""
-    from geoseg.modules.segment_engines.full_pipeline import process_figure
+def test_segmentation_stage_interface():
+    """Test that the segmentation stage works with adapted interfaces."""
+    from geoseg.pipeline.segment import run_segmentation_stage
 
     img = np.full((200, 400, 3), 255, dtype=np.uint8)
     img[50:150, 50:180] = 128
     img[50:150, 220:350] = 100
 
-    result = process_figure(img, n_layers=3, use_vlm=False)
+    result = run_segmentation_stage(img, n_layers=3, use_vlm=False)
 
     assert result["summary"]["status"] in ("ok", "skipped")
     assert "panels" in result
@@ -119,7 +119,7 @@ def test_full_pipeline_interface():
         assert "meta" in seg
         assert "engine" in seg["meta"]
 
-    print("  full_pipeline works with adapted Protocol interfaces")
+    print("  segmentation stage works with adapted Protocol interfaces")
 
 
 if __name__ == "__main__":
@@ -127,5 +127,5 @@ if __name__ == "__main__":
     test_segmenter_protocol()
     test_quality_reviewer_protocol()
     test_helpers()
-    test_full_pipeline_interface()
+    test_segmentation_stage_interface()
     print("\nAll Protocol compatibility checks passed!")

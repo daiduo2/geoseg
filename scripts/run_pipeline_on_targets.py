@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run full agent pipeline with VLM review on confirmed targets.
 
-Reads targets from vlm_confirmed_targets.json, runs process_figure on each,
+Reads targets from vlm_confirmed_targets.json, runs controller.run_pipeline on each,
 saves results and generates a report.
 """
 

@@ -12,10 +12,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _estimate_background_color,
-    _find_pixel_for_color,
-)
+from geoseg.modules.segment_engines.internal.color import _estimate_background_color
+from geoseg.modules.segment_engines.internal.seeds import _find_pixel_for_color
 
 
 def _sample_colorbar_at_value(colorbar_rgb: np.ndarray, colorbar_value: int) -> np.ndarray:

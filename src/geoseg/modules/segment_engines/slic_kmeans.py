@@ -18,31 +18,9 @@ from scipy.cluster.vq import kmeans2
 from skimage.color import rgb2lab
 from skimage.segmentation import slic
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
-    _distinct_colors,
-)
-
-
-def _reorder_labels_by_median_y(labels: np.ndarray) -> np.ndarray:
-    """Reorder labels so that top = lowest index, bottom = highest index."""
-    h, w = labels.shape
-    unique = np.unique(labels[labels >= 0])
-    if len(unique) == 0:
-        return labels.copy()
-
-    median_y = {}
-    for lbl in unique:
-        ys = np.where(labels == lbl)[0]
-        median_y[lbl] = np.median(ys) if len(ys) > 0 else h
-
-    sorted_by_y = sorted(median_y.items(), key=lambda x: x[1])
-    old_to_new = {old: new for new, (old, _) in enumerate(sorted_by_y)}
-
-    out = np.full_like(labels, -1)
-    for old, new in old_to_new.items():
-        out[labels == old] = new
-    return out
+from geoseg.modules.segment_engines.internal.color import _distinct_colors
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
+from geoseg.modules.segment_engines.internal.regions import _reorder_labels_by_median_y
 
 
 def segment(

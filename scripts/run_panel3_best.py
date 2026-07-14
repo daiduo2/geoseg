@@ -27,7 +27,7 @@ from geoseg.modules.segment_engines import (
     grayscale,
     ensemble,
 )
-from geoseg.modules.segment_engines._shared import row_median_filter
+from geoseg.core.image_ops import create_overlay, row_median_filter
 from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries
 from geoseg.modules.visual_audit import create_audit_report
 
@@ -84,9 +84,7 @@ def _save_result(name: str, labels: np.ndarray, panel_rgb: np.ndarray) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(out_dir / "labels.npz", labels=labels)
 
-    # Simple overlay
-    from geoseg.modules.segment_engines._shared import _create_overlay
-    overlay = _create_overlay(panel_rgb, labels, panel_rgb)
+    overlay = create_overlay(panel_rgb, labels, panel_rgb)
     Image.fromarray(overlay).save(out_dir / "overlay.jpg", quality=90)
     return out_dir
 

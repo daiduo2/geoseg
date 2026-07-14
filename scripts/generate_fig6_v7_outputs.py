@@ -4,8 +4,8 @@
 Minimal standalone script. Reuses existing library functions only:
 - remove_text-style pixel detection (local RGB/LAB outlier + saturation).
 - remove_labels_by_ids for nearest-neighbor fill.
-- _create_overlay for overlay/mask generation.
-- _draw_legend for overlay legend.
+- create_overlay for overlay/mask generation.
+- draw_overlay_legend for overlay legend.
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ from skimage.color import rgb2lab
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from geoseg.modules.post_process.merge import remove_labels_by_ids
-from geoseg.modules.segment_engines._shared import _create_overlay
-from geoseg.modules.segment_engines.regional_fusion import _draw_legend
+from geoseg.core.image_ops import create_overlay
+from geoseg.modules.visual_audit.rendering import draw_overlay_legend
 
 
 PANELS = [f"fig6_profile_{i:02d}" for i in range(3, 8)]
@@ -252,7 +252,7 @@ def main() -> None:
         overlay_colors = colors_to_array(colors)
         seeds = np.empty((0, 3), dtype=np.uint8)
 
-        overlay = _create_overlay(
+        overlay = create_overlay(
             cleaned,
             labels,
             seeds,
@@ -261,7 +261,7 @@ def main() -> None:
             overlay_colors=overlay_colors,
             skip_background=False,
         )
-        mask = _create_overlay(
+        mask = create_overlay(
             cleaned,
             labels,
             seeds,
@@ -276,7 +276,7 @@ def main() -> None:
         white = np.all(mask == [255, 255, 255], axis=2)
         mask[white] = [0, 0, 0]
 
-        overlay_legend = _draw_legend(overlay, labels, label_colors=colors)
+        overlay_legend = draw_overlay_legend(overlay, labels, label_colors=colors)
         comparison = create_comparison_image(original, overlay, mask)
 
         panel_out = OUT_DIR / panel_id

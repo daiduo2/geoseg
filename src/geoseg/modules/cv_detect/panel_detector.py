@@ -23,7 +23,7 @@ from scipy import ndimage
 from skimage.color import rgb2gray
 from skimage.measure import label, regionprops
 
-from geoseg.pipeline_interfaces import PanelInput
+from geoseg.core.models import PanelInput
 
 
 def _detect_background_type(img_gray: np.ndarray, sample_size: int = 20) -> str:

@@ -10,11 +10,6 @@ import numpy as np
 from PIL import Image
 
 from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar
-from geoseg.modules.segment_engines.v4_kmeans import (
-    segment_colorbar_guided,
-    segment as v4_segment,
-)
-from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
 from geoseg.core.image_ops import create_overlay
 from geoseg.preprocessing.absorption import absorb_artifacts, visualize_mask_on_image
 from geoseg.preprocessing.detectors import (
@@ -24,6 +19,11 @@ from geoseg.preprocessing.detectors import (
 )
 from geoseg.preprocessing.label_merge import merge_artifact_labels
 from geoseg.preprocessing.panel_split import split_panels_colored_components
+from geoseg.preprocessing.segmentation import (
+    create_audit_overlay,
+    segment_artifact_baseline,
+    segment_artifact_colorbar_guided,
+)
 
 
 @dataclass
@@ -156,8 +156,8 @@ def _run_segmentation(
     output_dir = config.output_dir
     n_layers = config.n_layers
 
-    base_seg = v4_segment(img_rgb, n_layers=n_layers)
-    clean_seg = v4_segment(cleaned, n_layers=n_layers)
+    base_seg = segment_artifact_baseline(img_rgb, n_layers=n_layers)
+    clean_seg = segment_artifact_baseline(cleaned, n_layers=n_layers)
     diff_mask = base_seg["labels"] != clean_seg["labels"]
     diff_vis = np.full_like(img_rgb, 128)
     diff_vis[diff_mask] = [255, 0, 0]
@@ -176,7 +176,7 @@ def _run_segmentation(
 
     colorbar_rgb = extract_colorbar(img_rgb, colorbar_roi=config.colorbar_roi)
     if colorbar_rgb is not None and colorbar_rgb.size > 0:
-        cb_clean_seg = segment_colorbar_guided(
+        cb_clean_seg = segment_artifact_colorbar_guided(
             cleaned, colorbar_rgb, n_layers=n_layers
         )
 
@@ -242,7 +242,7 @@ def _run_per_panel_segmentation(
     for panel_id, (x, y, pw, ph) in enumerate(panel_bboxes):
         panel_clean = cleaned[y : y + ph, x : x + pw]
         panel_mask = panel_masks[panel_id] if panel_masks else None
-        seg = v4_segment(panel_clean, n_layers=n_layers)
+        seg = segment_artifact_baseline(panel_clean, n_layers=n_layers)
         labels = seg["labels"].copy()
 
         artifact_labels_raw = config.artifact_labels or {}
@@ -265,7 +265,7 @@ def _run_per_panel_segmentation(
         full_labels[y : y + ph, x : x + pw] = shifted
         next_label_offset = int(np.max(full_labels)) + 1
 
-        audit_overlay = generate_overlay_with_legend(panel_clean, labels)
+        audit_overlay = create_audit_overlay(panel_clean, labels)
         palette = np.array(seg["seeds"], dtype=np.uint8)
         panel_overlay = create_overlay(
             panel_clean, labels, palette, skip_background=True, overlay_colors=palette

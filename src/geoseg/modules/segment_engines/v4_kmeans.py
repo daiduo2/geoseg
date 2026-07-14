@@ -14,19 +14,24 @@ from scipy.cluster.vq import kmeans2
 from scipy import ndimage
 from skimage.color import lab2rgb, rgb2lab
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
-    _shape_filter,
-    _label_by_nearest,
+from geoseg.modules.segment_engines.internal.color import (
     _estimate_background_color,
     _is_background_v2,
-    _cv_seeds,
-    _refine_vlm_seeds,
-    _auto_k,
+    _label_by_nearest,
     saturation_ratio,
+)
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
+from geoseg.modules.segment_engines.internal.regions import (
+    _reorder_labels_by_median_y,
+    _shape_filter,
+)
+from geoseg.modules.segment_engines.internal.seeds import (
+    _auto_k,
+    _cv_seeds,
     _find_pixel_for_color,
-    _scan_for_missing_colors,
     _parse_count_from_tag,
+    _refine_vlm_seeds,
+    _scan_for_missing_colors,
 )
 
 
@@ -84,27 +89,6 @@ def _name_palette(seeds_rgb: np.ndarray, k: int) -> list[str]:
     for rank, original_idx in enumerate(order):
         names[original_idx] = pool[rank]
     return names
-
-
-def _reorder_labels_by_median_y(labels: np.ndarray) -> np.ndarray:
-    """Reorder labels so that top=lowest index, bottom=highest index."""
-    h, w = labels.shape
-    unique = np.unique(labels[labels >= 0])
-    if len(unique) == 0:
-        return labels.copy()
-
-    median_y = {}
-    for lbl in unique:
-        ys = np.where(labels == lbl)[0]
-        median_y[lbl] = np.median(ys) if len(ys) > 0 else h
-
-    sorted_by_y = sorted(median_y.items(), key=lambda x: x[1])
-    old_to_new = {old: new for new, (old, _) in enumerate(sorted_by_y)}
-
-    out = np.full_like(labels, -1)
-    for old, new in old_to_new.items():
-        out[labels == old] = new
-    return out
 
 
 def _fill_holes(labels: np.ndarray) -> np.ndarray:

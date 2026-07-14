@@ -12,9 +12,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from geoseg.core.image_ops import create_overlay
 from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries
 from geoseg.modules.segment_engines.kmeans_full import segment as seg_kmeans
-from geoseg.modules.segment_engines._shared import _create_overlay
 from geoseg.modules.segment_engines.metrics import compute_all
 
 
@@ -33,8 +33,8 @@ def _make_comparison_image(
     n_layers_coarse = len(set(coarse_labels.flatten()) - {0})
     n_layers_refined = len(set(refined_labels.flatten()) - {0})
 
-    coarse_overlay = _create_overlay(original, coarse_labels, np.zeros((1, 3)))
-    refined_overlay = _create_overlay(original, refined_labels, np.zeros((1, 3)))
+    coarse_overlay = create_overlay(original, coarse_labels, np.zeros((1, 3)))
+    refined_overlay = create_overlay(original, refined_labels, np.zeros((1, 3)))
 
     total_w = w * 3 + margin * 4
     total_h = h + text_h + margin * 2
@@ -106,9 +106,9 @@ def _run_on_image(img_path: Path, out_dir: Path, n_layers: int) -> dict:
     print(f"  -> Saved: {comp_path}")
 
     # Step 4: Save individual overlays
-    Image.fromarray(_create_overlay(img, coarse_labels, np.zeros((1, 3)))) \
+    Image.fromarray(create_overlay(img, coarse_labels, np.zeros((1, 3)))) \
         .save(out_dir / f"{panel_id}_coarse.png")
-    Image.fromarray(_create_overlay(img, refined_labels, np.zeros((1, 3)))) \
+    Image.fromarray(create_overlay(img, refined_labels, np.zeros((1, 3)))) \
         .save(out_dir / f"{panel_id}_refined.png")
 
     return {

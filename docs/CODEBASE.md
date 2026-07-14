@@ -11,7 +11,10 @@
 | `core/models.py` | 稳定数据契约：`PanelInput`、`SegmentationResult`、`FigureClassification` 等 | 新代码优先从这里导入 |
 | `core/image_ops.py` | 跨模块图像工具 facade：overlay、distinct colors、saturation ratio | 产品代码不要直接依赖 `segment_engines/internal/shared.py` 或旧 `_shared.py` |
 | `pipeline/segment.py` | segmentation stage orchestration | 直接编排 classify/detect/review/segment stage |
+| `pipeline/stages/` | figure 级 classify/detect/review/panel segment/summary stage helpers | `segment_engines/*` stage helper 文件只保留兼容 re-export |
 | `pipeline/export.py` | post-process + SPECFEM export stage | `controller.py` 通过它导出 panel |
+| `api/` | FastAPI schema、序列化和 endpoint 实现 | `server.py` 只保留 app 兼容入口 |
+| `batch/` | 批处理 service 与 CLI 实现 | `batch_processor.py` 只保留兼容入口 |
 | `controller.py` | 兼容入口：`run_pipeline`、`run_post_process_and_export` | 新 stage 编排优先放 `pipeline/` |
 | `pipeline_interfaces.py` | 兼容导出层 | 新代码改用 `core/models.py` |
 
@@ -23,7 +26,7 @@
 | `pdf_extractor/` | **M0.5-Fallback**：PyMuPDF 提取 `{XObject(Image) + 页面文字块}`；`rasterize_page()` 整页/区域 rasterize。MinerU 拆分 figure 或提取尺寸过小时 fallback | `extract.py`, `vector_extract.py` | [pdf_extractor/CLAUDE.md](../src/geoseg/modules/pdf_extractor/CLAUDE.md) |
 | `cv_detect/` | **M1b**：CV 检测 panel 候选 bbox。子模块：figure 分类器、panel 检测器（含 e026 版）、colorbar 提取器、质量过滤器 | `detect.py`, `figure_classifier.py`, `panel_detector.py`, `panel_detector_e026.py`, `colorbar_extractor.py`, `quality_filter.py` | [cv_detect/CLAUDE.md](../src/geoseg/modules/cv_detect/CLAUDE.md) |
 | `vlm_client/` | **Schema + Prompt 定义库**。VLM 调用已全面迁移至 agent skill（`figure-classify` / `sandbox-segment`），本模块不再作为 LLM 调用出口。保留 schema（pydantic）和 prompt 模板供 skill 与 legacy code 引用 | `client.py`（`_call_claude_cli` 已 DEPRECATED）, `prompts.py` | [vlm_client/CLAUDE.md](../src/geoseg/modules/vlm_client/CLAUDE.md) |
-| `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。核心引擎 + registry / policy / runner / retry 边界 | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `pipeline_stages.py`, `full_pipeline.py`（legacy facade）, `ensemble.py`, `v4_kmeans.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `vlm_reps.py`, `strategy_memory.py` | [segment_engines/CLAUDE.md](../src/geoseg/modules/segment_engines/CLAUDE.md) |
+| `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。核心引擎 + registry / policy / runner / retry 边界 | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `pipeline_stages.py`（legacy re-export）, `full_pipeline.py`（legacy facade）, `ensemble.py`, `v4_kmeans.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `vlm_reps.py`, `strategy_memory.py` | [segment_engines/CLAUDE.md](../src/geoseg/modules/segment_engines/CLAUDE.md) |
 | `segment_engines/internal/` | engine family 内部工具 | `shared.py`；旧 `_shared.py` 仅兼容 re-export | — |
 | `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py`；旧同名文件仅兼容 re-export/entrypoint | — |
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
@@ -35,10 +38,12 @@
 ## 私有依赖边界
 
 - 产品代码不得直接导入 `geoseg.modules.segment_engines._shared`、`segment_engines.internal` 或 `router._run_engine`。
-- 需要 overlay/colors/saturation 等跨模块能力时，从 `geoseg.core.image_ops` 导入。
+- 新的 figure 级分割编排从 `geoseg.pipeline.segment.run_segmentation_stage` 进入；`segment_engines.full_pipeline.process_figure` 只作为旧调用兼容层保留。
+- 需要 overlay/colors/saturation/preprocessing heuristics 等跨模块能力时，从 `geoseg.core.image_ops` 导入。
 - 需要按名称运行分割引擎时，从 `geoseg.modules.segment_engines.runner import run_engine` 导入。
 - `segment_engines/` 内部可以使用 `internal/shared.py`，旧 `_shared.py` 只保留给历史代码兼容。
-- `experiments/`、`scripts/`、`examples/` 中仍有历史私有依赖，允许暂留；若要晋升进 `src/geoseg/`，必须先改为稳定 API。
+- `scripts/`、`examples/` 不再导入旧 `_shared.py` aggregate shim；实验性算法内部 helper 若仍在脚本中使用，保持局部、显式。
+- sandbox/agent 脚本按名称试跑多个引擎时走 `run_engine`，不要手写具体 engine dispatch。
 
 ## 组装层（`src/geoseg/` 根级）
 
@@ -48,8 +53,10 @@
 | `pipeline/` | Stage 编排：segment/export 等 |
 | `pipeline_interfaces.py` | 旧导入兼容层；新代码使用 `core/models.py` |
 | `controller.py` | 端到端兼容 facade：`figure image → classify → segment → post-process → export SPECFEM` |
-| `batch_processor.py` | 批量目录处理。支持 resume、单图错误隔离、结构化 JSON summary |
-| `server.py` | FastAPI HTTP 后端（v0.7）。暴露 `/api/agent/*` 和 `/api/manual/*` endpoint |
+| `batch/` | 批量目录处理。支持 resume、单图错误隔离、结构化 JSON summary |
+| `batch_processor.py` | 旧导入/`python -m` 兼容入口；新代码使用 `geoseg.batch` |
+| `api/` | FastAPI HTTP 后端 schema、序列化、endpoint |
+| `server.py` | 旧 FastAPI app 兼容入口 |
 | `gui/` | PySide6 GUI 包（v0.7 已废弃） |
 
 ## Skills（`.claude/skills/`）

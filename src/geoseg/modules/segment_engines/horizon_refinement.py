@@ -22,11 +22,9 @@ from scipy.interpolate import UnivariateSpline
 from scipy.signal import savgol_filter
 from skimage.transform import resize
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
-    row_median_filter,
-)
-from geoseg.pipeline_interfaces import SegmentationResult
+from geoseg.core.models import SegmentationResult
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
+from geoseg.modules.segment_engines.internal.preprocess import row_median_filter
 
 
 def _coarse_segment(

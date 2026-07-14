@@ -25,7 +25,7 @@ from typing import Any, Literal
 import numpy as np
 from PIL import Image
 
-from geoseg.pipeline_interfaces import QualityReview
+from geoseg.core.models import QualityReview
 
 from .prompts import (
     VERSION,

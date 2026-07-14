@@ -19,6 +19,7 @@ from geoseg.modules.visual_audit.color_residual import (
     compute_color_residual_map,
     create_color_residual_overlay,
 )
+from geoseg.modules.visual_audit.rendering import labels_ordered_top_to_bottom
 
 
 RED = np.array([255, 0, 0], dtype=np.uint8)
@@ -172,9 +173,7 @@ def create_topology_map(labels: np.ndarray) -> np.ndarray:
     Helps verify that layer ordering matches geological expectations
     (older/deeper layers at bottom, younger/surface layers at top).
     """
-    from geoseg.modules.segment_engines.v4_kmeans import _reorder_labels_by_median_y
-
-    ordered = _reorder_labels_by_median_y(labels)
+    ordered = labels_ordered_top_to_bottom(labels)
     return create_pure_mask(ordered)
 
 

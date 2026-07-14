@@ -1,6 +1,6 @@
 # geoseg 组装层
 
-> 本目录下的 `controller.py`、`batch_processor.py` 为后端组装层。
+> 本目录下的 `controller.py` 为后端组装兼容层；批处理实现已迁移到 `batch/`。
 > `session_state.py` 为 CLI 交互模型的持久化状态层。
 > `gui/` 和 `server.py` 已废弃（Tauri/FastAPI 前端路线已终止）。
 > 启动 cc 时：`cd geoseg && cc` 会自动加载本文件 + 根 CLAUDE.md。
@@ -26,8 +26,10 @@ python -m geoseg.pipeline_interfaces_demo
 - `pipeline_interfaces.py`：模块间接口契约（TypedDict + Protocol）
 - `session_state.py`：**CLI HITL 会话状态**。持久化每张 figure 的生命周期（pending → classified → segmented → reviewed → exported），支持回溯到上游阶段（classify / panel / segment）
 - `controller.py`：`run_pipeline(img_rgb, config) → dict` 是组装层的核心 API，串联 classify → segment → post-process → export
-- `batch_processor.py`：基于 `controller.run_pipeline` 的批量封装，支持 resume、单图错误隔离、JSON summary
-- ~~`server.py`~~：FastAPI HTTP 后端（v0.7）**已废弃**。前后端解耦不再必要，交互完全在 Claude Code 对话内完成
+- `batch/`：基于 `controller.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
+- `batch_processor.py`：旧导入和 `python -m geoseg.batch_processor` 兼容入口
+- `api/`：FastAPI HTTP schema、序列化与 endpoint 实现
+- ~~`server.py`~~：旧 FastAPI app 兼容入口（v0.7 路线已废弃）
 - ~~`gui/`~~：PySide6 交互视图 **已废弃**。`geoseg-gui/`（Tauri）同步废弃
 
 ## CLI Human-in-the-Loop 交互模型（v0.8）

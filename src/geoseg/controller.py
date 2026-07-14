@@ -23,6 +23,7 @@ def run_pipeline(
     quality_preference: str = "balanced",
     skip_non_velocity_model: bool = True,
     use_vlm: bool = True,
+    target_panel_id: int = -1,
     properties_map: dict[str, dict] | None = None,
     output_dir: str | Path | None = None,
     save_intermediates: bool = True,
@@ -36,6 +37,7 @@ def run_pipeline(
         quality_preference=quality_preference,
         skip_non_velocity_model=skip_non_velocity_model,
         use_vlm=use_vlm,
+        target_panel_id=target_panel_id,
     )
 
     if seg_result["summary"]["status"] == "skipped":

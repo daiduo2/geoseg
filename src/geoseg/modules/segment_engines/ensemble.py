@@ -15,11 +15,11 @@ from scipy import ndimage
 from skimage.color import rgb2lab
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines.internal.shared import (
-    _create_overlay,
+from geoseg.modules.segment_engines.internal.color import (
     _estimate_background_color,
     saturation_ratio,
 )
+from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 from geoseg.modules.segment_engines import v4_kmeans
 from geoseg.modules.segment_engines import edge_guided as edge_guided_mod
 from geoseg.modules.segment_engines import kmeans_full

@@ -98,7 +98,7 @@ def segment_with_text_mask(
     result["labels"] = labels
 
     # Regenerate overlay on the original image so text artifacts don't leak in.
-    from geoseg.modules.segment_engines.internal.shared import _create_overlay
+    from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
     seeds = np.array(result.get("seeds", []), dtype=np.uint8)
     result["overlay"] = _create_overlay(image_rgb, labels, seeds)
@@ -160,7 +160,7 @@ def regional_segment_with_text_mask(
     )
 
     result["labels"] = _assign_text_to_nearest_label(result["labels"], text_mask)
-    from geoseg.modules.segment_engines.internal.shared import _create_overlay
+    from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
     seeds = np.array(result.get("seeds", []), dtype=np.uint8)
     result["overlay"] = _create_overlay(image_rgb, result["labels"], seeds)
