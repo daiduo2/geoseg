@@ -36,7 +36,8 @@
 | `policy.py` | 路由策略 |
 | `runner.py` | 按名称执行引擎 |
 | `retry.py` | retry 策略 |
-| `full_pipeline.py` | 完整流水线组合 |
+| `pipeline_stages.py` | legacy full pipeline 的 classify/detect/review/segment stage helpers |
+| `full_pipeline.py` | `process_figure` 兼容 facade |
 | `vlm_reps.py` | VLM 种子点辅助 |
 | `internal/shared.py` | engine family 内部工具 |
 | `diagnostics/` | metrics、batch、comparison 诊断工具 |
