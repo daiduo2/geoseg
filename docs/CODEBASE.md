@@ -10,7 +10,7 @@
 |------|------|------|
 | `core/models.py` | 稳定数据契约：`PanelInput`、`SegmentationResult`、`FigureClassification` 等 | 新代码优先从这里导入 |
 | `core/image_ops.py` | 跨模块图像工具 facade：overlay、distinct colors、saturation ratio | 产品代码不要直接依赖 `segment_engines/internal/shared.py` 或旧 `_shared.py` |
-| `pipeline/segment.py` | segmentation stage wrapper | 调用 engine family，不内嵌算法细节 |
+| `pipeline/segment.py` | segmentation stage orchestration | 直接编排 classify/detect/review/segment stage |
 | `pipeline/export.py` | post-process + SPECFEM export stage | `controller.py` 通过它导出 panel |
 | `controller.py` | 兼容入口：`run_pipeline`、`run_post_process_and_export` | 新 stage 编排优先放 `pipeline/` |
 | `pipeline_interfaces.py` | 兼容导出层 | 新代码改用 `core/models.py` |
