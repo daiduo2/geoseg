@@ -1,5 +1,7 @@
 # geoseg v2 设计文档（一页）
 
+> **历史设计文档。** 本文记录 v0.7 以前的方案和当时的技术取舍，其中 `server.py`、`pipeline_interfaces.py`、`full_pipeline.py`、Tauri/FastAPI 前端等描述可能已经过时。当前可执行架构地图以 [`CODEBASE.md`](./CODEBASE.md)、[`refactor_roadmap_2026-07-14.md`](./refactor_roadmap_2026-07-14.md) 和模块内 `CLAUDE.md` 为准。
+>
 > v0.1 写于 2026-05-18(初稿)
 > v0.2 修订于 2026-05-18(模块独立验证 + e026 复制进项目)
 > v0.3 修订于 2026-05-18(PDF 提取嵌入图 + e025 schema 扩展 + VLM 受控智能参数)

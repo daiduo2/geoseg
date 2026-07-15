@@ -19,16 +19,16 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from geoseg.modules.segment_engines import (
-    v4_kmeans,
-    kmeans_full,
-    edge_guided,
-    slic_kmeans,
-    grayscale,
-    ensemble,
-)
 from geoseg.core.image_ops import create_overlay, row_median_filter
-from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries
+from geoseg.experiments import (
+    refine_boundaries,
+    segment_edge_guided,
+    segment_ensemble,
+    segment_grayscale_agglomerative,
+    segment_kmeans_full,
+    segment_slic_kmeans,
+    segment_v4_kmeans,
+)
 from geoseg.modules.visual_audit import create_audit_report
 
 
@@ -91,7 +91,8 @@ def _save_result(name: str, labels: np.ndarray, panel_rgb: np.ndarray) -> Path:
 
 def _run_config(config: dict, panel_rgb: np.ndarray, gt_mask: np.ndarray | None) -> dict:
     name = config["name"]
-    engine = config["engine"]
+    engine_name = config["engine"]
+    segment_fn = config["segment"]
     preprocess = config.get("preprocess")
     postprocess = config.get("postprocess")
     kwargs = config.get("kwargs", {})
@@ -106,7 +107,7 @@ def _run_config(config: dict, panel_rgb: np.ndarray, gt_mask: np.ndarray | None)
     elif preprocess == "gaussian_2":
         img = cv2.GaussianBlur(panel_rgb, (0, 0), sigmaX=2.0)
 
-    result = engine.segment(img, n_layers=N_LAYERS, **kwargs)
+    result = segment_fn(img, n_layers=N_LAYERS, **kwargs)
     labels = result["labels"]
 
     if postprocess == "horizon_refinement":
@@ -127,7 +128,7 @@ def _run_config(config: dict, panel_rgb: np.ndarray, gt_mask: np.ndarray | None)
 
     return {
         "name": name,
-        "engine": engine.__name__.split(".")[-1],
+        "engine": engine_name,
         "preprocess": preprocess,
         "postprocess": postprocess,
         "kwargs": kwargs,
@@ -143,24 +144,88 @@ def _run_config(config: dict, panel_rgb: np.ndarray, gt_mask: np.ndarray | None)
 
 
 CONFIGS = [
-    {"name": "v4_kmeans", "engine": v4_kmeans},
-    {"name": "v4_kmeans_row5", "engine": v4_kmeans, "preprocess": "row_median_5"},
-    {"name": "v4_kmeans_row7", "engine": v4_kmeans, "preprocess": "row_median_7"},
-    {"name": "v4_kmeans_blur1", "engine": v4_kmeans, "preprocess": "gaussian_1"},
-    {"name": "v4_kmeans_blur2", "engine": v4_kmeans, "preprocess": "gaussian_2"},
-    {"name": "kmeans_full", "engine": kmeans_full},
-    {"name": "kmeans_full_row5", "engine": kmeans_full, "preprocess": "row_median_5"},
-    {"name": "kmeans_full_blur1", "engine": kmeans_full, "preprocess": "gaussian_1"},
-    {"name": "edge_guided", "engine": edge_guided},
-    {"name": "edge_guided_lowedge", "engine": edge_guided, "kwargs": {"edge_weight": 0.2}},
-    {"name": "edge_guided_highsigma", "engine": edge_guided, "kwargs": {"sigma": 4.0}},
-    {"name": "edge_guided_row5", "engine": edge_guided, "preprocess": "row_median_5"},
-    {"name": "slic_kmeans", "engine": slic_kmeans},
-    {"name": "slic_kmeans_compact5", "engine": slic_kmeans, "kwargs": {"compactness": 5.0}},
-    {"name": "slic_kmeans_seg1000", "engine": slic_kmeans, "kwargs": {"n_segments": 1000}},
-    {"name": "grayscale", "engine": grayscale},
-    {"name": "ensemble", "engine": ensemble},
-    {"name": "ensemble_row5", "engine": ensemble, "preprocess": "row_median_5"},
+    {"name": "v4_kmeans", "engine": "v4_kmeans", "segment": segment_v4_kmeans},
+    {
+        "name": "v4_kmeans_row5",
+        "engine": "v4_kmeans",
+        "segment": segment_v4_kmeans,
+        "preprocess": "row_median_5",
+    },
+    {
+        "name": "v4_kmeans_row7",
+        "engine": "v4_kmeans",
+        "segment": segment_v4_kmeans,
+        "preprocess": "row_median_7",
+    },
+    {
+        "name": "v4_kmeans_blur1",
+        "engine": "v4_kmeans",
+        "segment": segment_v4_kmeans,
+        "preprocess": "gaussian_1",
+    },
+    {
+        "name": "v4_kmeans_blur2",
+        "engine": "v4_kmeans",
+        "segment": segment_v4_kmeans,
+        "preprocess": "gaussian_2",
+    },
+    {"name": "kmeans_full", "engine": "kmeans_full", "segment": segment_kmeans_full},
+    {
+        "name": "kmeans_full_row5",
+        "engine": "kmeans_full",
+        "segment": segment_kmeans_full,
+        "preprocess": "row_median_5",
+    },
+    {
+        "name": "kmeans_full_blur1",
+        "engine": "kmeans_full",
+        "segment": segment_kmeans_full,
+        "preprocess": "gaussian_1",
+    },
+    {"name": "edge_guided", "engine": "edge_guided", "segment": segment_edge_guided},
+    {
+        "name": "edge_guided_lowedge",
+        "engine": "edge_guided",
+        "segment": segment_edge_guided,
+        "kwargs": {"edge_weight": 0.2},
+    },
+    {
+        "name": "edge_guided_highsigma",
+        "engine": "edge_guided",
+        "segment": segment_edge_guided,
+        "kwargs": {"sigma": 4.0},
+    },
+    {
+        "name": "edge_guided_row5",
+        "engine": "edge_guided",
+        "segment": segment_edge_guided,
+        "preprocess": "row_median_5",
+    },
+    {"name": "slic_kmeans", "engine": "slic_kmeans", "segment": segment_slic_kmeans},
+    {
+        "name": "slic_kmeans_compact5",
+        "engine": "slic_kmeans",
+        "segment": segment_slic_kmeans,
+        "kwargs": {"compactness": 5.0},
+    },
+    {
+        "name": "slic_kmeans_seg1000",
+        "engine": "slic_kmeans",
+        "segment": segment_slic_kmeans,
+        "kwargs": {"n_segments": 1000},
+    },
+    {
+        "name": "grayscale",
+        "engine": "grayscale",
+        "segment": segment_grayscale_agglomerative,
+    },
+    {"name": "ensemble", "engine": "ensemble", "segment": segment_ensemble},
+    {
+        "name": "ensemble_row5",
+        "engine": "ensemble",
+        "segment": segment_ensemble,
+        "preprocess": "row_median_5",
+    },
 ]
 
 

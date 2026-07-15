@@ -11,7 +11,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
+from geoseg.experiments import vertical_scan_reps
 
 TEST_IMAGES = [
     ("ml_velocity page22_img2", "papers_new/to_process/ml_velocity_2024/ml_velocity_2024_page22_img2.png"),

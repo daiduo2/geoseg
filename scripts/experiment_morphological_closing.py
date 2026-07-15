@@ -2,6 +2,8 @@
 
 Per-layer closing with overlap resolution by nearest median y.
 Tests radii r=2,5,10,15.
+
+Algorithm-specific experiment: imports concrete engine internals intentionally.
 """
 from __future__ import annotations
 

@@ -7,9 +7,9 @@
 - 提供多算法分割引擎族，供 agent / controller 按需调用
 - 支持 `n_layers`、`reps`（种子点）、`colorbar_rgb` 等参数
 - 返回标准 `SegmentationResult`（`labels` + `overlay` + `meta`）
-- `registry.py` / `policy.py` / `runner.py` / `retry.py`：稳定调度边界
+- `registry.py` / `policy.py` / `runner.py` / `retry.py`：稳定调度边界。`registry.py` 维护 engine metadata、callable path 和 adapter；`runner.py` 只按 registry 加载并执行
 - `diagnostics/metrics.py`：多引擎评估与对比
-- `strategy_memory.py`：agent 策略学习（引擎选择历史与效果追踪）
+- `strategy/` + `strategy_memory.py` facade：agent 策略学习（引擎选择历史与效果追踪）
 - `internal/shared.py`：引擎间内部共享工具函数
 - `diagnostics/batch_test.py`：批量测试 runner
 - `diagnostics/compare_results.py`：多结果对比可视化
@@ -24,22 +24,31 @@
 
 | 文件 | 引擎 |
 |------|------|
-| `v4_kmeans.py` | v4 K-Means |
+| `v4/` | v4 K-Means 路径实现：jet vivid / colorbar-guided / pastel fallback |
+| `v4_kmeans.py` | v4 K-Means 兼容 facade |
 | `edge_guided.py` | Edge-guided 分割 |
 | `edge_grow.py` | Edge-grow 区域生长 |
+| `edge/` | edge engine 共享 seed、gradient、postprocess helpers |
 | `e027_slic_graphcut.py` | SLIC + GraphCut（e027） |
 | `slic_kmeans.py` | SLIC 超像素 + K-Means（e028，文字鲁棒） |
 | `kmeans_full.py` | K-Means 全图版 |
 | `grayscale.py` | 灰度 agglomerative |
 | `ensemble.py` | 多引擎融合 |
-| `registry.py` | 引擎注册表 |
+| `regional/` | regional fusion 的配置、overlay、split/merge、融合编排实现 |
+| `regional_fusion.py` | regional fusion 旧公共路径 facade |
+| `registry.py` | 引擎注册表，包含 callable path 与 runner adapter |
 | `policy.py` | 路由策略 |
-| `runner.py` | 按名称执行引擎 |
+| `runner.py` | 按 registry spec 执行引擎，处理 fallback 和结果归一化 |
 | `retry.py` | retry 策略 |
-| `pipeline_stages.py` | legacy stage helper 兼容 re-export；新编排走 `geoseg.pipeline.stages` |
-| `full_pipeline.py` | `process_figure` 兼容 facade；新编排走 `geoseg.pipeline.segment.run_segmentation_stage` |
+| `compat/` | legacy stage/full-pipeline/shared 兼容 re-export |
+| `pipeline_stages.py` | legacy stage helper 旧路径；实现集中在 `compat/` |
+| `full_pipeline.py` | `process_figure` 旧路径；实现集中在 `compat/` |
+| `horizon/` | horizon refinement 的 coarse/boundary/fitting/refine 实现 |
 | `vlm_reps.py` | VLM 种子点辅助 |
-| `internal/shared.py` | engine family 内部工具 |
+| `strategy/` | strategy memory records/scoring/template persistence 实现 |
+| `strategy_memory.py` | strategy memory 旧公共路径 facade |
+| `internal/shared.py` | engine family 内部工具兼容 aggregate |
+| `internal/seeds/` | seed search/CV/refine/scan/auto-k helpers |
 | `diagnostics/` | metrics、batch、comparison 诊断工具 |
 
 ## 预处理策略（2026-06-01 更新）

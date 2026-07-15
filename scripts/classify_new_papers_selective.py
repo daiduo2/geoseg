@@ -20,7 +20,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.vlm_client.client import classify_figure
+from geoseg.experiments import classify_figure
 from geoseg.pipeline.segment import run_segmentation_stage
 
 PAPERS_DIR = Path("papers_new/to_process")

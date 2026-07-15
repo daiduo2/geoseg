@@ -28,7 +28,8 @@ python -m geoseg.pipeline_interfaces_demo
 - `controller.py`：`run_pipeline(img_rgb, config) → dict` 是组装层的核心 API，串联 classify → segment → post-process → export
 - `batch/`：基于 `controller.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
 - `batch_processor.py`：旧导入和 `python -m geoseg.batch_processor` 兼容入口
-- `api/`：FastAPI HTTP schema、序列化与 endpoint 实现
+- `api/`：FastAPI HTTP app assembly、route modules、schema、序列化实现
+- `batch/`：batch CLI、directory orchestration、entry processing、audit/export helpers
 - ~~`server.py`~~：旧 FastAPI app 兼容入口（v0.7 路线已废弃）
 - ~~`gui/`~~：PySide6 交互视图 **已废弃**。`geoseg-gui/`（Tauri）同步废弃
 

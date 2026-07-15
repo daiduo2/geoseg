@@ -10,7 +10,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.vlm_client.client import classify_figure
+from geoseg.experiments import classify_figure
 
 SAMPLES = [
     # gras2019 — ok (CV 放行)

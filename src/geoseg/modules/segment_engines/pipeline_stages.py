@@ -1,6 +1,6 @@
-"""Backward-compatible imports for pipeline stage helpers."""
+"""Legacy import path; implementation lives in ``segment_engines.compat``."""
 
-from geoseg.pipeline.stages import (
+from geoseg.modules.segment_engines.compat.pipeline_stages import (
     MIN_AUTO_SEGMENT_HEIGHT,
     MIN_AUTO_SEGMENT_WIDTH,
     classify_figure_stage,

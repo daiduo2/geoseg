@@ -12,9 +12,9 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines import run_engine
-from geoseg.modules.vlm_client.client import review_segmentation_quality
-from geoseg.modules.cv_detect.panel_detector import detect_panels
+from geoseg.experiments import run_engine
+from geoseg.experiments import review_segmentation_quality
+from geoseg.experiments import detect_panels
 
 OUT_DIR = Path("runs/new_papers_vlm/all_overlays")
 AUDIT_DIR = Path("runs/new_papers_vlm/quality_review_audit_v4focus")

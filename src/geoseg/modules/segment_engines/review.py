@@ -1,5 +1,8 @@
-"""Backward-compatible imports for pipeline review stages."""
+"""Legacy import path; implementation lives in ``segment_engines.compat``."""
 
-from geoseg.pipeline.stages import resolve_target_panel_stage, review_figure_stage
+from geoseg.modules.segment_engines.compat.review import (
+    resolve_target_panel_stage,
+    review_figure_stage,
+)
 
 __all__ = ["resolve_target_panel_stage", "review_figure_stage"]

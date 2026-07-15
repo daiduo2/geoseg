@@ -17,17 +17,17 @@ from PIL import Image
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.metrics import compute_all
-from geoseg.modules.segment_engines.runner import run_engine
-from geoseg.modules.segment_engines.strategy_memory import record_attempt
+from geoseg.experiments import compute_all
+from geoseg.experiments import run_engine
+from geoseg.experiments import record_attempt
 from geoseg.core.image_ops import (
     saturation_ratio,
     adaptive_blur,
     estimate_noise_level,
     create_overlay,
 )
-from geoseg.modules.segment_engines.vlm_reps import color_zones_to_reps
-from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar
+from geoseg.experiments import color_zones_to_reps
+from geoseg.experiments import extract_colorbar
 
 
 def _compute_score(metrics: dict) -> float:

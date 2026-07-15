@@ -1,4 +1,7 @@
-"""Test fragment spatial distance relabeling on 16b0cf fixture."""
+"""Test fragment spatial distance relabeling on 16b0cf fixture.
+
+Algorithm-specific experiment: imports concrete engine internals intentionally.
+"""
 
 from __future__ import annotations
 

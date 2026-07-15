@@ -2,6 +2,8 @@
 
 Route A: reassign outlier fragments to spatially nearest layer before
 boundary fitting. Tests thresholds 50, 80, 100 px.
+
+Algorithm-specific experiment: imports concrete engine internals intentionally.
 """
 from __future__ import annotations
 

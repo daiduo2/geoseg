@@ -12,7 +12,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.cv_detect.figure_classifier import classify
+from geoseg.experiments import classify
 
 SKIPPED = [
     ("seismic_inv_2024/seismic_inv_2024_page9_img1", "papers_new/to_process/seismic_inv_2024/seismic_inv_2024_page9_img1.png"),

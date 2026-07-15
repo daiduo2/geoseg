@@ -17,7 +17,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.pipeline.segment import run_segmentation_stage
-from geoseg.modules.vlm_client.client import review_segmentation_quality
+from geoseg.experiments import review_segmentation_quality
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 OUT_DIR = Path("runs/new_papers_vlm/vivid_audit_v2")

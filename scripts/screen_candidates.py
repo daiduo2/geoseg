@@ -11,8 +11,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.cv_detect.panel_detector import detect_panels
+from geoseg.experiments import vertical_scan_reps
+from geoseg.experiments import detect_panels
 
 
 def analyze_panel(panel_img: np.ndarray) -> dict:

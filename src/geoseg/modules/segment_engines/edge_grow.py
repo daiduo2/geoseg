@@ -10,24 +10,13 @@ from __future__ import annotations
 import heapq
 
 import numpy as np
-from scipy import ndimage
 from skimage.color import rgb2lab
-from skimage.filters import sobel
 
-from geoseg.modules.segment_engines.internal.color import (
-    _estimate_background_color,
-    saturation_ratio,
-)
+from geoseg.modules.segment_engines.edge.gradients import lab_sobel_edge_map
+from geoseg.modules.segment_engines.edge.postprocess import postprocess_edge_labels
+from geoseg.modules.segment_engines.edge.seeds import prepare_edge_seeds, seeds_lab
+from geoseg.modules.segment_engines.internal.color import saturation_ratio
 from geoseg.modules.segment_engines.internal.overlay import _create_overlay
-from geoseg.modules.segment_engines.internal.regions import (
-    _merge_small_regions,
-    _shape_filter,
-)
-from geoseg.modules.segment_engines.internal.seeds import (
-    _auto_k,
-    _cv_seeds,
-    _refine_vlm_seeds,
-)
 
 
 def _region_grow_dijkstra_edge(
@@ -39,7 +28,6 @@ def _region_grow_dijkstra_edge(
 ) -> np.ndarray:
     """Multi-source Dijkstra in LAB space with edge barrier penalty."""
     h, w = panel_lab.shape[:2]
-    k = len(seeds_xy)
 
     diff = panel_lab[:, :, None, :] - seeds_lab[None, None, :, :]
     dists = np.linalg.norm(diff, axis=3)
@@ -96,55 +84,29 @@ def segment(
     Returns:
         dict with keys: labels, seeds, overlay, meta.
     """
-    h, w, _ = panel_rgb.shape
     panel_lab = rgb2lab(panel_rgb)
-    bg_rgb = _estimate_background_color(panel_rgb)
-    min_auto_count = max(50, h * w // 2000)
 
-    # Smooth LAB channels before gradient to reduce noise
-    gradient = np.zeros((h, w), dtype=np.float32)
-    for c in range(3):
-        smoothed = ndimage.gaussian_filter(panel_lab[..., c], sigma=1.0)
-        gradient += sobel(smoothed) ** 2
-    gradient = np.sqrt(gradient)
-    edge_map = gradient / (gradient.max() + 1e-9)
-
-    if reps:
-        cv_seeds_rgb, cv_tags = _cv_seeds(panel_rgb, k=len(reps))
-        used_cv_indices: set[int] = set()
-
-        refined_seeds, refined_reps = _refine_vlm_seeds(
-            panel_rgb, reps, bg_rgb, cv_seeds_rgb, cv_tags, used_cv_indices
-        )
-        color_names = [r.get("color_name", f"layer_{i + 1}") for i, r in enumerate(reps)]
-    else:
-        cv_seeds_rgb, cv_tags = _cv_seeds(panel_rgb, k=n_layers)
-        used_cv_indices: set[int] = set()
-        refined_seeds = []
-        refined_reps = []
-        color_names = [f"layer_{i + 1}" for i in range(n_layers)]
-
-    refined_seeds, refined_reps = _auto_k(
-        panel_rgb, panel_lab, bg_rgb,
-        refined_seeds, refined_reps,
-        cv_seeds_rgb, cv_tags, used_cv_indices,
-        max_auto_k, min_auto_count,
+    _, edge_map = lab_sobel_edge_map(panel_lab)
+    prepared = prepare_edge_seeds(
+        panel_rgb,
+        panel_lab,
+        reps,
+        n_layers,
+        max_auto_k,
     )
-    if len(refined_reps) > len(color_names):
-        color_names = color_names + [r["name"] for r in refined_reps[len(color_names):]]
 
-    if not refined_seeds:
-        refined_seeds = [cv_seeds_rgb[i] for i in range(min(n_layers, len(cv_seeds_rgb)))]
-
-    refined_seeds_arr = np.array(refined_seeds, dtype=np.uint8)
-    seeds_lab = rgb2lab(refined_seeds_arr[np.newaxis, ...])[0]
-    seeds_xy = [(rep["internal_x"], rep["internal_y"]) for rep in refined_reps]
+    refined_seeds_arr = prepared.refined_seeds_rgb
+    seed_lab = seeds_lab(refined_seeds_arr)
+    seeds_xy = [(rep["internal_x"], rep["internal_y"]) for rep in prepared.refined_reps]
 
     labels = _region_grow_dijkstra_edge(
-        panel_lab, seeds_xy, seeds_lab, edge_map, edge_penalty=edge_penalty
+        panel_lab,
+        seeds_xy,
+        seed_lab,
+        edge_map,
+        edge_penalty=edge_penalty,
     )
-    labels = _shape_filter(labels)
-    labels = _merge_small_regions(labels, min_area_frac=0.003)
+    labels = postprocess_edge_labels(labels)
 
     overlay = _create_overlay(panel_rgb, labels, refined_seeds_arr)
 
@@ -154,10 +116,12 @@ def segment(
         "overlay": overlay,
         "meta": {
             "engine": "edge_grow",
-            "reps_refined": refined_reps,
-            "cv_seeds": cv_seeds_rgb.tolist() if len(cv_seeds_rgb) else [],
-            "bg_rgb": bg_rgb.tolist(),
-            "auto_k_added": len(refined_reps) - (len(reps) if reps else 0),
+            "reps_refined": prepared.refined_reps,
+            "cv_seeds": (
+                prepared.cv_seeds_rgb.tolist() if len(prepared.cv_seeds_rgb) else []
+            ),
+            "bg_rgb": prepared.bg_rgb.tolist(),
+            "auto_k_added": prepared.auto_k_added,
             "edge_penalty": edge_penalty,
             "edge_map_stats": {
                 "min": float(edge_map.min()),

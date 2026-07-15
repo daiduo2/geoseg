@@ -24,10 +24,10 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.vlm_reps import vertical_scan_reps
-from geoseg.modules.segment_engines import route_and_segment
-from geoseg.modules.cv_detect.panel_detector import detect_panels
-from geoseg.modules.vlm_client.client import review_segmentation_quality
+from geoseg.experiments import vertical_scan_reps
+from geoseg.experiments import route_and_segment
+from geoseg.experiments import detect_panels
+from geoseg.experiments import review_segmentation_quality
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 OUT_DIR = Path("runs/new_papers_vlm/vscan_audit")

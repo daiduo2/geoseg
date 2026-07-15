@@ -26,8 +26,8 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.controller import run_pipeline
-from geoseg.modules.vlm_client.client import classify_figure
-from geoseg.modules.cv_detect.panel_detector import detect_panels
+from geoseg.experiments import classify_figure
+from geoseg.experiments import detect_panels
 
 # ---------------------------------------------------------------------------
 # Configuration

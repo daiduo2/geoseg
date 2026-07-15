@@ -9,7 +9,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from geoseg.modules.vlm_client.client import review_page_overview
+from geoseg.experiments import review_page_overview
 
 
 def main():

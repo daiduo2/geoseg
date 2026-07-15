@@ -9,7 +9,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.vlm_client.client import classify_figure
+from geoseg.experiments import classify_figure
 
 PAPER = sys.argv[1]
 IMG_DIR = sys.argv[2]

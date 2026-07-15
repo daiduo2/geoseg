@@ -7,7 +7,11 @@ from collections.abc import Callable
 import numpy as np
 
 from geoseg.core.models import SegmentationResult
-from geoseg.modules.segment_engines.registry import get_engine_spec
+from geoseg.modules.segment_engines.registry import (
+    EngineSpec,
+    get_engine_spec,
+    load_engine_callable,
+)
 
 
 def _normalize_result(raw: dict, engine_name: str, n_layers: int) -> SegmentationResult:
@@ -58,6 +62,41 @@ def _run_with_fallback(
             )
 
 
+def _call_engine(
+    spec: EngineSpec,
+    panel_rgb: np.ndarray,
+    reps: list[dict] | None,
+    colorbar_rgb: np.ndarray | None,
+    n_layers: int,
+    n_color_zones: int,
+) -> dict:
+    segment = load_engine_callable(spec)
+
+    if spec.adapter == "v4":
+        return segment(
+            panel_rgb,
+            reps=reps,
+            colorbar_rgb=colorbar_rgb,
+            n_layers=n_layers,
+            n_color_zones=n_color_zones,
+        )
+    if spec.adapter == "colorbar_guided":
+        return segment(
+            panel_rgb,
+            colorbar_rgb,
+            n_layers=n_layers,
+            n_color_zones=n_color_zones,
+        )
+    if spec.adapter == "grayscale":
+        return segment(panel_rgb, n_layers=n_layers, reps=reps)
+    if spec.adapter == "reps_keyword":
+        return segment(panel_rgb, reps=reps, n_layers=n_layers)
+    if spec.adapter == "reps_positional":
+        return segment(panel_rgb, reps, n_layers=n_layers)
+
+    raise ValueError(f"Unsupported engine adapter: {spec.adapter}")
+
+
 def run_engine(
     engine: str,
     panel_rgb: np.ndarray,
@@ -69,128 +108,31 @@ def run_engine(
     """Run a registered engine by name."""
 
     def _v4_fallback() -> dict:
-        from geoseg.modules.segment_engines.v4_kmeans import segment
-
-        return segment(
+        fallback_spec = get_engine_spec("v4_kmeans")
+        if fallback_spec is None:
+            raise ValueError("Missing v4_kmeans fallback engine")
+        return _call_engine(
+            fallback_spec,
             panel_rgb,
-            reps=reps,
-            colorbar_rgb=colorbar_rgb,
-            n_layers=n_layers,
-            n_color_zones=n_color_zones,
+            reps,
+            colorbar_rgb,
+            n_layers,
+            n_color_zones,
         )
 
     spec = get_engine_spec(engine)
-
-    if spec and spec.requires_reps and not reps:
+    if spec is None:
         return _normalize_result(_v4_fallback(), "v4_kmeans", n_layers)
 
-    if engine == "grayscale_agglomerative":
-        from geoseg.modules.segment_engines.grayscale import segment
-
-        return _run_with_fallback(
-            lambda: segment(panel_rgb, n_layers=n_layers, reps=reps),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine in ("v4_kmeans_colorbar", "v4_kmeans_pastel"):
-        from geoseg.modules.segment_engines.v4_kmeans import (
-            segment_colorbar_guided,
-            segment_pastel_faded,
-        )
-
-        if engine == "v4_kmeans_colorbar":
-            return _run_with_fallback(
-                lambda: segment_colorbar_guided(
-                    panel_rgb,
-                    colorbar_rgb,
-                    n_layers=n_layers,
-                    n_color_zones=n_color_zones,
-                ),
-                _v4_fallback,
-                engine,
-                panel_rgb,
-                n_layers,
-            )
-        return _run_with_fallback(
-            lambda: segment_pastel_faded(
-                panel_rgb,
-                colorbar_rgb,
-                n_layers=n_layers,
-                n_color_zones=n_color_zones,
-            ),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine == "v4_kmeans":
+    if spec.requires_reps and not reps:
         return _normalize_result(_v4_fallback(), "v4_kmeans", n_layers)
 
-    if engine == "kmeans_full":
-        from geoseg.modules.segment_engines.kmeans_full import segment
-
-        return _run_with_fallback(
-            lambda: segment(panel_rgb, reps, n_layers=n_layers),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine == "edge_guided":
-        from geoseg.modules.segment_engines.edge_guided import segment
-
-        return _run_with_fallback(
-            lambda: segment(panel_rgb, reps, n_layers=n_layers),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine == "edge_grow":
-        from geoseg.modules.segment_engines.edge_grow import segment
-
-        return _run_with_fallback(
-            lambda: segment(panel_rgb, reps, n_layers=n_layers),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine == "ensemble":
-        from geoseg.modules.segment_engines.ensemble import segment
-
-        return _run_with_fallback(
-            lambda: segment(panel_rgb, reps, n_layers=n_layers),
-            _v4_fallback,
-            engine,
-            panel_rgb,
-            n_layers,
-        )
-
-    if engine == "tubular":
-        from geoseg.modules.segment_engines.tubular_structure import segment
-
-        return _normalize_result(
-            segment(panel_rgb, reps=reps, n_layers=n_layers),
-            "tubular",
-            n_layers,
-        )
-
-    if engine == "horizon_refinement":
-        from geoseg.modules.segment_engines.horizon_refinement import segment as hr_segment
-
+    if spec.adapter == "horizon_refinement":
         coarse = _normalize_result(_v4_fallback(), "v4_kmeans", n_layers)
         if (coarse["labels"] != 0).sum() == 0:
             return coarse
         return _run_with_fallback(
-            lambda: hr_segment(
+            lambda: load_engine_callable(spec)(
                 panel_rgb,
                 n_layers=n_layers,
                 coarse_labels=coarse["labels"],
@@ -201,7 +143,20 @@ def run_engine(
             n_layers,
         )
 
-    return _normalize_result(_v4_fallback(), "v4_kmeans", n_layers)
+    if spec.fallback_engine is None:
+        return _normalize_result(
+            _call_engine(spec, panel_rgb, reps, colorbar_rgb, n_layers, n_color_zones),
+            engine,
+            n_layers,
+        )
+
+    return _run_with_fallback(
+        lambda: _call_engine(spec, panel_rgb, reps, colorbar_rgb, n_layers, n_color_zones),
+        _v4_fallback,
+        engine,
+        panel_rgb,
+        n_layers,
+    )
 
 
 __all__ = ["_normalize_result", "run_engine"]

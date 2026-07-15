@@ -1,4 +1,7 @@
-"""Debug spatial relabeling — why does refinement fail to improve?"""
+"""Debug spatial relabeling: why does refinement fail to improve?
+
+Algorithm-specific experiment: imports concrete engine internals intentionally.
+"""
 from __future__ import annotations
 
 import sys

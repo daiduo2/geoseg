@@ -1,167 +1,21 @@
-"""Batch processing services for geoseg figure worksets."""
+"""Batch processing service orchestration."""
 
 from __future__ import annotations
 
-import time
-import traceback
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-from PIL import Image
-
-from geoseg.controller import run_pipeline
-from geoseg.modules.visual_audit import create_audit_report
+from geoseg.batch.audit import run_visual_audit
+from geoseg.batch.entry import process_entry
+from geoseg.batch.export import export_reviewed
+from geoseg.batch.session import init_session
 from geoseg.session_state import (
     FigureStatus,
     SessionState,
-    create_session,
     get_summary,
-    list_ready_for_export,
-    load_session,
     save_session,
     update_figure,
 )
-
-
-def run_visual_audit(
-    labels: np.ndarray,
-    panel_rgb: np.ndarray,
-    audit_dir: Path,
-    panel3_mode: bool = False,
-    labels_path: str | None = None,
-    gt_mask_path: str | None = None,
-) -> dict:
-    """Run visual audit on a segmentation result."""
-    audit_dir.mkdir(parents=True, exist_ok=True)
-    return create_audit_report(
-        labels=labels,
-        panel_rgb=panel_rgb,
-        output_dir=str(audit_dir),
-        panel3_mode=panel3_mode,
-        labels_path=labels_path,
-        gt_mask_path=gt_mask_path,
-    )
-
-
-def init_session(images_dir: Path, output_dir: Path) -> SessionState:
-    """Create or load an existing session for the batch."""
-    session_path = output_dir / "session.json"
-    if session_path.exists():
-        try:
-            return load_session(session_path)
-        except Exception:
-            pass
-    image_files = sorted(images_dir.glob("*.jpg")) + sorted(images_dir.glob("*.png"))
-    return create_session([str(p) for p in image_files])
-
-
-def process_entry(
-    entry,
-    output_dir: Path,
-    n_layers: int,
-    quality_preference: str,
-    skip_non_velocity_model: bool,
-    use_vlm: bool,
-    properties_map: dict[str, dict] | None,
-) -> dict[str, Any]:
-    """Run the full pipeline for a single figure entry."""
-    img_path = Path(entry.source_path)
-    t0 = time.perf_counter()
-
-    try:
-        img = Image.open(img_path).convert("RGB")
-        arr = np.array(img)
-
-        img_out_dir = output_dir / entry.figure_id
-        result = run_pipeline(
-            arr,
-            n_layers=n_layers,
-            quality_preference=quality_preference,
-            skip_non_velocity_model=skip_non_velocity_model,
-            use_vlm=use_vlm,
-            properties_map=properties_map,
-            output_dir=img_out_dir,
-            save_intermediates=True,
-        )
-        elapsed = time.perf_counter() - t0
-
-        seg_record = None
-        if result["status"] in ("ok", "empty") and result.get("panels"):
-            panel = result["panels"][0] if result["panels"] else {}
-            if panel.get("status") == "ok":
-                from geoseg.session_state import SegmentationAttempt, SegmentationRecord
-
-                panel_id = panel.get("panel_id", 0)
-                panel_dir = img_out_dir / f"panel{panel_id}"
-                seg_record = SegmentationRecord(
-                    result_dir=str(panel_dir),
-                    engine=panel.get("engines_used", "unknown"),
-                    n_layers=panel.get("n_layers", n_layers),
-                    quality_score=0.0,
-                    overlay_path=str(panel_dir / "overlay.jpg"),
-                    labels_path=str(panel_dir / "labels.npz"),
-                    attempts=[
-                        SegmentationAttempt(
-                            engine=panel.get("engines_used", "unknown"),
-                            n_layers=panel.get("n_layers", n_layers),
-                            quality_score=0.0,
-                        )
-                    ],
-                )
-
-                try:
-                    labels = np.load(seg_record.labels_path)["labels"]
-                    bbox = panel.get("bbox", [0, 0, arr.shape[1], arr.shape[0]])
-                    x, y, w, h = bbox
-                    panel_rgb = arr[y : y + h, x : x + w]
-                    panel3_mode = (
-                        "panel3" in entry.figure_id.lower()
-                        or "panel_3" in entry.figure_id.lower()
-                    )
-                    audit_dir = panel_dir / "visual_audit"
-                    report = run_visual_audit(
-                        labels,
-                        panel_rgb,
-                        audit_dir,
-                        panel3_mode=panel3_mode,
-                        labels_path=seg_record.labels_path,
-                    )
-                    seg_record.audit = report
-                    if report.get("rejected"):
-                        return {
-                            "status": "audit_failed",
-                            "reason": "; ".join(report.get("reasons", [])),
-                            "classification": result["classification"],
-                            "elapsed": time.perf_counter() - t0,
-                            "seg_record": seg_record,
-                        }
-                except Exception as audit_exc:
-                    return {
-                        "status": "error",
-                        "reason": f"visual_audit_failed: {audit_exc}",
-                        "classification": result["classification"],
-                        "elapsed": time.perf_counter() - t0,
-                        "seg_record": seg_record,
-                    }
-
-        return {
-            "status": result["status"],
-            "reason": result.get("reason", ""),
-            "classification": result["classification"],
-            "elapsed": elapsed,
-            "seg_record": seg_record,
-        }
-
-    except Exception as exc:
-        elapsed = time.perf_counter() - t0
-        return {
-            "status": "error",
-            "reason": str(exc),
-            "traceback": traceback.format_exc(),
-            "elapsed": elapsed,
-            "seg_record": None,
-        }
 
 
 def process_directory(
@@ -264,57 +118,6 @@ def process_directory(
     print(f"Session: {output_dir / 'session.json'}")
 
     return state
-
-
-def export_reviewed(
-    session_path: str | Path,
-    output_dir: str | Path | None = None,
-) -> dict[str, Any]:
-    """Export all figures marked REVIEWED in the session."""
-    from geoseg.controller import run_post_process_and_export
-
-    state = load_session(session_path)
-    ready = list_ready_for_export(state)
-    if not ready:
-        print("No figures ready for export.")
-        return {"exported": 0, "skipped": 0}
-
-    base_out = Path(output_dir) if output_dir else Path(session_path).parent
-    exported = 0
-    skipped = 0
-
-    for entry in ready:
-        seg = entry.segmentation
-        if seg is None:
-            skipped += 1
-            continue
-
-        labels_path = seg.edited_labels_path or seg.labels_path
-        if not labels_path or not Path(labels_path).exists():
-            skipped += 1
-            continue
-
-        labels = np.load(labels_path)["labels"]
-        panel_out = base_out / entry.figure_id
-
-        try:
-            result = run_post_process_and_export(
-                labels,
-                output_dir=panel_out,
-                save_intermediates=True,
-            )
-            if result["status"] == "ok":
-                exported += 1
-                print(f"  EXPORTED: {entry.figure_id}")
-            else:
-                skipped += 1
-                print(f"  SKIP: {entry.figure_id} ({result.get('reason')})")
-        except Exception as exc:
-            skipped += 1
-            print(f"  ERROR: {entry.figure_id} ({exc})")
-
-    print(f"\nExported: {exported}, Skipped: {skipped}")
-    return {"exported": exported, "skipped": skipped}
 
 
 __all__ = [

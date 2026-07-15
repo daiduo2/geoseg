@@ -12,6 +12,7 @@ from geoseg.modules.segment_engines.registry import (
     EngineSpec,
     get_engine_spec,
     list_engines,
+    load_engine_callable,
 )
 from geoseg.modules.segment_engines.retry import (
     RETRY_CHAIN,
@@ -28,6 +29,7 @@ __all__ = [
     "count_foreground_labels",
     "get_engine_spec",
     "list_engines",
+    "load_engine_callable",
     "retry_undersegmentation",
     "route_and_segment",
     "run_engine",

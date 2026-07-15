@@ -11,24 +11,13 @@ import numpy as np
 from scipy.cluster.vq import kmeans2
 from scipy import ndimage
 from skimage.color import rgb2lab
-from skimage.feature import canny
-from skimage.morphology import closing, disk
 from skimage.measure import label, regionprops
 
-from geoseg.modules.segment_engines.internal.color import (
-    _estimate_background_color,
-    saturation_ratio,
-)
+from geoseg.modules.segment_engines.edge.gradients import canny_edge_map
+from geoseg.modules.segment_engines.edge.postprocess import postprocess_edge_labels
+from geoseg.modules.segment_engines.edge.seeds import prepare_edge_seeds, seeds_lab
+from geoseg.modules.segment_engines.internal.color import saturation_ratio
 from geoseg.modules.segment_engines.internal.overlay import _create_overlay
-from geoseg.modules.segment_engines.internal.regions import (
-    _merge_small_regions,
-    _shape_filter,
-)
-from geoseg.modules.segment_engines.internal.seeds import (
-    _auto_k,
-    _cv_seeds,
-    _refine_vlm_seeds,
-)
 
 
 def _compute_edge_map(
@@ -41,11 +30,12 @@ def _compute_edge_map(
 
     Returns (gradient, edge_mask).
     """
-    l_norm = panel_lab[..., 0] / 100.0
-    edge_mask = canny(l_norm, sigma=canny_sigma, low_threshold=canny_low, high_threshold=canny_high)
-    edge_mask = closing(edge_mask, footprint=disk(1))
-    gradient = edge_mask.astype(np.float32)
-    return gradient, edge_mask
+    return canny_edge_map(
+        panel_lab,
+        canny_sigma=canny_sigma,
+        canny_low=canny_low,
+        canny_high=canny_high,
+    )
 
 
 def _edge_guided_kmeans(
@@ -62,7 +52,13 @@ def _edge_guided_kmeans(
     flat_lab = panel_lab.reshape(-1, 3)
     k = seeds_lab.shape[0]
 
-    centroids, labels_flat = kmeans2(flat_lab, seeds_lab, minit="matrix", iter=max_iter, thresh=tol)
+    centroids, labels_flat = kmeans2(
+        flat_lab,
+        seeds_lab,
+        minit="matrix",
+        iter=max_iter,
+        thresh=tol,
+    )
     labels = labels_flat.reshape(h, w).astype(np.int32)
     centroids = centroids.astype(np.float64)
 
@@ -122,49 +118,28 @@ def segment(
     Returns:
         dict with keys: labels, seeds, overlay, meta.
     """
-    h, w, _ = panel_rgb.shape
     panel_lab = rgb2lab(panel_rgb)
-    bg_rgb = _estimate_background_color(panel_rgb)
-    min_auto_count = max(50, h * w // 2000)
 
-    gradient, edge_mask = _compute_edge_map(panel_lab)
-
-    if reps:
-        cv_seeds_rgb, cv_tags = _cv_seeds(panel_rgb, k=len(reps))
-        used_cv_indices: set[int] = set()
-
-        refined_seeds, refined_reps = _refine_vlm_seeds(
-            panel_rgb, reps, bg_rgb, cv_seeds_rgb, cv_tags, used_cv_indices
-        )
-        color_names = [r.get("color_name", f"layer_{i + 1}") for i, r in enumerate(reps)]
-    else:
-        cv_seeds_rgb, cv_tags = _cv_seeds(panel_rgb, k=n_layers)
-        used_cv_indices: set[int] = set()
-        refined_seeds = []
-        refined_reps = []
-        color_names = [f"layer_{i + 1}" for i in range(n_layers)]
-
-    refined_seeds, refined_reps = _auto_k(
-        panel_rgb, panel_lab, bg_rgb,
-        refined_seeds, refined_reps,
-        cv_seeds_rgb, cv_tags, used_cv_indices,
-        max_auto_k, min_auto_count,
+    _, edge_mask = _compute_edge_map(panel_lab)
+    prepared = prepare_edge_seeds(
+        panel_rgb,
+        panel_lab,
+        reps,
+        n_layers,
+        max_auto_k,
     )
-    if len(refined_reps) > len(color_names):
-        color_names = color_names + [r["name"] for r in refined_reps[len(color_names):]]
 
-    if not refined_seeds:
-        refined_seeds = [cv_seeds_rgb[i] for i in range(min(n_layers, len(cv_seeds_rgb)))]
-
-    refined_seeds_arr = np.array(refined_seeds, dtype=np.uint8)
-    seeds_lab = rgb2lab(refined_seeds_arr[np.newaxis, ...])[0]
+    refined_seeds_arr = prepared.refined_seeds_rgb
+    seed_lab = seeds_lab(refined_seeds_arr)
 
     centroids, labels = _edge_guided_kmeans(
-        panel_lab, seeds_lab, edge_mask,
-        edge_weight=edge_weight, sigma=sigma,
+        panel_lab,
+        seed_lab,
+        edge_mask,
+        edge_weight=edge_weight,
+        sigma=sigma,
     )
-    labels = _shape_filter(labels)
-    labels = _merge_small_regions(labels, min_area_frac=0.003)
+    labels = postprocess_edge_labels(labels)
 
     overlay = _create_overlay(panel_rgb, labels, refined_seeds_arr)
 
@@ -174,10 +149,12 @@ def segment(
         "overlay": overlay,
         "meta": {
             "engine": "edge_guided",
-            "reps_refined": refined_reps,
-            "cv_seeds": cv_seeds_rgb.tolist() if len(cv_seeds_rgb) else [],
-            "bg_rgb": bg_rgb.tolist(),
-            "auto_k_added": len(refined_reps) - (len(reps) if reps else 0),
+            "reps_refined": prepared.refined_reps,
+            "cv_seeds": (
+                prepared.cv_seeds_rgb.tolist() if len(prepared.cv_seeds_rgb) else []
+            ),
+            "bg_rgb": prepared.bg_rgb.tolist(),
+            "auto_k_added": prepared.auto_k_added,
             "edge_weight": edge_weight,
             "sigma": sigma,
             "edge_pixels_pct": float(edge_mask.mean() * 100),

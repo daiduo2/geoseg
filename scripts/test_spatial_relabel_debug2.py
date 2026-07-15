@@ -1,4 +1,7 @@
-"""Debug: check which refinement path is taken."""
+"""Debug: check which refinement path is taken.
+
+Algorithm-specific experiment: imports concrete engine internals intentionally.
+"""
 from __future__ import annotations
 
 import sys
