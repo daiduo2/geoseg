@@ -1,6 +1,6 @@
 """Integration tests for the napari editor application.
 
-Run: python -m pytest geoseg/modules/editor/test_napari_app.py -v
+Run: python -m pytest tests/modules/editor/test_napari_app.py -v -m gui
 
 These tests create real napari Viewers but only exercise programmatic
 shape changes, avoiding mouse/keyboard automation. They are skipped when
@@ -25,6 +25,8 @@ except Exception:
     NAPARI_AVAILABLE = False
 
 from geoseg.modules.editor.napari_app import GeoSegEditor
+
+pytestmark = pytest.mark.gui
 
 
 @pytest.fixture

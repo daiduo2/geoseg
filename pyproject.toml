@@ -58,3 +58,6 @@ version = {attr = "geoseg.__version__"}
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "gui: tests that instantiate real Qt/napari viewers; excluded from default CI",
+]
