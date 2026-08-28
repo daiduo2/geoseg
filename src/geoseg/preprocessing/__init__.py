@@ -4,6 +4,7 @@ from __future__ import annotations
 from geoseg.preprocessing.absorption import absorb_artifacts, visualize_mask_on_image
 from geoseg.preprocessing.detectors import (
     detect_black_crosses,
+    detect_red_boundaries,
     detect_red_lines,
     detect_text,
 )
@@ -17,6 +18,7 @@ from geoseg.preprocessing.pipeline import (
 __all__ = [
     "absorb_artifacts",
     "detect_black_crosses",
+    "detect_red_boundaries",
     "detect_red_lines",
     "detect_text",
     "merge_artifact_labels",

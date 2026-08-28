@@ -6,12 +6,32 @@ import pytest
 
 from geoseg.modules.visual_audit.color_residual import (
     compute_color_residual_map,
+    compute_palette_match_residuals,
     compute_label_representative_colors,
     compute_label_residual_stats,
     create_color_residual_overlay,
     estimate_text_mask,
     find_high_deviation_regions,
 )
+
+
+def test_compute_palette_match_residuals_exact_and_ambiguous() -> None:
+    palette = np.array([[255, 0, 0], [0, 0, 255]], dtype=np.uint8)
+    image = np.array([[[255, 0, 0], [0, 0, 255], [128, 0, 128]]], dtype=np.uint8)
+
+    result = compute_palette_match_residuals(image, palette, chunk_size=2)
+
+    assert result["labels"].shape == (1, 3)
+    assert result["labels"][0, :2].tolist() == [0, 1]
+    assert result["rgb_residual"][0, :2].tolist() == [0.0, 0.0]
+    assert result["delta_e"][0, :2].tolist() == [0.0, 0.0]
+    assert result["margin_delta_e"][0, 2] < result["margin_delta_e"][0, 0]
+
+
+def test_compute_palette_match_residuals_validates_palette() -> None:
+    image = np.zeros((2, 2, 3), dtype=np.uint8)
+    with pytest.raises(ValueError, match="K >= 2"):
+        compute_palette_match_residuals(image, np.zeros((1, 3), dtype=np.uint8))
 
 
 def _make_solid_image(h: int, w: int, color: tuple[int, int, int]) -> np.ndarray:

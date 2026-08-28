@@ -27,6 +27,62 @@ def _validate_shapes(labels: np.ndarray, image_rgb: np.ndarray) -> None:
         )
 
 
+def compute_palette_match_residuals(
+    image_rgb: np.ndarray,
+    palette_rgb: np.ndarray,
+    *,
+    chunk_size: int = 200_000,
+) -> dict[str, np.ndarray]:
+    """Match pixels to exact palette colors and retain RGB/LAB diagnostics.
+
+    ``margin_delta_e`` is the distance from the second-nearest palette color
+    minus the nearest distance. Small values identify ambiguous color matches.
+    Chunking bounds the temporary pixel-by-palette distance matrix for large
+    publication figures.
+    """
+    if image_rgb.ndim != 3 or image_rgb.shape[2] != 3:
+        raise ValueError("image_rgb must have shape (H, W, 3)")
+    palette = np.asarray(palette_rgb, dtype=np.uint8)
+    if palette.ndim != 2 or palette.shape[1] != 3 or len(palette) < 2:
+        raise ValueError("palette_rgb must have shape (K, 3) with K >= 2")
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+
+    h, w = image_rgb.shape[:2]
+    flat_rgb = image_rgb.reshape(-1, 3).astype(np.float32)
+    flat_lab = rgb2lab(image_rgb.astype(np.float64) / 255.0).reshape(-1, 3)
+    palette_lab = rgb2lab(palette[np.newaxis, ...].astype(np.float64) / 255.0)[0]
+
+    labels = np.empty(flat_rgb.shape[0], dtype=np.int32)
+    rgb_residual = np.empty(flat_rgb.shape[0], dtype=np.float32)
+    delta_e = np.empty(flat_rgb.shape[0], dtype=np.float32)
+    margin = np.empty(flat_rgb.shape[0], dtype=np.float32)
+
+    for start in range(0, flat_rgb.shape[0], chunk_size):
+        stop = min(start + chunk_size, flat_rgb.shape[0])
+        lab_d2 = (
+            (flat_lab[start:stop, None, :] - palette_lab[None, :, :]) ** 2
+        ).sum(axis=2)
+        nearest_two = np.partition(lab_d2, kth=1, axis=1)[:, :2]
+        nearest_two.sort(axis=1)
+        chunk_labels = lab_d2.argmin(axis=1).astype(np.int32)
+        matched_rgb = palette[chunk_labels].astype(np.float32)
+
+        labels[start:stop] = chunk_labels
+        rgb_residual[start:stop] = np.linalg.norm(
+            flat_rgb[start:stop] - matched_rgb, axis=1
+        )
+        delta_e[start:stop] = np.sqrt(nearest_two[:, 0])
+        margin[start:stop] = np.sqrt(nearest_two[:, 1]) - delta_e[start:stop]
+
+    return {
+        "labels": labels.reshape(h, w),
+        "rgb_residual": rgb_residual.reshape(h, w),
+        "delta_e": delta_e.reshape(h, w),
+        "margin_delta_e": margin.reshape(h, w),
+    }
+
+
 def estimate_text_mask(image_rgb: np.ndarray, dilation_iterations: int = 2) -> np.ndarray:
     """Lightweight text/annotation mask estimation.
 

@@ -9,7 +9,10 @@ from geoseg.modules.post_process.properties import (
     save_properties_json,
 )
 from geoseg.modules.post_process.merge import merge_warm_labels, merge_labels_by_ids
-from geoseg.modules.post_process.split import split_label_by_color_components
+from geoseg.modules.post_process.split import (
+    split_label_by_color_components,
+    split_labels_by_red_boundaries,
+)
 
 __all__ = [
     "extract_components",
@@ -23,4 +26,5 @@ __all__ = [
     "merge_warm_labels",
     "merge_labels_by_ids",
     "split_label_by_color_components",
+    "split_labels_by_red_boundaries",
 ]

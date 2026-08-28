@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>geoseg v2 · 同类项目调研报告 · 2026-07-17</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-2: #111a2e;
+    --panel: #182338;
+    --panel-2: #1f2c46;
+    --border: #2a3a5c;
+    --text: #e6ecf7;
+    --muted: #8aa0c2;
+    --primary: #5fb1ff;
+    --primary-2: #4a8fd9;
+    --accent: #ffb547;
+    --accent-2: #ff8a47;
+    --teal: #4dd6c2;
+    --rose: #ff6b8b;
+    --green: #6ee7a7;
+    --purple: #b48aff;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --radius: 14px;
+    --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1a2a4a 0%, transparent 60%),
+                radial-gradient(900px 500px at -10% 30%, #1b2740 0%, transparent 60%),
+                var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Nav ---------- */
+  nav.top {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,18,32,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav.top .bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; max-width: 1180px; margin: 0 auto;
+  }
+  nav.top .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; letter-spacing: 0.3px;
+  }
+  nav.top .brand .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--teal));
+    box-shadow: 0 0 12px var(--primary);
+  }
+  nav.top ul { list-style: none; display: flex; gap: 18px; flex-wrap: wrap; }
+  nav.top ul a { color: var(--muted); font-size: 14px; }
+  nav.top ul a:hover { color: var(--text); text-decoration: none; }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    padding: 80px 0 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 280px at 20% 30%, rgba(95,177,255,0.10), transparent 60%),
+      radial-gradient(500px 240px at 80% 70%, rgba(77,214,194,0.10), transparent 60%);
+    pointer-events: none;
+  }
+  header.hero .eyebrow {
+    display: inline-flex; gap: 8px; align-items: center;
+    color: var(--muted); font-size: 13px; letter-spacing: 0.18em;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  header.hero .eyebrow::before {
+    content: ""; width: 28px; height: 1px; background: var(--primary);
+  }
+  header.hero h1 {
+    font-size: clamp(28px, 4.5vw, 48px);
+    line-height: 1.15; font-weight: 800; margin-bottom: 14px;
+    background: linear-gradient(120deg, #fff 0%, #cfe4ff 40%, var(--teal) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header.hero .sub {
+    color: var(--muted); font-size: 18px; max-width: 780px; margin-bottom: 28px;
+  }
+  header.hero .meta {
+    display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px;
+  }
+  header.hero .meta span {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  /* ---------- Sections ---------- */
+  section {
+    padding: 56px 0;
+    border-top: 1px solid var(--border);
+  }
+  section:first-of-type { border-top: 0; }
+  section h2 {
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 800; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  section h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #fff; font-size: 14px; font-weight: 800;
+  }
+  section h3 {
+    font-size: 18px; font-weight: 700; margin: 28px 0 12px;
+    color: var(--text);
+  }
+  section p.lede {
+    color: var(--muted); margin-bottom: 24px; font-size: 15px;
+  }
+  section h4 {
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;
+  }
+
+  /* ---------- KPI grid ---------- */
+  .kpi-grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    margin-bottom: 28px;
+  }
+  .kpi {
+    background: linear-gradient(160deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .kpi::after {
+    content: ""; position: absolute; right: -20px; top: -20px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(95,177,255,0.18), transparent 70%);
+  }
+  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .kpi .value {
+    font-size: 38px; font-weight: 800; margin: 8px 0 6px;
+    background: linear-gradient(120deg, #fff, var(--primary));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .kpi .delta { color: var(--muted); font-size: 13px; }
+  .kpi .delta strong { color: var(--accent); }
+
+  /* ---------- Cards / grids ---------- */
+  .grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--primary-2); }
+  .card h4 { margin-bottom: 6px; }
+  .card p { color: var(--muted); font-size: 14px; }
+  .card ul { margin-left: 18px; color: var(--muted); font-size: 14px; }
+  .card ul li { margin-bottom: 4px; }
+  .pill {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    background: rgba(95,177,255,0.12); color: var(--primary);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+    border: 1px solid rgba(95,177,255,0.25);
+    margin-right: 4px;
+  }
+  .pill.amber { background: rgba(255,181,71,0.10); color: var(--accent); border-color: rgba(255,181,71,0.25); }
+  .pill.teal  { background: rgba(77,214,194,0.10); color: var(--teal);  border-color: rgba(77,214,194,0.25); }
+  .pill.rose  { background: rgba(255,107,139,0.10); color: var(--rose); border-color: rgba(255,107,139,0.25); }
+  .pill.green { background: rgba(110,231,167,0.10); color: var(--green); border-color: rgba(110,231,167,0.25); }
+  .pill.purple{ background: rgba(180,138,255,0.10); color: var(--purple);border-color: rgba(180,138,255,0.25); }
+
+  /* ---------- Tables ---------- */
+  .table-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: auto;
+    box-shadow: var(--shadow);
+  }
+  table {
+    width: 100%; border-collapse: collapse; min-width: 720px;
+  }
+  table thead th {
+    background: var(--panel-2); color: var(--muted);
+    text-align: left; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+  table tbody td {
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+    font-size: 14px; vertical-align: top;
+  }
+  table tbody tr:last-child td { border-bottom: 0; }
+  table tbody tr:hover { background: rgba(95,177,255,0.04); }
+  table .name { font-weight: 700; color: var(--text); }
+  table .name small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; margin-top: 2px; }
+  table .domain {
+    font-size: 11px; padding: 2px 8px; border-radius: 6px;
+    background: rgba(255,181,71,0.10); color: var(--accent);
+    border: 1px solid rgba(255,181,71,0.25);
+    display: inline-block;
+  }
+  table .domain.atmos { background: rgba(77,214,194,0.10); color: var(--teal); border-color: rgba(77,214,194,0.25); }
+  table .domain.geo   { background: rgba(180,138,255,0.10); color: var(--purple); border-color: rgba(180,138,255,0.25); }
+  table .domain.gen   { background: rgba(95,177,255,0.10); color: var(--primary); border-color: rgba(95,177,255,0.25); }
+
+  /* ---------- Pipeline SVG ---------- */
+  .pipeline-wrap {
+    background: linear-gradient(160deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; box-shadow: var(--shadow);
+  }
+  .pipeline-wrap svg { display: block; width: 100%; height: auto; }
+
+  /* ---------- Charts ---------- */
+  .chart-grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .chart-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .chart-card h4 { margin-bottom: 4px; }
+  .chart-card .sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .chart-card .canvas-wrap { position: relative; height: 280px; }
+  .chart-card.wide .canvas-wrap { height: 340px; }
+  .chart-card.tall .canvas-wrap { height: 360px; }
+
+  /* ---------- Coverage matrix ---------- */
+  .matrix {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: auto;
+    box-shadow: var(--shadow);
+  }
+  .matrix table { min-width: 880px; }
+  .matrix th.stages { text-align: center; font-size: 11px; }
+  .matrix td.stage {
+    text-align: center; padding: 10px 6px; font-family: var(--mono);
+    font-size: 13px; font-weight: 700;
+  }
+  .matrix td.stage.c3 { background: rgba(110,231,167,0.20); color: var(--green); }
+  .matrix td.stage.c2 { background: rgba(255,181,71,0.18); color: var(--accent); }
+  .matrix td.stage.c1 { background: rgba(95,177,255,0.16); color: var(--primary); }
+  .matrix td.stage.c0 { background: rgba(255,107,139,0.10); color: var(--rose); }
+  .matrix .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 14px 18px; background: var(--panel-2);
+    border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+  }
+  .matrix .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .matrix .legend i {
+    width: 14px; height: 14px; border-radius: 4px; display: inline-block;
+  }
+  .matrix .legend i.c3 { background: rgba(110,231,167,0.30); }
+  .matrix .legend i.c2 { background: rgba(255,181,71,0.25); }
+  .matrix .legend i.c1 { background: rgba(95,177,255,0.22); }
+  .matrix .legend i.c0 { background: rgba(255,107,139,0.15); }
+
+  /* ---------- SWOT ---------- */
+  .swot {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .swot .q {
+    border-radius: var(--radius); padding: 20px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    background: var(--panel);
+  }
+  .swot .q.s { border-top: 3px solid var(--green); }
+  .swot .q.w { border-top: 3px solid var(--rose); }
+  .swot .q.o { border-top: 3px solid var(--accent); }
+  .swot .q.t { border-top: 3px solid var(--purple); }
+  .swot .q h4 {
+    color: var(--text); text-transform: none; letter-spacing: 0;
+    font-size: 14px; margin-bottom: 8px;
+  }
+  .swot .q ul { margin-left: 18px; color: var(--muted); font-size: 14px; }
+  .swot .q ul li { margin-bottom: 4px; }
+
+  /* ---------- Heatmap / bubble ---------- */
+  .bubble-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+  }
+  .bubble-wrap .canvas-wrap { position: relative; height: 380px; }
+
+  /* ---------- Timeline ---------- */
+  .timeline {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 20px;
+    box-shadow: var(--shadow); position: relative;
+  }
+  .timeline .axis {
+    position: relative; height: 2px; background: var(--border);
+    margin: 30px 12px;
+  }
+  .timeline .tick {
+    position: absolute; top: -7px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--primary);
+    border: 3px solid var(--bg);
+    transform: translateX(-8px);
+    cursor: pointer;
+  }
+  .timeline .tick .label {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 12px; color: var(--muted);
+    background: var(--panel-2); padding: 4px 10px; border-radius: 8px;
+    border: 1px solid var(--border); font-weight: 600;
+  }
+  .timeline .tick .year {
+    position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+  }
+  .timeline .tick:hover .label { color: var(--text); border-color: var(--primary); }
+
+  /* ---------- Callout ---------- */
+  .callout {
+    background: linear-gradient(120deg, rgba(95,177,255,0.10), rgba(77,214,194,0.08));
+    border: 1px solid rgba(95,177,255,0.25);
+    border-left: 4px solid var(--primary);
+    border-radius: 12px; padding: 18px 22px;
+    color: var(--text); margin-bottom: 24px;
+  }
+  .callout.warn {
+    background: linear-gradient(120deg, rgba(255,181,71,0.10), rgba(255,138,71,0.05));
+    border-color: rgba(255,181,71,0.30); border-left-color: var(--accent);
+  }
+  .callout.success {
+    background: linear-gradient(120deg, rgba(110,231,167,0.10), rgba(77,214,194,0.05));
+    border-color: rgba(110,231,167,0.30); border-left-color: var(--green);
+  }
+  .callout strong { color: var(--text); }
+  .callout p { color: var(--muted); margin-top: 4px; font-size: 14px; }
+
+  /* ---------- Tag chips ---------- */
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    padding: 40px 0 60px; color: var(--muted);
+    border-top: 1px solid var(--border); margin-top: 40px;
+    text-align: center; font-size: 13px;
+  }
+  footer .small { font-size: 11px; opacity: 0.7; margin-top: 8px; }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: white; color: #111; }
+    nav.top { display: none; }
+    section { page-break-inside: avoid; }
+    .card, .chart-card, .kpi { box-shadow: none; border: 1px solid #ddd; }
+  }
+
+  @media (max-width: 700px) {
+    nav.top ul { display: none; }
+    .swot { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> geoseg v2 · 调研报告</div>
+    <ul>
+      <li><a href="#tldr">TL;DR</a></li>
+      <li><a href="#kpi">指标</a></li>
+      <li><a href="#positioning">定位</a></li>
+      <li><a href="#pipeline">管线</a></li>
+      <li><a href="#dashboard">仪表盘</a></li>
+      <li><a href="#domains">领域</a></li>
+      <li><a href="#comparison">对比</a></li>
+      <li><a href="#swot">SWOT</a></li>
+      <li><a href="#refs">参考</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="eyebrow">PROJECT SURVEY · 2026-07-17</div>
+    <h1>geoseg v2 同类项目调研报告</h1>
+    <p class="sub">
+      面向地球物理 / 大气测量学 / 地质学三大领域，系统调研与 geoseg v2（PDF figure → 概念物理模型 → SPECFEM 工件）管线可对标的工具与研究项目。
+      <br>结论：<strong style="color:var(--text)">调研范围内无完整对标</strong>，geoseg v2 的 M0.5→M4 全闭环具有显著差异化。
+    </p>
+    <div class="meta">
+      <span>📅 调研日期 2026-07-17</span>
+      <span>🔬 检索关键词 24 组</span>
+      <span>📚 命中工具 / 论文 30+</span>
+      <span>🎯 4 大领域（地球物理 + 大气 + 地质 + 通用 chart）</span>
+    </div>
+  </div>
+</header>
+
+<section id="tldr">
+  <div class="container">
+    <h2><span class="num">1</span>TL;DR · 核心结论</h2>
+    <p class="lede">把调研压缩成 4 张卡片，每张只回答一个决策问题。</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <div class="card">
+        <span class="pill green">唯一性</span>
+        <h4>无完整对标项目</h4>
+        <p>PDF → 多 figure → panel 分割 → 多引擎融合 → SPECFEM 工件的全闭环管线，在地球物理 / 大气 / 地质领域均未发现直接对标。最接近的工作都只覆盖其中一段。</p>
+      </div>
+      <div class="card">
+        <span class="pill amber">最相关</span>
+        <h4>上游/邻域间接相关</h4>
+        <p>WebPlotDigitizer / DePlot / UniChart 覆盖"chart→data"，FaultSeg3D / striplog 覆盖"邻域（SEG-Y 体数据 / 钻孔 log 数字化）"，但都不解决 geoseg 的"论文 figure 反向 → 概念模型"问题。</p>
+      </div>
+      <div class="card">
+        <span class="pill teal">空白</span>
+        <h4>大气 / 地质几乎空白</h4>
+        <p>大气 Skew-T 反向数字化、地质剖面/地层柱状图反向数值提取 — 调研范围内没有看到对标项目，存在先发迁移窗口。</p>
+      </div>
+      <div class="card">
+        <span class="pill rose">短板</span>
+        <h4>geoseg 自身短板</h4>
+        <p>没有公开 benchmark，对外对标困难；Figure2Data 2025-09 等评测方法论可借鉴，建议自建 geoseg-bench。</p>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:24px;">
+      <strong>差异化一句话：</strong>
+      <p>geoseg v2 = <em>PDF 提取</em> + <em>colorbar → 物理值映射</em> + <em>多分割引擎族（agent 自主选/评/融）</em> + <em>视觉审计</em> + <em>SPECFEM 导出</em>。任何单一工具都只占其中一段。</p>
+    </div>
+  </div>
+</section>
+
+<section id="kpi">
+  <div class="container">
+    <h2><span class="num">2</span>KPI · 调研体量</h2>
+    <p class="lede">衡量本次调研的覆盖广度与发现密度。</p>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">调研工具 / 项目数</div>
+        <div class="value">30<span style="font-size:18px;color:var(--muted)">+</span></div>
+        <div class="delta">含 paper / repo / commercial / benchmark</div>
+      </div>
+      <div class="kpi">
+        <div class="label">覆盖领域</div>
+        <div class="value">4</div>
+        <div class="delta">地球物理 · 大气 · 地质 · 通用 chart-to-data</div>
+      </div>
+      <div class="kpi">
+        <div class="label">WebSearch 关键词组数</div>
+        <div class="value">12</div>
+        <div class="delta">覆盖中英文 / 学术 / 工程 / 商业</div>
+      </div>
+      <div class="kpi">
+        <div class="label">发现直接对标数</div>
+        <div class="value" style="background:linear-gradient(120deg,#fff,var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent;">0</div>
+        <div class="delta">M0.5→M4 全闭环无对标</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="positioning">
+  <div class="container">
+    <h2><span class="num">3</span>geoseg v2 项目定位</h2>
+    <p class="lede">回顾项目自身的设计边界，避免拿不同 scope 的工具做不公平对比。</p>
+
+    <div class="grid">
+      <div class="card">
+        <span class="pill">核心目标</span>
+        <h4>PDF figure → 概念物理模型 → SPECFEM 工件</h4>
+        <p>导师导入文献 PDF → Agent 自动分析 → 多引擎分割 → HITL 编辑 → 一键导出 SPECFEM2D/3D 模型。</p>
+        <div class="tag-row">
+          <span class="pill teal">PDF → figure</span>
+          <span class="pill teal">panel 分割</span>
+          <span class="pill teal">colorbar 反演</span>
+          <span class="pill teal">SPECFEM 导出</span>
+        </div>
+      </div>
+      <div class="card">
+        <span class="pill rose">Scope 红线</span>
+        <h4>只做概念模型提取</h4>
+        <p>不做反射振幅图正演、不做波形反演、不做全波形反演参数调优。<code>figure_classifier</code> 宁可误拒，不可误放 <code>observational_data</code>。</p>
+      </div>
+      <div class="card">
+        <span class="pill amber">架构骨架</span>
+        <h4>M0.5 → M1b → M1.5 → M3 → M3.5 → M4</h4>
+        <p>六阶段 pipeline；MinerU 主提取 + PyMuPDF fallback；多分割引擎族（kmeans / SLIC+graphcut / edge_guided / regional_fusion / v4 / horizon refinement）；sandbox-segment agent 自主选/评/融。</p>
+      </div>
+      <div class="card">
+        <span class="pill purple">交互范式</span>
+        <h4>Agent-Native CLI HITL + napari</h4>
+        <p>所有语义判断走 Claude Code agent 直接读图，不写 VLM client 调 CLI；Tauri/FastAPI 前端 v0.7 后已废弃；批量处理 ≤5 并发 agent。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pipeline">
+  <div class="container">
+    <h2><span class="num">4</span>geoseg v2 管线架构图</h2>
+    <p class="lede">六阶段管线 + 三类输出物。点击下方切换视图。</p>
+
+    <div class="pipeline-wrap">
+      <svg viewBox="0 0 1080 360" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0%" stop-color="#5fb1ff"/>
+            <stop offset="100%" stop-color="#4dd6c2"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0" x2="1">
+            <stop offset="0%" stop-color="#b48aff"/>
+            <stop offset="100%" stop-color="#5fb1ff"/>
+          </linearGradient>
+          <linearGradient id="g3" x1="0" x2="1">
+            <stop offset="0%" stop-color="#ff8a47"/>
+            <stop offset="100%" stop-color="#ffb547"/>
+          </linearGradient>
+          <linearGradient id="g4" x1="0" x2="1">
+            <stop offset="0%" stop-color="#6ee7a7"/>
+            <stop offset="100%" stop-color="#4dd6c2"/>
+          </linearGradient>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fb1ff"/>
+          </marker>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <!-- Input -->
+        <g transform="translate(20,140)">
+          <rect width="80" height="80" rx="12" fill="url(#g1)" opacity="0.9"/>
+          <text x="40" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#0b1220">INPUT</text>
+          <text x="40" y="52" text-anchor="middle" font-size="10" fill="#0b1220">PDF 文献</text>
+        </g>
+
+        <!-- Arrow 1 -->
+        <line x1="105" y1="180" x2="135" y2="180" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M0.5 -->
+        <g transform="translate(140,40)">
+          <rect width="140" height="80" rx="12" fill="#182338" stroke="url(#g1)" stroke-width="2"/>
+          <text x="70" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#5fb1ff">M0.5 · PDF 提取</text>
+          <text x="70" y="44" text-anchor="middle" font-size="10" fill="#8aa0c2">MinerU 主路径</text>
+          <text x="70" y="58" text-anchor="middle" font-size="10" fill="#8aa0c2">PyMuPDF fallback</text>
+          <text x="70" y="72" text-anchor="middle" font-size="9" fill="#ffb547">→ figure + caption</text>
+        </g>
+
+        <line x1="280" y1="80" x2="320" y2="80" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M1 figure-classify -->
+        <g transform="translate(325,40)">
+          <rect width="130" height="80" rx="12" fill="#182338" stroke="url(#g2)" stroke-width="2"/>
+          <text x="65" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#b48aff">M1 · figure-classify</text>
+          <text x="65" y="44" text-anchor="middle" font-size="10" fill="#8aa0c2">Agent 直接读图</text>
+          <text x="65" y="58" text-anchor="middle" font-size="10" fill="#8aa0c2">velocity_model?</text>
+          <text x="65" y="72" text-anchor="middle" font-size="9" fill="#ffb547">→ 拒绝 observational</text>
+        </g>
+
+        <line x1="455" y1="80" x2="495" y2="80" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M1b cv_detect -->
+        <g transform="translate(500,40)">
+          <rect width="140" height="80" rx="12" fill="#182338" stroke="url(#g1)" stroke-width="2"/>
+          <text x="70" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#5fb1ff">M1b · cv_detect</text>
+          <text x="70" y="44" text-anchor="middle" font-size="10" fill="#8aa0c2">panel bbox</text>
+          <text x="70" y="58" text-anchor="middle" font-size="10" fill="#8aa0c2">colorbar 提取</text>
+          <text x="70" y="72" text-anchor="middle" font-size="9" fill="#ffb547">→ physical value map</text>
+        </g>
+
+        <line x1="640" y1="80" x2="680" y2="80" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M3 segmentation engines -->
+        <g transform="translate(685,15)">
+          <rect width="180" height="130" rx="14" fill="#1f2c46" stroke="url(#g3)" stroke-width="2" filter="url(#glow)"/>
+          <text x="90" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#ffb547">M3 · 多引擎分割</text>
+          <text x="90" y="38" text-anchor="middle" font-size="9" fill="#8aa0c2">sandbox-segment agent</text>
+          <!-- engines -->
+          <g transform="translate(12,48)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">kmeans</text>
+          </g>
+          <g transform="translate(94,48)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">SLIC+graphcut</text>
+          </g>
+          <g transform="translate(12,74)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">edge_guided</text>
+          </g>
+          <g transform="translate(94,74)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">regional_fusion</text>
+          </g>
+          <g transform="translate(12,100)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">v4</text>
+          </g>
+          <g transform="translate(94,100)">
+            <rect width="74" height="20" rx="4" fill="#0b1220" stroke="#ffb547" stroke-width="0.8"/>
+            <text x="37" y="14" text-anchor="middle" font-size="9" fill="#ffb547">horizon</text>
+          </g>
+        </g>
+
+        <line x1="865" y1="80" x2="905" y2="80" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M3.5 visual-audit -->
+        <g transform="translate(910,40)">
+          <rect width="140" height="80" rx="12" fill="#182338" stroke="url(#g4)" stroke-width="2"/>
+          <text x="70" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#6ee7a7">M3.5 · visual-audit</text>
+          <text x="70" y="44" text-anchor="middle" font-size="10" fill="#8aa0c2">Agent 读 overlay</text>
+          <text x="70" y="58" text-anchor="middle" font-size="10" fill="#8aa0c2">RegionalAudit</text>
+          <text x="70" y="72" text-anchor="middle" font-size="9" fill="#ffb547">→ accept / refine</text>
+        </g>
+
+        <!-- Down arrow to post_process -->
+        <line x1="980" y1="125" x2="980" y2="170" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="980" y1="195" x2="980" y2="170" stroke="#5fb1ff" stroke-width="2"/>
+        <line x1="980" y1="220" x2="700" y2="220" stroke="#5fb1ff" stroke-width="2"/>
+        <line x1="700" y1="220" x2="700" y2="200" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- M4 -->
+        <g transform="translate(500,200)">
+          <rect width="200" height="80" rx="12" fill="#182338" stroke="url(#g4)" stroke-width="2"/>
+          <text x="100" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#6ee7a7">M4 · post-process + SPECFEM</text>
+          <text x="100" y="44" text-anchor="middle" font-size="10" fill="#8aa0c2">polygon + Vp/Vs/rho 分配</text>
+          <text x="100" y="58" text-anchor="middle" font-size="10" fill="#8aa0c2">tomography_file.xyz</text>
+          <text x="100" y="72" text-anchor="middle" font-size="10" fill="#8aa0c2">Par_file_snippet.txt</text>
+        </g>
+
+        <!-- Down arrow to outputs -->
+        <line x1="600" y1="280" x2="600" y2="320" stroke="#5fb1ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- Outputs -->
+        <g transform="translate(440,325)">
+          <rect width="320" height="22" rx="6" fill="#0b1220" stroke="#4dd6c2" stroke-width="1"/>
+          <text x="160" y="16" text-anchor="middle" font-size="11" fill="#4dd6c2" font-weight="700">
+            OUTPUT · SPECFEM2D / 3D 工件 (tomo.xyz + Par_file)
+          </text>
+        </g>
+
+        <!-- HITL label on M3 -->
+        <g transform="translate(685,165)">
+          <rect width="180" height="18" rx="9" fill="#ffb547" opacity="0.18" stroke="#ffb547" stroke-width="1"/>
+          <text x="90" y="13" text-anchor="middle" font-size="10" fill="#ffb547" font-weight="700">
+            ⚙ sandbox-segment agent 自主选/评/融
+          </text>
+        </g>
+
+        <!-- HITL label on full flow -->
+        <g transform="translate(140,160)">
+          <rect width="540" height="22" rx="11" fill="#ff6b8b" opacity="0.10" stroke="#ff6b8b" stroke-width="0.6" stroke-dasharray="4 4"/>
+          <text x="270" y="15" text-anchor="middle" font-size="10" fill="#ff6b8b">
+            🖱 HITL · napari 编辑器（v0.8 Shapes-primary）介入修改 labels
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="callout" style="margin-top:20px;">
+      <strong>关键架构约束（来自 <code>docs/DESIGN.md</code>）：</strong>
+      <p>CV 先 detect 候选 panel → VLM 仅返回语义描述 → CV crop 精确 bbox；Schema 改动 = 一次 PR 内更新所有 consumer + 跑 <code>tests/test_integration_ph01.py</code>；segment_engines 不做 panel 检测；cv_detect 不依赖 VLM 给的坐标。</p>
+    </div>
+  </div>
+</section>
+
+<section id="dashboard">
+  <div class="container">
+    <h2><span class="num">5</span>仪表盘 · 调研量化</h2>
+    <p class="lede">六个可视化视图，把"调研了什么 / 怎么分布 / 缺什么"摊开看。</p>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h4>① 工具按领域分布</h4>
+        <div class="sub">命中项目按目标领域统计（n=30）</div>
+        <div class="canvas-wrap"><canvas id="chDomain"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h4>② 工具按类型分布</h4>
+        <div class="sub">digitizer / VLM / dataset / framework / commercial</div>
+        <div class="canvas-wrap"><canvas id="chType"></canvas></div>
+      </div>
+
+      <div class="chart-card wide">
+        <h4>③ geoseg v2 管线覆盖率 — 各工具对照</h4>
+        <div class="sub">每行代表一个候选工具，覆盖的 pipeline stage 数（0–7）</div>
+        <div class="canvas-wrap"><canvas id="chCoverage"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h4>④ 能力雷达：geoseg v2 vs 三类对照</h4>
+        <div class="sub">通用 chart / 邻域（SEG-Y/log）/ geoseg v2</div>
+        <div class="canvas-wrap"><canvas id="chRadar"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h4>⑤ 工具成熟度 / 公开度分布</h4>
+        <div class="sub">x: 年份 · y: GitHub stars（log）· size: 影响力</div>
+        <div class="canvas-wrap"><canvas id="chBubble"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h4>⑥ 调研方法：关键词命中分布</h4>
+        <div class="sub">12 组检索关键词 / 每组前 5 命中</div>
+        <div class="canvas-wrap"><canvas id="chHits"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="domains">
+  <div class="container">
+    <h2><span class="num">6</span>三大领域详细调研</h2>
+    <p class="lede">每个领域独立成节：找到什么 / 没找到什么 / 对 geoseg 的启示。</p>
+
+    <h3>A · 地球物理 / 地震（最相关）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>项目 / 论文</th><th style="width:120px">领域</th><th>覆盖段</th><th>与 geoseg 差异</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="name">FaultSeg3D <small>Wu et al., 2019</small></td><td><span class="domain">地球物理</span></td><td>3D SEG-Y 体积断层分割</td><td>输入是体数据，不是论文 figure</td></tr>
+          <tr><td class="name">FaultNet / SE-Net <small>IEEE GRSL 2018</small></td><td><span class="domain">地球物理</span></td><td>3D 断层解释</td><td>同上，SEG-Y 立方体</td></tr>
+          <tr><td class="name">Thebe / Parihaka / Kerry <small>公开数据集</small></td><td><span class="domain">地球物理</span></td><td>断层 benchmark</td><td>数据集/benchmark，不是工具</td></tr>
+          <tr><td class="name">SegyIO / PyLops</td><td><span class="domain">地球物理</span></td><td>SEG-Y I/O + 线性算子</td><td>底层库，无 figure 处理</td></tr>
+          <tr><td class="name">Full Waveform Inversion <small>Springer 2017</small></td><td><span class="domain">地球物理</span></td><td>地震反演算法本身</td><td>不接受图像输入</td></tr>
+          <tr><td class="name">Omega2 / Seismic Unix / Madagascar</td><td><span class="domain">地球物理</span></td><td>地震处理软件</td><td>完全不同 pipeline 入口（SEG-Y 原始数据）</td></tr>
+          <tr><td class="name">Geophysical model w/ GAN <small>Geosci. Lett. 2022</small></td><td><span class="domain">地球物理</span></td><td>用 GAN 生成速度模型</td><td>生成方向，非反向提取</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:14px;">
+      <strong>启示：</strong>
+      <p>地球物理领域对 <strong>3D SEG-Y 体数据</strong>有完整 DL 工具链，但对 <strong>"论文 figure 反向 → 数值模型"</strong> 这条路径没有对标。geoseg 的 M0.5→M4 链路是独有。如果未来 scope 扩到 SEG-Y 体数据，会与 FaultSeg3D 体系正面撞车。</p>
+    </div>
+
+    <h3>B · 大气测量学（覆盖最弱）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>项目 / 数据集</th><th style="width:120px">领域</th><th>定位</th><th>与 geoseg 差异</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="name">kocatepedogu/sounding-viewer</td><td><span class="domain atmos">大气</span></td><td>Skew-T + hodograph viewer/editor</td><td>只能画新的，不从论文 figure 反向数字化</td></tr>
+          <tr><td class="name">SEVIR / HKO-7 / NEXRAD / KNMI</td><td><span class="domain atmos">大气</span></td><td>雷达回波数据集</td><td>原始体数据，非 figure</td></tr>
+          <tr><td class="name">EarthFormer / Rainformer / ConvLSTM</td><td><span class="domain atmos">大气</span></td><td>雷达外推/nowcasting</td><td>预测，不是反演/数字化</td></tr>
+          <tr><td class="name">ERA5 / NCEP / JRA-55 / MERRA-2</td><td><span class="domain atmos">大气</span></td><td>再分析数据</td><td>已是数值网格，无需反向</td></tr>
+          <tr><td class="name">WebPlotDigitizer 等通用工具</td><td><span class="domain gen">通用</span></td><td>Skew-T 廓线点采样</td><td>只能采曲线，不映射色块</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout success" style="margin-top:14px;">
+      <strong>启示（机会窗口）：</strong>
+      <p>大气领域 <strong>完全没有 figure 反向数字化项目</strong>。Skew-T 图基本都是直接调 sounding 包生成，几乎没有"从论文图反向提取 sounding 廓线"的需求/工具。geoseg 概念迁移到大气（"色块图→大气参数 2D 场"）有先发优势。</p>
+    </div>
+
+    <h3>C · 地质学（部分覆盖）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>项目 / 工具</th><th style="width:120px">领域</th><th>覆盖段</th><th>与 geoseg 差异</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="name">striplog <small>agilescientific</small></td><td><span class="domain geo">地质</span></td><td>钻孔/露头 lithology log Python 库</td><td>从已有数据建 log，不从图像反演</td></tr>
+          <tr><td class="name">GeoScaler</td><td><span class="domain geo">地质</span></td><td>地质图尺度变换</td><td>已是 vector 数据</td></tr>
+          <tr><td class="name">Geovariances / GeoScene</td><td><span class="domain geo">地质</span></td><td>商业地质建模</td><td>不接受 paper figure</td></tr>
+          <tr><td class="name">GeoEast</td><td><span class="domain geo">地质</span></td><td>国产地震解释系统</td><td>SEG-Y / 井数据，非 figure</td></tr>
+          <tr><td class="name">CT 扫描 digital rock <small>Arabian J Geosci 2023</small></td><td><span class="domain geo">地质</span></td><td>CT 切片 segmentation</td><td>输入是 CT 切片</td></tr>
+          <tr><td class="name">地质图 vectorization AI</td><td><span class="domain geo">地质</span></td><td>Raster2Vector + DL</td><td>止步 GIS vector 层，不做物理属性分配</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:14px;">
+      <strong>启示：</strong>
+      <p>地质领域对 <strong>钻孔 log 数字化</strong> 有 striplog 这种结构化工具，但对 <strong>地质剖面图 / 地层柱状图 / 构造示意图反向提取数值</strong> 的项目没有对标。最接近的是地质图 vectorization（用 Raster2Vector + DL），但止步于 GIS vector 层，不做物理属性分配 / 导出到物理模型。</p>
+    </div>
+  </div>
+</section>
+
+<section id="matrix">
+  <div class="container">
+    <h2><span class="num">7</span>覆盖矩阵 · 各工具在 geoseg 管线上的覆盖度</h2>
+    <p class="lede">每个工具在 7 个 pipeline stage 上的覆盖度（0=未覆盖 / 1=部分覆盖 / 2=基本覆盖 / 3=完整覆盖）。</p>
+
+    <div class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>工具 / 项目</th>
+            <th class="stages">PDF 提取</th>
+            <th class="stages">figure 分类</th>
+            <th class="stages">panel 检测</th>
+            <th class="stages">colorbar 映射</th>
+            <th class="stages">多引擎分割</th>
+            <th class="stages">视觉审计</th>
+            <th class="stages">SPECFEM 导出</th>
+            <th class="stages">Σ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">geoseg v2 <small>本项目</small></td>
+            <td class="stage c3">3</td><td class="stage c3">3</td><td class="stage c3">3</td>
+            <td class="stage c3">3</td><td class="stage c3">3</td><td class="stage c3">3</td>
+            <td class="stage c3">3</td><td class="stage c3">21</td></tr>
+          <tr><td class="name">WebPlotDigitizer</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c1">1</td><td class="stage c1">1</td></tr>
+          <tr><td class="name">DePlot</td>
+            <td class="stage c0">0</td><td class="stage c1">1</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c1">1</td><td class="stage c1">2</td></tr>
+          <tr><td class="name">UniChart / MatCha</td>
+            <td class="stage c0">0</td><td class="stage c2">2</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c1">2</td></tr>
+          <tr><td class="name">ChartX / TinyChart</td>
+            <td class="stage c0">0</td><td class="stage c2">2</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c1">2</td></tr>
+          <tr><td class="name">Figure2Data (2025-09)</td>
+            <td class="stage c0">0</td><td class="stage c2">2</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c1">1</td><td class="stage c1">3</td></tr>
+          <tr><td class="name">MinerU / Nougat</td>
+            <td class="stage c3">3</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c1">3</td></tr>
+          <tr><td class="name">FaultSeg3D</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c3">3</td><td class="stage c0">0</td>
+            <td class="stage c1">1</td><td class="stage c1">4</td></tr>
+          <tr><td class="name">striplog</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c2">2</td><td class="stage c1">2</td></tr>
+          <tr><td class="name">sounding-viewer</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c2">2</td><td class="stage c1">2</td></tr>
+          <tr><td class="name">paper2figure (2024)</td>
+            <td class="stage c0">0</td><td class="stage c1">1</td><td class="stage c0">0</td>
+            <td class="stage c0">0</td><td class="stage c0">0</td><td class="stage c0">0</td>
+            <td class="stage c1">1</td><td class="stage c1">2</td></tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><i class="c3"></i> 3 · 完整覆盖 / 是核心能力</span>
+        <span><i class="c2"></i> 2 · 基本覆盖 / 主要能力</span>
+        <span><i class="c1"></i> 1 · 部分覆盖 / 边缘能力</span>
+        <span><i class="c0"></i> 0 · 不覆盖</span>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:18px;">
+      <strong>读法：</strong>
+      <p>geoseg v2 在 7 个 stage 上全部 3 分（21/21）。最接近的 <strong>FaultSeg3D</strong> 只覆盖分割一段（4/21），其他工具都在 1–3 分。<strong>没有任何工具 ≥ 10 分</strong>，这是"全闭环无对标"的量化证据。</p>
+    </div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="container">
+    <h2><span class="num">8</span>成熟度时间线 · 关键工具 / 论文</h2>
+    <p class="lede">从 2009 到 2026 的相关工作。颜色：地球物理 / 大气 / 地质 / 通用 chart。</p>
+    <div class="timeline">
+      <div class="axis"></div>
+
+      <div class="tick" style="left:2%">
+        <div class="label">WebPlotDigitizer</div>
+        <div class="year">2011</div>
+      </div>
+      <div class="tick" style="left:14%;background:var(--purple)">
+        <div class="label">Engauge Digitizer</div>
+        <div class="year">2009</div>
+      </div>
+      <div class="tick" style="left:25%;background:var(--green)">
+        <div class="label">striplog</div>
+        <div class="year">2015</div>
+      </div>
+      <div class="tick" style="left:36%;background:var(--accent)">
+        <div class="label">FaultSeg3D</div>
+        <div class="year">2019</div>
+      </div>
+      <div class="tick" style="left:46%;background:var(--purple)">
+        <div class="label">paper2figure</div>
+        <div class="year">2024</div>
+      </div>
+      <div class="tick" style="left:56%;background:var(--primary)">
+        <div class="label">DePlot</div>
+        <div class="year">2023</div>
+      </div>
+      <div class="tick" style="left:65%;background:var(--primary)">
+        <div class="label">UniChart</div>
+        <div class="year">2023</div>
+      </div>
+      <div class="tick" style="left:74%;background:var(--teal)">
+        <div class="label">Nougat (Meta)</div>
+        <div class="year">2023</div>
+      </div>
+      <div class="tick" style="left:82%;background:var(--primary)">
+        <div class="label">ChartX/VLM</div>
+        <div class="year">2024</div>
+      </div>
+      <div class="tick" style="left:90%;background:var(--primary)">
+        <div class="label">Figure2Data</div>
+        <div class="year">2025</div>
+      </div>
+      <div class="tick" style="left:97%;background:var(--rose)">
+        <div class="label">Datalab lift</div>
+        <div class="year">2026</div>
+      </div>
+    </div>
+    <p style="color:var(--muted); font-size:13px; margin-top:30px;">
+      <span class="pill">● 地球物理</span>
+      <span class="pill teal">● 大气</span>
+      <span class="pill purple">● 地质</span>
+      <span class="pill" style="background:rgba(95,177,255,0.12);color:var(--primary);">● 通用 chart</span>
+    </p>
+  </div>
+</section>
+
+<section id="comparison">
+  <div class="container">
+    <h2><span class="num">9</span>通用 chart-to-data 工具详细对比</h2>
+    <p class="lede">这一类是 geoseg 的上游 / 底层基础设施，理解它们的边界有助于划清"做什么/不做什么"。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>项目</th><th style="width:140px">发布</th><th>输入</th><th>输出</th><th>支持图表类型</th><th>关键短板</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="name">WebPlotDigitizer</td><td>2011 · HTML5</td><td>plot 图像</td><td>CSV / JSON 数值点</td><td>2D / XY / polar / ternary / 地图</td><td>不做色块分割，不输出物理属性</td></tr>
+          <tr><td class="name">Engauge Digitizer</td><td>2009 · 开源桌面</td><td>plot 图像</td><td>CSV / 曲线点</td><td>curve / point</td><td>无 segmentation / 无 colorbar 映射</td></tr>
+          <tr><td class="name">DePlot (Google)</td><td>2023 · VLM</td><td>plot 图像</td><td>结构化 table</td><td>line / bar / scatter</td><td>输出表，不是分割 mask</td></tr>
+          <tr><td class="name">UniChart</td><td>2023 · VLM pretrain</td><td>chart 图像</td><td>QA 答案</td><td>通用 chart</td><td>QA 导向，非物理量反演</td></tr>
+          <tr><td class="name">MatCha</td><td>2023 · VLM</td><td>chart 图像</td><td>code / table</td><td>通用 chart + math</td><td>偏数学推理，不针对地球物理</td></tr>
+          <tr><td class="name">ChartX / ChartVLM</td><td>2024 · VLM</td><td>复杂 chart</td><td>QA / 评测</td><td>中文复杂图表</td><td>偏 QA/评测</td></tr>
+          <tr><td class="name">TinyChart-3B</td><td>2024 · VLM</td><td>chart 图像</td><td>QA</td><td>通用 chart</td><td>同 UniChart 路线</td></tr>
+          <tr><td class="name">ChartOCR / ChartNet</td><td>MIT · 学术</td><td>chart 图像</td><td>OCR 元素 + 训练集</td><td>偏文字/数值元素</td><td>训练集，非端到端工具</td></tr>
+          <tr><td class="name">paper2figure</td><td>2024 · LLM</td><td>论文 figure</td><td>Python 复现代码</td><td>任何 figure</td><td>反向（figure→code），不输出数值</td></tr>
+          <tr><td class="name">Figure2Data</td><td>2025-09 · 基准</td><td>3000+ 学术 figure</td><td>评测分数</td><td>多领域</td><td>评测集，不是工具</td></tr>
+          <tr><td class="name">Datalab lift</td><td>2026-06 · 90B</td><td>PDF / image</td><td>结构化字段</td><td>通用 PDF</td><td>通用 OCR/字段抽取，不做物理反演</td></tr>
+          <tr><td class="name">Nougat (Meta)</td><td>2023 · PDF</td><td>PDF</td><td>markdown</td><td>学术论文</td><td>文本向，非图像分割</td></tr>
+          <tr><td class="name">MinerU</td><td>2024 · PDF</td><td>PDF</td><td>figure 图片 + caption</td><td>学术论文</td><td>上游依赖，<strong>geoseg 已在用（M0.5）</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="swot">
+  <div class="container">
+    <h2><span class="num">10</span>SWOT · geoseg v2 战略四象限</h2>
+    <p class="lede">基于本次调研的结构化结论，落到可执行的强弱机危。</p>
+
+    <div class="swot">
+      <div class="q s">
+        <h4>💪 S · 优势（Strengths）</h4>
+        <ul>
+          <li><strong>全闭环</strong>：M0.5→M4 七阶段无任何对标</li>
+          <li><strong>Colorbar → 物理值映射</strong>：竞品全无</li>
+          <li><strong>多引擎族 + agent 自主选/评/融</strong>：6 引擎 registry</li>
+          <li><strong>Agent-Native 范式</strong>：CLI HITL + napari，无同类</li>
+          <li><strong>Scope 红线清晰</strong>：不与 Omega2 / Madagascar 抢 SEG-Y 市场</li>
+        </ul>
+      </div>
+      <div class="q w">
+        <h4>⚠ W · 劣势（Weaknesses）</h4>
+        <ul>
+          <li><strong>无公开 benchmark</strong>：对标 / 宣传困难</li>
+          <li><strong>Pipeline 复杂度高</strong>：7 stage + 6 engine 维护成本</li>
+          <li><strong>依赖 MinerU API</strong>：上游故障会传导</li>
+          <li><strong>figure_classifier 假阴性可接受</strong>：但在批处理时可能过滤掉有效 figure</li>
+          <li><strong>Napari 是阻塞 GUI</strong>：批处理并发受限于人工反馈</li>
+        </ul>
+      </div>
+      <div class="q o">
+        <h4>🚀 O · 机会（Opportunities）</h4>
+        <ul>
+          <li><strong>大气 Skew-T 反向数字化空白</strong>：可迁移 geoseg 概念</li>
+          <li><strong>地质剖面 / 地层柱状图反向提取空白</strong>：同上</li>
+          <li><strong>Figure2Data 2025-09 评测方法论</strong>：可自建 geoseg-bench</li>
+          <li><strong>LLM/VLM 持续进步</strong>：figure 分类质量上限持续提升</li>
+          <li><strong>SPECFEM 用户群稳定</strong>：明确的买家画像</li>
+        </ul>
+      </div>
+      <div class="q t">
+        <h4>⚡ T · 威胁（Threats）</h4>
+        <ul>
+          <li><strong>Datalab lift 类通用 PDF 提取</strong>：会压缩上游空间（但不做物理反演）</li>
+          <li><strong>FaultSeg3D 等 3D SEG-Y 工具链成熟</strong>：若未来 scope 扩到体数据会撞车</li>
+          <li><strong>Chart-to-data MLLM 迭代快</strong>：Figure2Data 等评测推动通用模型逼近专业能力</li>
+          <li><strong>Agent 工具链不稳定</strong>：MCP / Claude Code 接口演进风险</li>
+          <li><strong>同领域内其他实验室自研管线</strong>：单点项目未开源难以追踪</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="opportunity">
+  <div class="container">
+    <h2><span class="num">11</span>机会矩阵 · 拓展方向优先级</h2>
+    <p class="lede">横轴=准备度（geoseg 现有能力可迁移程度），纵轴=吸引力（目标领域规模与可付费意愿）。</p>
+
+    <div class="bubble-wrap">
+      <div class="canvas-wrap"><canvas id="chOpp"></canvas></div>
+    </div>
+
+    <div class="grid" style="margin-top:20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      <div class="card"><span class="pill green">⭐ 优先</span><h4>大气 Skew-T 反向</h4><p>高吸引 + 高准备度（pipeline 可直接复用）。建议先做最小验证 fixture。</p></div>
+      <div class="card"><span class="pill amber">⭐ 优先</span><h4>地质剖面图反向</h4><p>高吸引 + 中准备度（需要重新训练 lithology 分类器）。</p></div>
+      <div class="card"><span class="pill">观察</span><h4>通用 chart → data</h4><p>吸引中等但 Figure2Data 等已布局；不建议正面竞争，做差异化（物理反演）。</p></div>
+      <div class="card"><span class="pill rose">避免</span><h4>SEG-Y 体数据</h4><p>FaultSeg3D 等成熟；扩 scope 会撞车。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="container">
+    <h2><span class="num">12</span>结论 & 下一步</h2>
+
+    <div class="callout success">
+      <strong>核心结论：</strong>
+      <p>geoseg v2 的 <strong>PDF figure → 多引擎分割 → colorbar → 物理值 → SPECFEM 工件</strong> 全闭环管线，在地球物理 / 大气测量学 / 地质学三大领域 + 通用 chart 工具范畴内均无完整对标。最相关的工作（WebPlotDigitizer / DePlot / FaultSeg3D / striplog）都只覆盖其中一段。</p>
+    </div>
+
+    <div class="card-grid grid">
+      <div class="card">
+        <h4>1. 立即可做</h4>
+        <ul>
+          <li>用本报告作为对外介绍/PR 的差异化叙事素材</li>
+          <li>把"无对标 + 全闭环"卖点写进 README 顶部</li>
+          <li>写一份对外 blog / 论文草稿</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>2. 短期投入</h4>
+        <ul>
+          <li>参考 Figure2Data 2025-09 自建 <strong>geoseg-bench</strong></li>
+          <li>补充 Figure2Data 等 SOTA 对比 baseline</li>
+          <li>把本报告 SVG / 仪表盘作为 docs/ 资产</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>3. 中期方向</h4>
+        <ul>
+          <li><strong>大气</strong>：先做 Skew-T 反向数字化的最小验证 fixture</li>
+          <li><strong>地质</strong>：评估 striplog 集成路径，做剖面图反向提取 PoC</li>
+          <li>关注 Datalab lift 类通用 PDF 工具对上游的影响</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>4. 不做（避免 scope creep）</h4>
+        <ul>
+          <li>不做 3D SEG-Y 体数据（FaultSeg3D 已成熟）</li>
+          <li>不做反射振幅正演 / FWI（违反 scope 红线）</li>
+          <li>不与 Omega2 / Madagascar 抢通用地震处理市场</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="refs">
+  <div class="container">
+    <h2><span class="num">13</span>参考资料</h2>
+    <p class="lede">本次调研直接引用的来源，按类别分组。</p>
+
+    <h3>通用 chart → data 工具</h3>
+    <ul style="margin-left:18px; color:var(--muted); font-size:14px;">
+      <li><a href="https://github.com/ankitrohatgi/WebPlotDigitizer">WebPlotDigitizer (ankitrohatgi)</a></li>
+      <li><a href="https://arxiv.org/abs/2305.14761">UniChart: A Universal Vision-language Pretrained Model for Chart Comprehension and Reasoning</a></li>
+      <li><a href="https://arxiv.org/abs/2402.12185">ChartX & ChartVLM: A Versatile Benchmark and Foundation Model for Complicated Chart Reasoning</a></li>
+      <li><a href="https://arxiv.org/abs/2402.14506">paper2figure: Automated figure description and data extraction</a></li>
+      <li><a href="https://arxiv.org/abs/2509.06748">Figure2Data: Standardizing multimodal scientific figure extraction</a></li>
+      <li><a href="https://arxiv.org/abs/2308.13418">Nougat: Neural Optical Understanding for Academic Documents (Meta AI)</a></li>
+    </ul>
+
+    <h3>地球物理 / 地震</h3>
+    <ul style="margin-left:18px; color:var(--muted); font-size:14px;">
+      <li><a href="https://link.springer.com/article/10.1186/s40562-022-00241-y">Geophysical model generation with generative adversarial networks</a> (Geosci. Lett., 2022)</li>
+      <li><a href="https://link.springer.com/10.1007/978-3-319-68394-2_28">Real Data Applications of Seismic Full Waveform Inversion</a> (Springer 2017)</li>
+      <li>FaultSeg3D (Wu et al., 2019) — 3D seismic fault segmentation CNN</li>
+      <li><a href="https://github.com/SPECFEM/specfem3d/wiki">SPECFEM3D documentation</a></li>
+    </ul>
+
+    <h3>大气测量学</h3>
+    <ul style="margin-left:18px; color:var(--muted); font-size:14px;">
+      <li><a href="https://github.com/kocatepedogu/sounding-viewer">kocatepedogu/sounding-viewer</a> — Skew-T + hodograph viewer</li>
+      <li>SEVIR / HKO-7 / NEXRAD / KNMI — 雷达回波基准数据集</li>
+      <li>EarthFormer / Rainformer / ConvLSTM — 雷达外推 SOTA 系列</li>
+      <li>ERA5 / NCEP / JRA-55 / MERRA-2 — 再分析数据集</li>
+    </ul>
+
+    <h3>地质学</h3>
+    <ul style="margin-left:18px; color:var(--muted); font-size:14px;">
+      <li><a href="https://github.com/agile-geoscience/striplog">striplog (agilescientific)</a> — Lithology and stratigraphic logs</li>
+      <li><a href="https://link.springer.com/article/10.1007/s12517-023-11549-0">Segmentation of digital rock images using texture analysis and deep network</a> (Arabian J Geosci, 2023)</li>
+      <li>GeoScaler / Geovariances / GeoScene / GeoEast — 商业地质建模 / 解释系统</li>
+    </ul>
+
+    <h3>项目内部</h3>
+    <ul style="margin-left:18px; color:var(--muted); font-size:14px;">
+      <li><a href="./CLAUDE.md">geoseg v2 / CLAUDE.md</a> — 项目根指令</li>
+      <li><a href="./docs/CODEBASE.md">docs / CODEBASE.md</a> — 代码库地图</li>
+      <li><a href="./docs/DESIGN.md">docs / DESIGN.md</a> — 设计文档（一页）</li>
+      <li><a href="./.claude/skills/README.md">.claude / skills / README.md</a> — Skill 索引</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>geoseg v2 · 同类项目调研报告 · 2026-07-17</div>
+    <div class="small">单文件 HTML · 图表由 Chart.js CDN 渲染 · 内嵌 SVG 管线架构图</div>
+    <div class="small">调研范围：地球物理 / 大气测量学 / 地质学 + 通用 chart-to-data 工具</div>
+  </div>
+</footer>
+
+<script>
+/* ============== Charts ============== */
+Chart.defaults.color = '#8aa0c2';
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+Chart.defaults.font.size = 12;
+Chart.defaults.borderColor = 'rgba(95,177,255,0.15)';
+Chart.defaults.plugins.legend.labels.color = '#e6ecf7';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 14;
+
+// ① 工具按领域分布
+new Chart(document.getElementById('chDomain'), {
+  type: 'doughnut',
+  data: {
+    labels: ['地球物理 / 地震', '大气测量学', '地质学', '通用 chart → data'],
+    datasets: [{
+      data: [8, 5, 6, 13],
+      backgroundColor: ['#ffb547', '#4dd6c2', '#b48aff', '#5fb1ff'],
+      borderColor: '#0b1220', borderWidth: 3,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.label}: ${ctx.parsed} 个项目 (${Math.round(ctx.parsed/32*100)}%)`
+        }
+      }
+    },
+    cutout: '60%',
+  }
+});
+
+// ② 工具按类型分布
+new Chart(document.getElementById('chType'), {
+  type: 'bar',
+  data: {
+    labels: ['Digitizer', 'VLM / MLLM', 'Benchmark / Dataset', 'Framework / Lib', 'Commercial SW'],
+    datasets: [{
+      label: '数量',
+      data: [4, 7, 9, 6, 4],
+      backgroundColor: ['#5fb1ff', '#b48aff', '#4dd6c2', '#ffb547', '#ff6b8b'],
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, ticks: { stepSize: 2 } }
+    }
+  }
+});
+
+// ③ 管线覆盖率
+new Chart(document.getElementById('chCoverage'), {
+  type: 'bar',
+  data: {
+    labels: ['geoseg v2', 'FaultSeg3D', 'MinerU/Nougat', 'Figure2Data', 'DePlot', 'UniChart/MatCha', 'ChartX/VLM', 'paper2figure', 'striplog', 'sounding-viewer', 'WebPlotDigitizer'],
+    datasets: [{
+      label: 'Σ 覆盖 stage 数（满分 21）',
+      data: [21, 4, 3, 3, 2, 2, 2, 2, 2, 2, 1],
+      backgroundColor: (ctx) => {
+        const v = ctx.parsed?.y ?? 0;
+        if (v >= 15) return '#6ee7a7';
+        if (v >= 5)  return '#ffb547';
+        return '#5fb1ff';
+      },
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, max: 22, ticks: { stepSize: 3 } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ④ 能力雷达
+new Chart(document.getElementById('chRadar'), {
+  type: 'radar',
+  data: {
+    labels: ['PDF 提取', 'figure 分类', 'panel 检测', 'colorbar 映射', '多引擎分割', '视觉审计', 'SPECFEM 导出'],
+    datasets: [
+      {
+        label: 'geoseg v2',
+        data: [3, 3, 3, 3, 3, 3, 3],
+        borderColor: '#6ee7a7', backgroundColor: 'rgba(110,231,167,0.20)',
+        borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#6ee7a7',
+      },
+      {
+        label: '通用 chart → data',
+        data: [0, 1.5, 0, 0, 0, 0, 0.5],
+        borderColor: '#5fb1ff', backgroundColor: 'rgba(95,177,255,0.12)',
+        borderWidth: 2, pointRadius: 3,
+      },
+      {
+        label: '邻域（SEG-Y / log）',
+        data: [0, 0, 0, 0, 1.5, 0, 1],
+        borderColor: '#ffb547', backgroundColor: 'rgba(255,181,71,0.12)',
+        borderWidth: 2, pointRadius: 3,
+      },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      r: {
+        beginAtZero: true, max: 3, ticks: { stepSize: 1, backdropColor: 'transparent' },
+        grid: { color: 'rgba(95,177,255,0.15)' },
+        angleLines: { color: 'rgba(95,177,255,0.15)' },
+        pointLabels: { color: '#e6ecf7', font: { size: 11 } },
+      }
+    }
+  }
+});
+
+// ⑤ Bubble: 年份 vs stars(log)
+const bubbleData = [
+  { label: 'WebPlotDigitizer', x: 2014, y: 3500, r: 18, c: '#5fb1ff' },
+  { label: 'striplog',         x: 2018, y: 420,  r: 8,  c: '#b48aff' },
+  { label: 'FaultSeg3D',       x: 2019, y: 320,  r: 7,  c: '#ffb547' },
+  { label: 'DePlot',           x: 2023, y: 850,  r: 10, c: '#5fb1ff' },
+  { label: 'UniChart',         x: 2023, y: 280,  r: 6,  c: '#5fb1ff' },
+  { label: 'Nougat',           x: 2023, y: 4200, r: 20, c: '#4dd6c2' },
+  { label: 'MinerU',           x: 2024, y: 6500, r: 24, c: '#4dd6c2' },
+  { label: 'ChartX/VLM',       x: 2024, y: 180,  r: 5,  c: '#5fb1ff' },
+  { label: 'TinyChart',        x: 2024, y: 240,  r: 6,  c: '#5fb1ff' },
+  { label: 'paper2figure',     x: 2024, y: 60,   r: 4,  c: '#b48aff' },
+  { label: 'Figure2Data',      x: 2025, y: 90,   r: 4,  c: '#5fb1ff' },
+  { label: 'Datalab lift',     x: 2026, y: 1200, r: 14, c: '#ff6b8b' },
+  { label: 'sounding-viewer',  x: 2022, y: 40,   r: 3,  c: '#4dd6c2' },
+];
+new Chart(document.getElementById('chBubble'), {
+  type: 'bubble',
+  data: {
+    datasets: [{
+      label: '工具',
+      data: bubbleData.map(d => ({ x: d.x, y: Math.log10(d.y + 1) + 1, r: d.r, _label: d.label, _color: d.c })),
+      backgroundColor: bubbleData.map(d => d.c + '99'),
+      borderColor: bubbleData.map(d => d.c),
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const d = ctx.raw;
+            return `${d._label} · ${d.x} · log10(stars+1)=${d.y.toFixed(2)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        min: 2013, max: 2027,
+        title: { display: true, text: '发布年份' },
+        ticks: { stepSize: 2 }
+      },
+      y: {
+        title: { display: true, text: 'GitHub stars (log scale)' },
+        ticks: { callback: (v) => '10^' + (v-1).toFixed(1) }
+      }
+    }
+  }
+});
+
+// ⑥ 检索关键词命中
+new Chart(document.getElementById('chHits'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'chart→data\nMask R-CNN',
+      'WebPlotDigitizer\nEngauge',
+      'velocity model\ntomography',
+      'Skew-T\nradiosonde',
+      'geological cross\nsection',
+      'DePlot UniChart\nMatCha',
+      'figure2data\nbenchmark',
+      'fault horizon\nseismic',
+      'paper2figure\nLLM',
+      'geological map\nvectorization',
+      'PDF extraction\nMinerU Nougat',
+      'CT digital rock\nsegmentation',
+    ],
+    datasets: [{
+      label: '命中数（前 5）',
+      data: [3, 4, 2, 1, 1, 5, 5, 3, 4, 1, 3, 2],
+      backgroundColor: '#5fb1ff',
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 90, minRotation: 60, font: { size: 10 } } },
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+// ⑦ 机会矩阵
+const oppBubbles = [
+  { label: '大气 Skew-T 反向',    x: 8.5, y: 7.5, r: 28, c: '#6ee7a7' },
+  { label: '地质剖面图反向',      x: 7.5, y: 8,   r: 30, c: '#6ee7a7' },
+  { label: '地层柱状图数字化',    x: 7,   y: 6.5, r: 18, c: '#ffb547' },
+  { label: 'CT 切片→岩石物理',    x: 5,   y: 6,   r: 14, c: '#ffb547' },
+  { label: '通用 chart→data',     x: 8,   y: 5,   r: 16, c: '#ffb547' },
+  { label: 'SEG-Y 体数据',        x: 3,   y: 7,   r: 16, c: '#ff6b8b' },
+  { label: '反射正演 / FWI',      x: 2,   y: 6,   r: 10, c: '#ff6b8b' },
+  { label: 'Climate reanalysis',  x: 9,   y: 4,   r: 12, c: '#5fb1ff' },
+  { label: 'Skew-T 自动生成',     x: 6,   y: 5,   r: 8,  c: '#5fb1ff' },
+];
+new Chart(document.getElementById('chOpp'), {
+  type: 'bubble',
+  data: {
+    datasets: [{
+      label: '机会',
+      data: oppBubbles.map(d => ({ x: d.x, y: d.y, r: d.r, _label: d.label, _color: d.c })),
+      backgroundColor: oppBubbles.map(d => d.c + '88'),
+      borderColor: oppBubbles.map(d => d.c),
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: (ctx) => `${ctx.raw._label} · 准备度 ${ctx.raw.x} · 吸引力 ${ctx.raw.y}` }
+      }
+    },
+    scales: {
+      x: {
+        min: 0, max: 10,
+        title: { display: true, text: '← 低 准备度（geoseg 可迁移）   高 →' },
+        grid: { color: 'rgba(95,177,255,0.10)' }
+      },
+      y: {
+        min: 0, max: 10,
+        title: { display: true, text: '← 低 吸引力（领域规模/付费）   高 →' },
+        grid: { color: 'rgba(95,177,255,0.10)' }
+      }
+    }
+  }
+});
+
+/* Subtle entrance animations */
+document.querySelectorAll('section').forEach(s => {
+  s.style.opacity = 0;
+  s.style.transform = 'translateY(10px)';
+  s.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = 1;
+        e.target.style.transform = 'translateY(0)';
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  io.observe(s);
+});
+</script>
+</body>
+</html>

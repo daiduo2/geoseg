@@ -68,10 +68,19 @@ def _reconstruct_image(labels: np.ndarray, palette: dict[int, tuple[int, int, in
 
 
 def _write_labels_txt(labels: np.ndarray, out_path: Path) -> None:
-    """Write x y label_id table. Vectorized for speed."""
-    ys, xs = np.indices(labels.shape, dtype=np.int32)
-    flat = np.column_stack([xs.ravel(), ys.ravel(), labels.ravel()])
-    out_path.write_text("x y label_id\n" + "\n".join(f"{x} {y} {l}" for x, y, l in flat), encoding="utf-8")
+    """Write x y label_id table in bounded-memory row chunks."""
+    height, width = labels.shape
+    xs = np.arange(width, dtype=np.int32)
+    with out_path.open("w", encoding="utf-8") as handle:
+        handle.write("x y label_id\n")
+        for y0 in range(0, height, 64):
+            y1 = min(y0 + 64, height)
+            ys = np.repeat(np.arange(y0, y1, dtype=np.int32), width)
+            chunk_xs = np.tile(xs, y1 - y0)
+            flat = np.column_stack(
+                [chunk_xs, ys, labels[y0:y1].reshape(-1)]
+            )
+            np.savetxt(handle, flat, fmt="%d %d %d")
 
 
 def _write_palette_txt(palette: dict[int, tuple[int, int, int]], out_path: Path) -> None:
@@ -133,6 +142,142 @@ def _resolve_labels_path(panel_dir: Path, label_version: str) -> Path | None:
     return None
 
 
+def _normalize_direct_colorbar_labels(
+    labels: np.ndarray,
+    palette_rgb: np.ndarray,
+) -> tuple[np.ndarray, dict[int, tuple[int, int, int]], dict[int, int]]:
+    """Map -1 background to 0 and direct color classes to positive IDs."""
+    if labels.ndim != 2:
+        raise ValueError("labels must be a 2D array")
+    if palette_rgb.ndim != 2 or palette_rgb.shape[1] != 3:
+        raise ValueError("palette_rgb must have shape (N, 3)")
+    foreground = labels >= 0
+    if foreground.any() and int(labels[foreground].max()) >= len(palette_rgb):
+        raise ValueError("labels reference colors outside palette_rgb")
+
+    normalized = np.zeros(labels.shape, dtype=np.int32)
+    normalized[foreground] = labels[foreground].astype(np.int32) + 1
+    palette: dict[int, tuple[int, int, int]] = {0: (255, 255, 255)}
+    palette.update(
+        {
+            index + 1: tuple(int(channel) for channel in rgb)
+            for index, rgb in enumerate(palette_rgb)
+        }
+    )
+    source_to_export = {-1: 0}
+    source_to_export.update({index: index + 1 for index in range(len(palette_rgb))})
+    return normalized, palette, source_to_export
+
+
+def _export_direct_colorbar_run(
+    run_dir: Path,
+    output_dir: Path,
+    profiles: Sequence[str] | None,
+) -> int:
+    """Export named figures produced by the direct-colorbar workflow."""
+    figure_dirs = sorted(
+        path
+        for path in run_dir.iterdir()
+        if path.is_dir()
+        and (path / "annotation_cleanup" / "labels.npz").exists()
+        and (path / "01_panel.png").exists()
+    )
+    if not figure_dirs:
+        print(f"No exportable figures found in {run_dir}", file=sys.stderr)
+        return 1
+    if profiles is None:
+        profiles = [path.name for path in figure_dirs]
+    if len(profiles) != len(figure_dirs):
+        print("--profiles count must match figure count", file=sys.stderr)
+        return 1
+
+    reconstructed_images: list[np.ndarray] = []
+    comparison_images: list[np.ndarray] = []
+    titles: list[str] = []
+    manifest_profiles: list[dict[str, object]] = []
+
+    for figure_dir, profile in zip(figure_dirs, profiles):
+        labels_path = figure_dir / "annotation_cleanup" / "labels.npz"
+        original_path = figure_dir / "01_panel.png"
+        with np.load(labels_path) as data:
+            if "palette_rgb" not in data.files:
+                print(
+                    f"Skipping {figure_dir.name}: palette_rgb is missing",
+                    file=sys.stderr,
+                )
+                continue
+            source_labels = data["labels"]
+            palette_rgb = data["palette_rgb"]
+        labels, palette, source_to_export = _normalize_direct_colorbar_labels(
+            source_labels, palette_rgb
+        )
+        original = np.asarray(Image.open(original_path).convert("RGB"))
+        if original.shape[:2] != labels.shape:
+            print(
+                f"Shape mismatch in {figure_dir.name}: image "
+                f"{original.shape[:2]} vs labels {labels.shape}",
+                file=sys.stderr,
+            )
+            continue
+
+        reconstructed = _reconstruct_image(labels, palette)
+        comparison = np.concatenate([original, reconstructed], axis=1)
+        _write_labels_txt(labels, output_dir / f"{profile}_labels.txt")
+        _write_palette_txt(palette, output_dir / f"{profile}_palette.txt")
+        Image.fromarray(reconstructed).save(
+            output_dir / f"{profile}_reconstructed.png"
+        )
+        Image.fromarray(comparison).save(output_dir / f"{profile}_comparison.png")
+        Image.fromarray(reconstructed).save(
+            output_dir / f"{profile}_reconstructed.jpg", quality=95
+        )
+        Image.fromarray(comparison).save(
+            output_dir / f"{profile}_comparison.jpg", quality=95
+        )
+        print(f"Exported {profile}")
+
+        reconstructed_images.append(reconstructed)
+        comparison_images.append(comparison)
+        titles.append(profile)
+        manifest_profiles.append(
+            {
+                "profile": profile,
+                "source_figure": figure_dir.name,
+                "source_labels": str(labels_path.relative_to(run_dir)),
+                "source_original": str(original_path.relative_to(run_dir)),
+                "shape_yx": list(labels.shape),
+                "background_export_label": 0,
+                "source_to_export_label": {
+                    str(source): exported
+                    for source, exported in source_to_export.items()
+                },
+                "palette_source": "labels.npz:palette_rgb_exact_reviewed_colors",
+            }
+        )
+
+    if not reconstructed_images:
+        return 1
+    if len(reconstructed_images) > 1:
+        _assemble_grid(reconstructed_images, titles).save(
+            output_dir / "combined_reconstructed.jpg", quality=95
+        )
+        _assemble_grid(comparison_images, titles).save(
+            output_dir / "combined_comparison.jpg", quality=95
+        )
+    manifest = {
+        "format": "geoseg_txt_export_v1",
+        "coordinate_order": "x y label_id",
+        "coordinate_origin": "top_left",
+        "x_direction": "right",
+        "y_direction": "down",
+        "profiles": manifest_profiles,
+    }
+    (output_dir / "export_manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+    return 0
+
+
 def _load_original(run_dir: Path, panel_id: int, summary: dict | None) -> np.ndarray:
     """Return raw original crop for a panel. Falls back to cleaned panel.png."""
     if summary is not None:
@@ -164,8 +309,7 @@ def export_run(
     panels_dir = run_dir / "panels"
     panel_dirs = sorted(panels_dir.glob("panel_*"))
     if not panel_dirs:
-        print(f"No panel directories found in {panels_dir}", file=sys.stderr)
-        return 1
+        return _export_direct_colorbar_run(run_dir, output_dir, profiles)
 
     if profiles is None:
         profiles = [f"{run_dir.name}_panel_{i:02d}" for i in range(len(panel_dirs))]

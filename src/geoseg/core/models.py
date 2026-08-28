@@ -47,6 +47,9 @@ class SegmentationMeta(TypedDict):
     retry_labels: NotRequired[list[int]]
     fusion_notes: NotRequired[str]
     iteration: NotRequired[int]
+    boundary_mode: NotRequired[str]
+    boundary_pixels: NotRequired[int]
+    parent_labels: NotRequired[dict[int, int]]
 
 
 class SegmentationResult(TypedDict):
@@ -56,6 +59,8 @@ class SegmentationResult(TypedDict):
     meta: SegmentationMeta
     overlay: NotRequired[np.ndarray | None]
     seeds: NotRequired[list | np.ndarray]
+    color_partition: NotRequired[np.ndarray]
+    boundary_mask: NotRequired[np.ndarray]
 
 
 class QualityReview(TypedDict, total=False):

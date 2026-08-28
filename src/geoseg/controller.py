@@ -24,6 +24,7 @@ def run_pipeline(
     skip_non_velocity_model: bool = True,
     use_vlm: bool = True,
     target_panel_id: int = -1,
+    boundary_mode: str = "none",
     properties_map: dict[str, dict] | None = None,
     output_dir: str | Path | None = None,
     save_intermediates: bool = True,
@@ -38,6 +39,7 @@ def run_pipeline(
         skip_non_velocity_model=skip_non_velocity_model,
         use_vlm=use_vlm,
         target_panel_id=target_panel_id,
+        boundary_mode=boundary_mode,
     )
 
     if seg_result["summary"]["status"] == "skipped":

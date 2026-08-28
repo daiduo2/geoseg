@@ -14,6 +14,10 @@ from geoseg.modules.cv_detect.colorbar_extractor import (
 from geoseg.modules.cv_detect.figure_classifier import classify
 from geoseg.modules.segment_engines import route_and_segment
 from geoseg.modules.segment_engines.vlm_reps import color_zones_to_reps
+from geoseg.modules.post_process.split import (
+    split_label_by_color_components,
+    split_labels_by_red_boundaries,
+)
 
 
 def crop_panel_for_segmentation(
@@ -72,6 +76,7 @@ def segment_panel_stage(
     n_layers: int,
     quality_preference: str,
     review_warnings: list[str],
+    boundary_mode: str = "none",
 ) -> tuple[dict[str, Any] | None, int, str | None]:
     """Segment one panel and return panel result, layer count, and engine name."""
     is_target = (target_panel_id < 0) or (panel["id"] == target_panel_id)
@@ -133,6 +138,64 @@ def segment_panel_stage(
         is_velocity_model=True,
         n_color_zones=n_color_zones,
     )
+
+    if boundary_mode == "red":
+        from geoseg.preprocessing.absorption import absorb_artifacts
+        from geoseg.preprocessing.detectors import (
+            detect_red_boundaries,
+            detect_text,
+        )
+
+        boundary_mask = detect_red_boundaries(panel_img)
+        text_mask = detect_text(
+            panel_img,
+            min_area=20,
+            min_width=8,
+            min_aspect=2.0,
+        )
+        cleaned_for_color = absorb_artifacts(
+            panel_img,
+            boundary_mask | text_mask,
+            inpaint_radius=5,
+            dilate_iters=1,
+        )
+        color_labels = split_label_by_color_components(
+            np.ones(panel_img.shape[:2], dtype=np.int32),
+            cleaned_for_color,
+            target_label=1,
+            k=max(2, n_layers),
+            min_component_area=max(300, int(panel_img.shape[0] * panel_img.shape[1] * 0.005)),
+        )
+        parent_color_names = [
+            f"color_region_{label_id}"
+            for label_id in sorted(set(color_labels.flatten()) - {0})
+        ]
+        refined_labels, parent_map, boundary_mask = split_labels_by_red_boundaries(
+            color_labels,
+            panel_img,
+            boundary_mask=boundary_mask,
+        )
+        seg["labels"] = refined_labels
+        seg["color_partition"] = color_labels
+        seg["boundary_mask"] = boundary_mask
+        seg["meta"]["boundary_mode"] = "red"
+        seg["meta"]["boundary_pixels"] = int(boundary_mask.sum())
+        seg["meta"]["parent_labels"] = parent_map
+        seg["meta"]["color_names"] = [
+            parent_color_names[parent_map[label_id] - 1]
+            if parent_map[label_id] - 1 < len(parent_color_names)
+            else f"color_region_{parent_map[label_id]}"
+            for label_id in sorted(parent_map)
+        ]
+        from geoseg.core.image_ops import create_overlay
+
+        seg["overlay"] = create_overlay(panel_img, refined_labels, None)
+        review_warnings.append(
+            f"panel_{panel['id']}_red_boundary_split: "
+            f"{len(parent_map)}_connected_regions"
+        )
+    elif boundary_mode != "none":
+        raise ValueError(f"Unsupported boundary_mode: {boundary_mode!r}")
 
     labels = seg["labels"]
     unique_labels = set(labels.flatten())

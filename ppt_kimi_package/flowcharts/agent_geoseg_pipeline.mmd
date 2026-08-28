@@ -1,0 +1,9 @@
+flowchart LR
+    A["PDF / 文献图片<br/>概念模型 / 反演图"] --> B["Agent 图像理解<br/>判断类型 / 规划步骤"]
+    B --> C["目标检测<br/>Panel / Colorbar / 坐标轴"]
+    C --> D["图像预处理<br/>去文字 / 去噪 / 颜色校正"]
+    D --> E["分区识别<br/>颜色聚类 / SLIC / 区域融合"]
+    E --> F["质量审查<br/>Agent 视觉评估 / 失败重试"]
+    F --> G["界面提取<br/>Label map → 边界 / 多边形"]
+    G --> H["SEM 输入<br/>速度 / 材料分区 / SPECFEM"]
+    F -. 人工反馈 .-> D

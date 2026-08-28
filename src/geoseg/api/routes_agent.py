@@ -26,6 +26,7 @@ async def process_figure_agent(
     text_blocks: str = Form("[]"),
     n_layers: int = Form(5),
     quality_preference: str = Form("balanced"),
+    boundary_mode: str = Form("none"),
 ) -> AgentProcessFigureResponse:
     """Run the full Agent pipeline on a figure image."""
     img_rgb = upload_to_ndarray(image)
@@ -39,6 +40,7 @@ async def process_figure_agent(
         text_blocks=text_block_data,
         n_layers=n_layers,
         quality_preference=quality_preference,
+        boundary_mode=boundary_mode,
         skip_non_velocity_model=True,
         use_vlm=True,
         save_intermediates=False,
@@ -97,6 +99,7 @@ async def segment_agent(
     image: UploadFile = File(...),
     n_layers: int = Form(5),
     reps: str | None = Form(None),
+    boundary_mode: str = Form("none"),
 ) -> SegmentationResult:
     """Segment a panel image using the automatic router."""
     img_rgb = upload_to_ndarray(image)
@@ -108,6 +111,39 @@ async def segment_agent(
         kwargs["reps"] = json.loads(reps)
 
     seg = route_and_segment(img_rgb, **kwargs)
+    if boundary_mode == "red":
+        from geoseg.modules.post_process.split import (
+            split_label_by_color_components,
+            split_labels_by_red_boundaries,
+        )
+        from geoseg.preprocessing.absorption import absorb_artifacts
+        from geoseg.preprocessing.detectors import detect_red_boundaries, detect_text
+
+        boundary_mask = detect_red_boundaries(img_rgb)
+        text_mask = detect_text(
+            img_rgb, min_area=20, min_width=8, min_aspect=2.0
+        )
+        cleaned = absorb_artifacts(
+            img_rgb, boundary_mask | text_mask, inpaint_radius=5, dilate_iters=1
+        )
+        color_labels = split_label_by_color_components(
+            np.ones(img_rgb.shape[:2], dtype=np.int32),
+            cleaned,
+            target_label=1,
+            k=max(2, n_layers),
+            min_component_area=max(300, int(img_rgb.shape[0] * img_rgb.shape[1] * 0.005)),
+        )
+        labels, parent_map, boundary_mask = split_labels_by_red_boundaries(
+            color_labels, img_rgb, boundary_mask=boundary_mask
+        )
+        seg["labels"] = labels
+        seg["color_partition"] = color_labels
+        seg["boundary_mask"] = boundary_mask
+        seg["meta"]["boundary_mode"] = "red"
+        seg["meta"]["boundary_pixels"] = int(boundary_mask.sum())
+        seg["meta"]["parent_labels"] = parent_map
+    elif boundary_mode != "none":
+        raise ValueError(f"Unsupported boundary_mode: {boundary_mode!r}")
     return segmentation_to_api(seg)
 
 

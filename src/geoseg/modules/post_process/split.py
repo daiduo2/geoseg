@@ -11,7 +11,6 @@ import numpy as np
 from scipy import ndimage
 from scipy.cluster.vq import kmeans2
 
-
 def _run_kmeans(pixels: np.ndarray, k: int, seed: int) -> np.ndarray:
     """Run k-means and return a cluster assignment for every pixel.
 
@@ -176,3 +175,139 @@ def split_label_by_color_components(
         return result
 
     return final
+
+
+def split_labels_by_red_boundaries(
+    labels: np.ndarray,
+    img_rgb: np.ndarray,
+    *,
+    boundary_mask: np.ndarray | None = None,
+    erosion_radius: int | None = None,
+    min_component_area_frac: float = 0.005,
+) -> tuple[np.ndarray, dict[int, int], np.ndarray]:
+    """Split colour labels into regions separated by incomplete red traces.
+
+    The red trace may stop shortly before the enclosing colour boundary. To
+    close that topological gap without shrinking the final regions, the
+    colour mask minus the red trace is eroded into stable cores. Pixels in the
+    erosion band are then assigned to the nearest core. New region labels map
+    back to their original colour label through the returned ``parent_map``.
+
+    Returns:
+        ``(refined_labels, parent_map, boundary_mask)``.
+    """
+    if labels.shape != img_rgb.shape[:2]:
+        raise ValueError("Shape mismatch between labels and image")
+    if labels.ndim != 2:
+        raise ValueError("labels must be a 2D array")
+    if not 0.0 <= min_component_area_frac < 1.0:
+        raise ValueError("min_component_area_frac must be in [0, 1)")
+
+    if boundary_mask is None:
+        from geoseg.preprocessing.detectors import detect_red_boundaries
+
+        boundary_mask = detect_red_boundaries(img_rgb)
+    else:
+        boundary_mask = np.asarray(boundary_mask, dtype=bool)
+        if boundary_mask.shape != labels.shape:
+            raise ValueError("Shape mismatch between labels and boundary_mask")
+
+    h, w = labels.shape
+    if erosion_radius is None:
+        erosion_radius = max(2, int(round(min(h, w) * 0.04)))
+    if erosion_radius < 0:
+        raise ValueError("erosion_radius must be >= 0")
+
+    refined = np.zeros_like(labels, dtype=np.int32)
+    parent_map: dict[int, int] = {}
+    next_label = 1
+    structure = np.ones((3, 3), dtype=bool)
+
+    for parent_label in sorted(set(labels.flatten()) - {0}):
+        region = labels == parent_label
+        cut_region = region & ~boundary_mask
+        min_area = max(20, int(region.sum() * min_component_area_frac))
+
+        if erosion_radius > 0:
+            core = ndimage.distance_transform_edt(cut_region) > erosion_radius
+            baseline_core = ndimage.distance_transform_edt(region) > erosion_radius
+        else:
+            core = cut_region
+            baseline_core = region
+
+        core_labels, core_count = ndimage.label(core, structure=structure)
+        baseline_labels, baseline_count = ndimage.label(
+            baseline_core, structure=structure
+        )
+
+        core_ids = [
+            component_id
+            for component_id in range(1, core_count + 1)
+            if int((core_labels == component_id).sum()) >= min_area
+        ]
+        baseline_ids = [
+            component_id
+            for component_id in range(1, baseline_count + 1)
+            if int((baseline_labels == component_id).sum()) >= min_area
+        ]
+
+        # Only introduce a split when the structural boundary creates more
+        # stable components than the colour region has on its own.
+        if len(core_ids) <= max(1, len(baseline_ids)):
+            refined[region] = next_label
+            parent_map[next_label] = int(parent_label)
+            next_label += 1
+            continue
+
+        stable_cores = np.zeros_like(labels, dtype=np.int32)
+        for stable_id, component_id in enumerate(core_ids, start=1):
+            stable_cores[core_labels == component_id] = stable_id
+
+        _, indices = ndimage.distance_transform_edt(
+            stable_cores == 0, return_indices=True
+        )
+        assignable = cut_region
+        nearest = stable_cores[indices[0][assignable], indices[1][assignable]]
+
+        for stable_id in range(1, len(core_ids) + 1):
+            region_mask = np.zeros_like(region)
+            region_mask[assignable] = nearest == stable_id
+            refined[region_mask] = next_label
+            parent_map[next_label] = int(parent_label)
+            next_label += 1
+
+    # Guarantee the downstream contract that every output label is one
+    # connected region. Tiny islands created by symbols or antialiasing are
+    # left as background instead of becoming spurious geological regions.
+    connected = np.zeros_like(refined)
+    connected_parent_map: dict[int, int] = {}
+    connected_label = 1
+    parent_areas = {
+        int(parent_label): int((labels == parent_label).sum())
+        for parent_label in set(parent_map.values())
+    }
+    for provisional_label, parent_label in parent_map.items():
+        components, count = ndimage.label(
+            refined == provisional_label, structure=structure
+        )
+        component_sizes = [
+            (component_id, int((components == component_id).sum()))
+            for component_id in range(1, count + 1)
+        ]
+        component_min_area = max(
+            20, int(parent_areas[parent_label] * min_component_area_frac)
+        )
+        survivors = [
+            (component_id, area)
+            for component_id, area in component_sizes
+            if area >= component_min_area
+        ]
+        if not survivors and component_sizes:
+            survivors = [max(component_sizes, key=lambda item: item[1])]
+
+        for component_id, _ in survivors:
+            connected[components == component_id] = connected_label
+            connected_parent_map[connected_label] = parent_label
+            connected_label += 1
+
+    return connected, connected_parent_map, boundary_mask

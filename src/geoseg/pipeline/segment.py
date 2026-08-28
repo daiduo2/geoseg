@@ -31,6 +31,7 @@ def run_segmentation_stage(
     skip_non_velocity_model: bool = True,
     use_vlm: bool = True,
     target_panel_id: int = -1,
+    boundary_mode: str = "none",
 ) -> dict[str, Any]:
     """Run classification, panel detection, and segmentation for one figure."""
     review_warnings: list[str] = []
@@ -79,6 +80,7 @@ def run_segmentation_stage(
             n_layers=n_layers,
             quality_preference=quality_preference,
             review_warnings=review_warnings,
+            boundary_mode=boundary_mode,
         )
         if result is None:
             continue

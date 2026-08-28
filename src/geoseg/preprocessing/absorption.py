@@ -5,6 +5,45 @@ import cv2
 import numpy as np
 
 
+def fill_mask_nearest_along_axis(
+    img_rgb: np.ndarray,
+    mask: np.ndarray,
+    *,
+    axis: str = "horizontal",
+) -> np.ndarray:
+    """Fill masked pixels from the nearest unmasked pixel along one axis.
+
+    Horizontal filling preserves stratigraphic bands through annotation boxes;
+    vertical filling is useful for wide colorbars that occlude a lower layer.
+    """
+    if img_rgb.shape[:2] != mask.shape:
+        raise ValueError("mask shape must match image spatial shape")
+    if axis not in {"horizontal", "vertical"}:
+        raise ValueError("axis must be 'horizontal' or 'vertical'")
+    if axis == "vertical":
+        transposed = fill_mask_nearest_along_axis(
+            np.swapaxes(img_rgb, 0, 1), np.swapaxes(mask, 0, 1), axis="horizontal"
+        )
+        return np.swapaxes(transposed, 0, 1)
+
+    result = img_rgb.copy()
+    width = img_rgb.shape[1]
+    all_x = np.arange(width)
+    for row in range(img_rgb.shape[0]):
+        valid_x = all_x[~mask[row]]
+        masked_x = all_x[mask[row]]
+        if not len(masked_x) or not len(valid_x):
+            continue
+        insertion = np.searchsorted(valid_x, masked_x)
+        left_index = np.clip(insertion - 1, 0, len(valid_x) - 1)
+        right_index = np.clip(insertion, 0, len(valid_x) - 1)
+        left_x = valid_x[left_index]
+        right_x = valid_x[right_index]
+        nearest_x = np.where(masked_x - left_x <= right_x - masked_x, left_x, right_x)
+        result[row, masked_x] = img_rgb[row, nearest_x]
+    return result
+
+
 def absorb_artifacts(
     img_rgb: np.ndarray,
     mask: np.ndarray,

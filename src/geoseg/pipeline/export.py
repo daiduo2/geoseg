@@ -139,6 +139,21 @@ def export_segmented_panels(
             overlay=seg.get("overlay"),
         )
 
+        if panel_out_dir and save_intermediates:
+            color_partition = seg.get("color_partition")
+            if color_partition is not None:
+                np.savez_compressed(
+                    panel_out_dir / "color_partition.npz",
+                    labels=color_partition,
+                )
+            boundary_mask = seg.get("boundary_mask")
+            if boundary_mask is not None:
+                from PIL import Image
+
+                Image.fromarray(
+                    np.asarray(boundary_mask, dtype=np.uint8) * 255
+                ).save(panel_out_dir / "red_boundary_mask.png")
+
         panel_outputs.append({
             "panel_id": panel["panel_id"],
             "bbox": panel["bbox"],

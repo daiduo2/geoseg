@@ -155,6 +155,62 @@ def detect_red_lines(
     return cv2.dilate(mask_uint8, kernel, iterations=dilation_iters) > 0
 
 
+def detect_red_boundaries(
+    panel_rgb: np.ndarray,
+    *,
+    min_area: int = 40,
+    min_length_frac: float = 0.04,
+    min_elongation: float = 1.8,
+    closing_radius: int = 2,
+) -> np.ndarray:
+    """Detect red structural boundaries, including thick and solid traces.
+
+    ``detect_red_lines`` is deliberately conservative because its original
+    use is artifact absorption. Structural diagrams need the complementary
+    behaviour: retain long red strokes while rejecting compact symbols and
+    isolated red marks. This detector starts from the existing red-colour
+    predicate and filters connected components by spatial extent and PCA
+    elongation.
+    """
+    if panel_rgb.ndim != 3 or panel_rgb.shape[2] != 3:
+        raise ValueError("panel_rgb must have shape (H, W, 3)")
+
+    candidate = _is_reddish(panel_rgb)
+    if closing_radius > 0:
+        size = closing_radius * 2 + 1
+        structure = np.ones((size, size), dtype=bool)
+        candidate = ndimage.binary_closing(candidate, structure=structure)
+
+    h, w = candidate.shape
+    min_length = max(5.0, min(h, w) * min_length_frac)
+    components, count = ndimage.label(candidate, structure=np.ones((3, 3)))
+    result = np.zeros_like(candidate)
+
+    for component_id in range(1, count + 1):
+        ys, xs = np.where(components == component_id)
+        if xs.size < min_area:
+            continue
+
+        bbox_length = float(max(np.ptp(xs) + 1, np.ptp(ys) + 1))
+        if bbox_length < min_length:
+            continue
+
+        coords = np.column_stack((xs, ys)).astype(np.float64)
+        coords -= coords.mean(axis=0)
+        if len(coords) < 2:
+            continue
+        _, singular_values, _ = np.linalg.svd(coords, full_matrices=False)
+        if len(singular_values) < 2:
+            continue
+        elongation = singular_values[0] / max(singular_values[1], 1e-6)
+        if elongation < min_elongation:
+            continue
+
+        result[ys, xs] = True
+
+    return result
+
+
 def detect_text(
     panel_rgb: np.ndarray,
     median_ksize: int = 7,
