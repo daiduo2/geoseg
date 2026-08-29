@@ -1,137 +1,106 @@
 # geoseg v2
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> Agent-native velocity zone extraction from geophysics interpretation figures.
+> Agent-native velocity-zone extraction from geophysics interpretation figures.
 
-**geoseg** converts published geophysics figures — colored cross-sections, tomography maps, MATLAB-rendered seismic profiles — into [SPECFEM](https://github.com/SPECFEM/specfem2d)-ready velocity zone models. The entire pipeline is driven by AI agents inside [Claude Code](https://claude.ai/code), not by a traditional GUI.
+**geoseg** turns published geophysics figures — colored cross-sections, tomography maps, MATLAB-rendered seismic profiles — into [SPECFEM2D/3D](https://github.com/SPECFEM/specfem2d)-ready velocity-zone models. The pipeline is driven by Claude Code agents, not by a GUI: agents look at the image, decide what to do, and ask for help only at the overlay-review stage.
 
-## Why
+## Scope
 
-Traditional segmentation tools require manual tracing, parameter tuning, and domain expertise. We asked: **what if the entire pipeline could be driven by an agent that sees what we see, decides what to do, and asks for help only when it needs it?**
+Concept-model extraction only. No reflection-amplitude forward modeling, no waveform inversion, no full-waveform parameter tuning. The `figure_classifier` is **conservative** — false negatives are acceptable, false positives are not. A 1-D well-log plot should be rejected outright, not forced into the layered pipeline.
 
-geoseg v2 is the answer: a CLI-native workflow where agents autonomously classify figures, detect panels, select segmentation engines, and iterate on results — with humans in the loop only at the overlay review stage.
+## Why agent-native
 
-## Key Features
+Traditional segmentation tools require manual tracing, parameter tuning, and domain expertise. v2 replaces clicks with conversation — natural language is the interface, and Claude Code skills orchestrate the whole pipeline. The agent **sees** the figure via the `Read` tool and **decides** which engine, mask, or refinement to apply.
 
-- **Agent-Native Architecture** — No traditional GUI. The entire pipeline is orchestrated by Claude Code skills (`geo-segment`, `batch-segment`, `sandbox-segment`, `figure-classify`).
-- **CLI Human-in-the-Loop** — Agent auto-runs the pipeline, presents overlay results, and waits for natural language feedback. "Remove the colorbar" or "Split the bottom layer" — the agent re-runs sandbox on the fly.
-- **Multi-Engine Segmentation** — `sandbox-segment` autonomously tries multiple engines (k-means, edge-guided, ensemble, grayscale) and picks the best via VLM visual evaluation + objective metrics.
-- **Horizon Refinement** — Post-processes fragmented segmentations by applying label-space Gaussian blur, eliminating "broken glass" artifacts while preserving large-scale geological structures.
-- **Strategy Memory** — Learns from past segmentations. After each batch, extracts strategy templates (e.g. *"vivid + high edge → ensemble"*) and improves future decisions.
-- **Session State Persistence** — Full lifecycle tracking (`pending → classified → segmented → reviewed → exported`) with backtracking to any upstream stage.
-- **Batch Processing** — Process entire directories with parallel agents (≤5 concurrent), then review all results in one pass.
-- **HTML Report Dashboard** — Auto-generates a beautiful dashboard with figure cards, overlay comparison, and a real-time feedback chatbox (via optional rmux bridge to CLI).
+## Key features
+
+- **Agent-native orchestration** — figure-classify → cv_detect → sandbox-segment → visual-audit → export, driven by Claude Code skills.
+- **CLI human-in-the-loop** — agent auto-runs the pipeline, presents the overlay, then waits for natural-language feedback. *"Remove the colorbar"* or *"split the bottom layer"* triggers an immediate re-segment.
+- **Multi-engine sandbox** — `sandbox-segment` tries engines (`colorbar_guided`, `regional_fusion`, `edge_guided`, `ensemble`, `kmeans_full`, `grayscale`, …), evaluates by VLM visual judgment + objective metrics, and picks or fuses the best.
+- **Artifact-aware preprocessing** — red fault lines, black crosses, white gaps, label merges, and small-component cleanup happen before zone extraction.
+- **Visual audit** — `visual-audit` reads overlay-with-legend and emits a structured `RegionalAudit`. No PASS/FAIL scoring — the agent decides.
+- **Strategy memory** — past segmentations inform engine selection on similar figures.
+- **Session state with backtracking** — full lifecycle `pending → classified → segmented → reviewed → exported`, with backtrack to any upstream stage.
+- **Batch processing** — directory mode with ≤5 concurrent segmenter agents (M-series Mac ~1.5 GB per agent).
+- **Napari Shapes editor** — blocking GUI for fine label editing when natural-language feedback isn't enough.
 
 ## Architecture
 
 ```
 PDF / Image
     ↓
-[figure-classify] → velocity_model / skip
+[Agent: figure-classify] → velocity_model / skip
     ↓
-[cv_detect] → panels + colorbar extraction
+[cv_detect] → panels + colorbar
     ↓
-[sandbox-segment] → best labels (agent picks engine, evaluates, fuses)
+[Agent: sandbox-segment] → best labels (engine pick + fuse)
     ↓
-[Human Review] → overlay confirmed / modified via natural language
+[Agent: visual-audit] → RegionalAudit (semantic summary)
     ↓
-[post_process] → polygons + properties + SPECFEM export
+[napari editor]  ←── optional, only when natural language isn't enough
+    ↓
+[post_process + exporter] → polygons + properties + SPECFEM2D/3D
 ```
 
-All VLM reasoning happens inside Claude Code agent sessions via the `Read` tool. No Python subprocess calls to `claude -p`.
+All VLM reasoning runs inside Claude Code agent sessions via the `Read` tool. No Python subprocess to `claude -p`.
 
-## Literature Parsing
+## Skills
 
-### Why Parse Literature?
+| Skill | What it does |
+|-------|--------------|
+| `geo-segment` | End-to-end: figure → SPECFEM, dialog HITL. |
+| `figure-classify` | Look at the image, decide velocity model vs. skip. |
+| `sandbox-segment` | Try multiple engines, evaluate, fuse. |
+| `visual-audit` | Read overlay-with-legend, emit structured audit. |
+| `batch-segment` | Directory mode, ≤5 concurrent agents. |
+| `segment-export` | Export accepted segmentation to SPECFEM. |
+| `preprocess-artifact` | Red fault lines, black crosses, white-gap repair. |
+| `module-demo` | Run `examples/geoseg/` flows to verify modules. |
+| `schema-bump` | Schema change protocol. |
 
-SPECFEM-ready velocity models are rarely published as raw data tables. Instead, they are embedded as **interpretation figures** in published geophysics literature — PDF papers where velocity cross-sections, tomography maps, and seismic profiles are rendered as colored images with colorbars and annotations. Extracting these figures from PDFs is the first necessary step of the pipeline.
+Skill workflow graphs and failure handling live in `.claude/skills/<skill>/SKILL.md`.
 
-### Pipeline
-
-```
-PDF paper (arXiv / journal / conference)
-    ↓
-[MinerU] → structured extraction (text + figures + tables)
-    ↓
-[Panel detection] → individual figure panels + colorbar bbox
-    ↓
-[Segmentation] → velocity zone labels
-    ↓
-[SPECFEM export] → tomo.xyz + Par_file snippet
-```
-
-[MinerU](https://github.com/opendatalab/MinerU) is an open-source PDF parsing tool that converts academic papers into structured markdown with embedded figures. geoseg uses MinerU as the **literature ingestion layer** to extract high-resolution figures from PDFs before segmentation.
-
-### ⚠️ Important: Configure MinerU API Key
-
-Before running literature parsing, you **must** configure your MinerU API credentials:
-
-```bash
-# Set your MinerU API key as environment variable
-export MINERU_API_KEY="your-api-key-here"
-
-# Or add to your shell profile for persistence
-echo 'export MINERU_API_KEY="your-api-key-here"' >> ~/.zshrc
-```
-
-Without a valid API key, the PDF ingestion stage will fail. You can obtain an API key from the [MinerU developer portal](https://mineru.net/).
-
-## Quick Start
+## Quick start
 
 ### Prerequisites
 
 - Python 3.10+
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- [pnpm](https://pnpm.io/) (TS/JS package manager — used for Claude Code workflows)
+- [uv](https://docs.astral.sh/uv/) — Python package manager
 - [Claude Code](https://claude.ai/code) CLI
-- [rmux](https://github.com/joshmedeski/rmux) (optional, for real-time frontend → CLI feedback)
-- MinerU API key (for PDF ingestion)
+- Optional: MinerU API key (PDF ingestion)
+- Optional: [rmux](https://github.com/joshmedeski/rmux) (HTML report ↔ CLI feedback bridge)
 
 ### Package manager rules
 
-| Ecosystem | Tool | Command examples |
-|-----------|------|------------------|
-| Python    | **uv** | `uv sync`, `uv run python -m geoseg...` |
-| TS/JS     | **pnpm** | `pnpm install`, `pnpm exec ...` |
+| Ecosystem | Tool | Notes |
+|-----------|------|-------|
+| Python | **uv** | `uv sync`, `uv run python -m geoseg…` |
+| TS/JS | **pnpm** | `pnpm install`, `pnpm exec …` |
 
-**Do not mix:** do not use `python3 -m venv`/`pip`, `npm`, or `yarn` inside this project. The virtual environment is managed exclusively by `uv`.
+Do **not** mix `pip` / `python3 -m venv`, `npm`, or `yarn` inside this project. The virtualenv is managed exclusively by `uv`.
 
 ### Install
 
 ```bash
 git clone https://github.com/daiduo2/geoseg.git
 cd geoseg
-
-# Create/sync the uv-managed virtual environment
 uv sync
-
-# Verify the environment
 uv run scripts/env_check.py
-
-# Optional: install workflow JS dependencies when present
-pnpm install
 ```
 
-All Python commands below assume `uv run` prefix. For example:
+### Single figure
 
-```bash
-uv run python -m geoseg.controller_demo
-uv run pytest tests/
-```
-
-### Single Figure
-
-In Claude Code:
 ```
 User: /geo-segment runs/M0.5/fig1.png --n-layers=5
 
-Agent: [auto-runs classify → detect → segment]
-       📊 fig1.png  分割完成
-          类型: velocity_model (0.92)
-          引擎: kmeans_full → 5 层
-          质量: 0.85
+Agent: [auto-runs classify → detect → segment → audit]
+       fig1.png  分割完成
+         类型: velocity_model (0.92)
+         引擎: colorbar_guided → 5 层
+         audit: ok
        [shows overlay]
 
        Accept / Modify / Skip / Backtrack ?
@@ -148,7 +117,7 @@ Agent: [exports SPECFEM]
        ✅ tomo.xyz + Par_file_snippet.txt
 ```
 
-### Batch Processing
+### Batch
 
 ```
 User: /batch-segment runs/M0.5/ --n-layers=5
@@ -156,174 +125,104 @@ User: /batch-segment runs/M0.5/ --n-layers=5
 Agent: [Stage 1-3: scans → classifies all → segments all]
        📦 5 张目标图已处理完毕，请 review。
 
-       [1] fig1.png  ✅ 0.85  5层
-       [2] fig3.png  ✅ 0.91  4层
-       [3] fig4.png  ⚠️  0.62  3层  ← 建议修改
-       [4] fig7.png  ✅ 0.78  6层
-       [5] fig9.png  ⚠️  0.58  2层  ← 建议修改
+       [1] fig1.png  ✅  0.85  5层
+       [2] fig3.png  ✅  0.91  4层
+       [3] fig4.png  ⚠️   0.62  3层  ← 建议修改
+       [4] fig7.png  ✅  0.78  6层
+       [5] fig9.png  ⚠️   0.58  2层  ← 建议修改
 
 User: 1,2,4 接受；3 修改：底层应分两层；5 跳过
 
 Agent: [exports 1,2,4; re-segments 3; skips 5]
 ```
 
-### Generate Report
+## PDF ingestion (optional)
+
+Published models are usually embedded in papers, not released as raw data tables. geoseg provides two ingestion layers:
+
+- **MinerU** (`modules/mineru_client/`) — structured extraction (figures + caption markdown + content_list.json). Requires `MINERU_API_KEY`.
+- **PyMuPDF fallback** (`modules/pdf_extractor/`) — `{XObject + text block}` extraction and `rasterize_page()`. Used when MinerU splits a figure or sizes are too small.
 
 ```bash
-# After batch processing, generate an HTML dashboard
+export MINERU_API_KEY="your-api-key"
+```
+
+## Real-time feedback (optional)
+
+The HTML report chatbox can drive the CLI session in real time via `rmux`:
+
+```bash
+# Terminal 1 — Claude Code inside a named rmux session
+rmux new-session -s geoseg
+# (inside rmux) cd /path/to/geoseg && cc
+
+# Terminal 2 — feedback bridge
+uv run python -m geoseg.feedback_bridge --rmux-session=geoseg
+
+# Generate and open the dashboard
 uv run python -m geoseg.generate_report runs/sessions/batch_xxx.json
 open runs/reports/batch_xxx.html
 ```
 
-For real-time feedback from the browser chatbox to the CLI session:
+## Module structure
+
+```
+src/geoseg/
+├── core/                  # Stable data contracts + cross-module facade
+│   ├── models.py
+│   └── image_ops.py
+├── pipeline/              # Stage orchestration
+│   ├── segment.py
+│   ├── export.py
+│   └── stages/
+├── modules/
+│   ├── cv_detect/         # Panel detection + colorbar extraction
+│   ├── segment_engines/   # Engine family (registry / runner / policy / retry)
+│   │   ├── v4/            # colorbar_guided, palette
+│   │   ├── regional/      # regional_fusion
+│   │   ├── edge/          # edge_guided helpers
+│   │   ├── horizon/       # horizon refinement internals
+│   │   ├── strategy/      # strategy memory
+│   │   ├── diagnostics/   # metrics, batch_test, compare_results
+│   │   └── internal/      # shared helpers
+│   ├── post_process/      # Polygons + physical properties
+│   ├── exporter/          # SPECFEM2D/3D output
+│   ├── editor/            # Napari Shapes-primary editor
+│   ├── visual_audit/      # overlay-with-legend views
+│   ├── mineru_client/     # MinerU PDF ingestion
+│   ├── pdf_extractor/     # PyMuPDF fallback
+│   └── vlm_client/        # Schema + prompt templates (no LLM call)
+├── cli/                   # Packaged CLI entrypoints
+├── batch/                 # Batch directory processing
+├── api/                   # FastAPI schema/routes (legacy compat)
+├── experiments.py         # Script-side facade for CV / VLM / engine helpers
+├── session_state.py       # Persistent session state with backtracking
+├── controller.py          # End-to-end compat facade
+├── pipeline_interfaces.py # Old import compat layer
+└── server.py              # FastAPI compat entrypoint
+```
+
+For the full code map and module contracts see [`docs/CODEBASE.md`](docs/CODEBASE.md).
+
+## Design philosophy
+
+1. **Agent-native over GUI** — conversation is the interface.
+2. **HITL only at review** — auto-run everything; stop only for overlay confirmation.
+3. **Upstream backtracking** — user can backtrack to `classify` / `panel` / `segment`.
+4. **Conservative classification** — prefer false negatives over false positives.
+5. **VLM judgment primary** — visual evaluation trumps quantitative metrics.
+6. **Immutable state** — session-state updates return new objects; every step persists.
+7. **No new Tauri/FastAPI product frontend** — `api/` and `server.py` are historical compatibility only.
+
+## Testing
 
 ```bash
-# Terminal 1: start Claude Code inside a named rmux session
-rmux new-session -s geoseg
-# (inside rmux) cd /path/to/geoseg && cc
-
-# Terminal 2: start the feedback bridge
-uv run python -m geoseg.feedback_bridge --rmux-session=geoseg
-
-# Now type feedback in the HTML report chatbox — it appears directly in the CLI session
+uv run pytest                              # full suite
+uv run pytest tests/test_integration_ph01.py  # smoke after schema changes
 ```
 
-## Examples
-
-### Original vs. Segmentation Overlay
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/assets/example1_original.png" width="100%" alt="Original Figure 1"/>
-      <br/><sub>Original: velocity cross-section (Gras et al., 2019)</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example1_coarse.png" width="100%" alt="Coarse Segmentation 1"/>
-      <br/><sub>Coarse: kmeans_full, 4 layers</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example1_refined.png" width="100%" alt="Refined Segmentation 1"/>
-      <br/><sub>Refined: horizon refinement (fallback — already clean)</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/assets/example2_original.png" width="100%" alt="Original Figure 2"/>
-      <br/><sub>Original: Velocity cross-section with anticline/syncline structures (Gras et al., 2019)</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example2_coarse.png" width="100%" alt="Coarse Segmentation 2"/>
-      <br/><sub>Coarse: kmeans_full, 5 layers — moderate fragmentation at boundaries</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example2_refined.png" width="100%" alt="Refined Segmentation 2"/>
-      <br/><sub>Refined: label-space Gaussian blur, smooths boundaries while preserving structural folds</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/assets/example3_original.png" width="100%" alt="Original Figure 3"/>
-      <br/><sub>Original: seismic tomography (Gras et al., 2019)</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example3_coarse.png" width="100%" alt="Coarse Segmentation 3"/>
-      <br/><sub>Coarse: kmeans_full, 4 layers — severe fragmentation</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/assets/example3_refined.png" width="100%" alt="Refined Segmentation 3"/>
-      <br/><sub>Refined: label-space Gaussian blur, frag 0.0294 → 0.0000</sub>
-    </td>
-  </tr>
-</table>
-
-> **Note:** All overlays use vivid, perceptually distinct colors (golden-ratio HSV palette) at high opacity (α=0.65) so both VLM and human reviewers can clearly distinguish every segmented region. Three fill modes are available: `blend` (default, shown above), `solid` (near-opaque), and `mask` (pure segmentation map). The human-in-the-loop review step allows natural language feedback (e.g. "split the bottom layer" or "remove the colorbar") for on-the-fly refinement.
->
-> **Horizon Refinement** (v0.8 Direction A): When pixel-wise clustering produces fragmented boundaries ("broken glass" effect), the agent detects whether layers actually touch. For touching layer pairs, it fits smooth curves via Savitzky-Golay with `mode='mirror'` and adjusts only boundary-adjacent pixels. For severely fragmented (non-touching) layer pairs — "archipelagos" of disconnected fragments — it applies **label-space Gaussian blur**: each label's binary mask is blurred in 2D and pixels are reassigned to the dominant label. Small fragments lose to spatial competition and disappear, while large-scale layer structures are preserved. If the coarse segmentation is already clean or lacks spatial coherence, the refinement step gracefully falls back to the original result.
-
-## Experimental Report: The 16b0cf Challenge
-
-### The Problem
-
-The third example above (**16b0cf**, Gras et al., 2019) represents the most challenging case in our test suite: a seismic tomography cross-section where k-means clustering produces severe "broken glass" fragmentation (frag = 0.0294). Layer boundaries are not merely jagged — they consist of disconnected "archipelagos" of fragments with no touching pixels between adjacent layers.
-
-### Experimental Journey
-
-We conducted a systematic exploration of post-processing strategies for this image:
-
-| Experiment | Method | Result | Conclusion |
-|-----------|--------|--------|------------|
-| **E1** | Curvature-constrained quintic splines (global) | Over-smoothes local geometry | ❌ Rejected — curvature penalty integrated over full width flattens legitimate folds |
-| **E2** | Savitzky-Golay with adaptive window (local) | Better, but still loses small features | ⚠️ Partial — insufficient for archipelago structures |
-| **E3** | Distance-transform ridge (Voronoi midline) | Severe deviation (max 247px off) | ❌ Rejected — non-convex islands cause ridge to run through fragment interiors |
-| **E4** | Knot-constrained spline fitting | 17 knots at prominence=20, max diff 26px | ⚠️ Partial — works at curve level but global repartitioning masks the improvement |
-| **E5** | **Label-space Gaussian blur (σ=15)** | Frag 0.0294 → 0.0000 | ✅ **Adopted** — visually matches human-drawn boundaries exactly |
-
-### Key Insight
-
-The quantitative metric that guided earlier experiments — fragmentation score — turned out to be a poor proxy for visual quality. The breakthrough came when we stopped optimizing mathematical smoothness and instead asked: **"What would a human draw as the boundary?"**
-
-The answer was simple: **spatial Gaussian smoothing of the label map itself**. No boundary extraction, no curve fitting, no repartitioning — just let spatial competition between labels naturally eliminate small fragments while preserving large-scale structures. This is both mathematically elegant (10 lines of code) and visually correct.
-
-### Current Behavior
-
-- **Broken-pair images** (like 16b0cf) → label-space Gaussian blur (σ=15)
-- **Touching-pair images** (like silixa) → Savitzky-Golay local boundary adjustment (unchanged)
-- **Fallback** → if blur worsens fragmentation or drops >1 layer, return coarse unchanged
-
-## Project Structure
-
-```
-geoseg/
-├── src/
-│   └── geoseg/
-│       ├── modules/
-│       │   ├── cv_detect/              # Panel detection, colorbar extraction
-│       │   ├── segment_engines/        # Multi-engine segmentation + strategy memory
-│       │   │   ├── v4_kmeans.py
-│       │   │   ├── edge_guided.py
-│       │   │   ├── ensemble.py
-│       │   │   ├── grayscale.py
-│       │   │   ├── horizon_refinement.py  # Label-space Gaussian blur + curve fitting
-│       │   │   ├── strategy_memory.py  # History-based engine selection
-│       │   │   └── metrics.py          # Objective facts (no physical bias)
-│       │   ├── vlm_client/             # Schema + prompt definitions (pydantic)
-│       │   │   ├── prompts.py          # Single source of truth for schemas
-│       │   │   └── client.py           # DEPRECATED (agent-native only)
-│       │   ├── post_process/           # Polygon extraction, property assignment
-│       │   └── exporter/               # SPECFEM tomography_file + Par_file
-│       ├── session_state.py            # Persistent session state with backtracking
-│       ├── generate_report.py          # HTML dashboard generator
-│       ├── feedback_bridge.py          # Browser → rmux → CLI real-time bridge
-│       ├── pipeline_interfaces.py      # Inter-module contracts (TypedDict + Protocol)
-│       ├── controller.py               # Pipeline orchestration
-│       └── batch_processor.py          # Batch processing wrapper
-│
-├── tests/                              # Unit and integration tests
-├── docs/                               # Design documents and specs
-├── .claude/skills/
-│   ├── geo-segment/                    # End-to-end single figure skill
-│   ├── batch-segment/                  # Batch processing skill (5-stage pipeline)
-│   ├── sandbox-segment/                # Autonomous segmentation skill
-│   └── figure-classify/                # Figure classification skill
-└── README.md
-```
-
-## Design Philosophy
-
-1. **Agent-Native over GUI** — The interaction model is conversation, not clicks. Natural language is the interface.
-2. **Human-in-the-Loop at Review Only** — Auto-run everything, stop only for overlay confirmation. No manual tracing.
-3. **Upstream Backtracking** — Users can backtrack to `classify`, `panel`, or `segment` stage from review. Natural language feedback drives re-execution.
-4. **Conservative Classification** — Prefer false negatives over false positives. Skip non-velocity-model figures immediately.
-5. **VLM Judgment Primary** — Visual evaluation by the agent trumps quantitative metrics. Geological sense > mathematical smoothness.
-6. **Immutable State** — Session state updates return new objects. Every significant step is persisted to JSON.
-
-## History
-
-- **v0.1–v0.6** — PySide6 GUI + manual pipeline. Reached functional completeness but GUI interaction felt unnatural.
-- **v0.7** — Tauri + FastAPI frontend designed, but abandoned before implementation. Realized the project's value is the *agent-driven workflow*, not another GUI tool.
-- **v0.8** — CLI-native HITL with session state persistence, upstream backtracking, HTML report dashboard, and label-space Gaussian blur for horizon refinement.
+GUI tests are excluded from CI on macOS runners. See [`tests/`](tests/).
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+[MIT](LICENSE).
