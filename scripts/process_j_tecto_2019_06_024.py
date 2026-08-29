@@ -22,7 +22,7 @@ from geoseg.modules.segment_engines.horizon_refinement import refine_label_blur
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
 from geoseg.modules.segment_engines.v4.colorbar_guided import segment_colorbar_guided
 from geoseg.modules.segment_engines.v4.palette import _sample_colorbar_seeds
-from geoseg.modules.segment_engines.metrics import compute_all
+from geoseg.experiments import compute_all
 from geoseg.modules.post_process.merge import (
     filter_small_components,
     remove_labels_by_ids,
