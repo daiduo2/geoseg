@@ -117,10 +117,16 @@ def _run_engine_on_panel(
 def run_benchmark(
     cfg: BenchmarkConfig,
     output_path: str | Path | None = None,
+    keep_artifacts: bool = False,
 ) -> dict[str, Any]:
     """Run the full benchmark. Return a JSON-serialisable summary.
 
     If `output_path` is given, also dump the summary to that file.
+
+    If `keep_artifacts=True`, each per_panel record also carries
+    `panel_rgb` and `gt_labels` (numpy arrays) for downstream
+    visualisation. They will NOT serialise to JSON cleanly — convert
+    them to lists first, or use only the in-memory summary.
     """
     summary: dict[str, Any] = {
         "config": {
@@ -204,7 +210,15 @@ def run_benchmark(
                 text_mask=text_mask,
                 colorbar_mask=colorbar_mask,
             )
-            panel_record["engines"][engine] = {"ok": True, "metrics": metrics}
+            panel_record["engines"][engine] = {
+                "ok": True,
+                "metrics": metrics,
+                "labels": pred_labels if keep_artifacts else None,
+            }
+
+        if keep_artifacts:
+            panel_record["panel_rgb"] = rgb
+            panel_record["gt_labels"] = gt
 
         summary["per_panel"].append(panel_record)
 
