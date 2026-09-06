@@ -37,9 +37,11 @@ __all__ = [
     "evaluate",
     "run_benchmark",
     "default_benchmark",
+    "synthesize_reps",
+    "synthesize_noisy_reps",
 ]
 
-_MODULES = ("configs", "generator", "noise", "evaluate", "runner")
+_MODULES = ("configs", "generator", "noise", "evaluate", "runner", "vlm_seeds")
 
 
 def _load(sub: str):
@@ -92,4 +94,6 @@ def __getattr__(name: str):  # PEP 562 lazy attribute access
         return _load("runner").run_benchmark
     if name == "default_benchmark":
         return _load("runner").default_benchmark
+    if name in {"synthesize_reps", "synthesize_noisy_reps"}:
+        return getattr(_load("vlm_seeds"), name)
     raise AttributeError(name)

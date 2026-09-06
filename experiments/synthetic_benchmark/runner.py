@@ -23,6 +23,7 @@ from .configs import BenchmarkConfig, PanelConfig  # noqa: PLC0415
 from .evaluate import evaluate  # noqa: PLC0415
 from .generator import generate_panel  # noqa: PLC0415
 from .noise import apply_noise  # noqa: PLC0415
+from .vlm_seeds import synthesize_reps  # noqa: PLC0415
 
 
 def _generate_one(
@@ -74,12 +75,9 @@ def _run_engine_on_panel(
     rgb: np.ndarray,
     colorbar_rgb: np.ndarray | None,
     n_layers_hint: int,
+    reps: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Run one engine via geoseg.experiments.run_engine.
-
-    Engines that require reps (VLM seed vectors) are skipped here —
-    the synthetic benchmark is meant to evaluate the pure pixel-side
-    machinery; semantic seed quality is a separate question.
 
     If `colorbar_rgb` is given, we crop the last `colorbar_rgb.shape[1]`
     columns off `rgb` before passing it as `panel_rgb`. Per the engine
@@ -87,6 +85,10 @@ def _run_engine_on_panel(
     seeds from `colorbar_rgb` then labels the whole `panel_rgb` in LAB
     space), the panel must NOT contain the appended colorbar — that
     would double-stamp it and confuse the engine.
+
+    `reps` is passed through unchanged. Engines marked
+    `requires_reps=True` in the registry (kmeans_full, edge_guided,
+    edge_grow) will run their primary path when reps is non-empty.
     """
     from geoseg.experiments import run_engine
 
@@ -100,7 +102,7 @@ def _run_engine_on_panel(
         result = run_engine(
             engine=engine,
             panel_rgb=panel,
-            reps=None,
+            reps=reps,
             colorbar_rgb=colorbar_rgb,
             n_layers=n_layers_hint,
             n_color_zones=0,
@@ -168,8 +170,16 @@ def run_benchmark(
         # under-segmentation from under-estimating.
         n_layers_hint = max(1, len(gen_meta.get("label_to_value", {})))
 
+        # Synthesize VLM-style reps once per panel, shared across all
+        # engines (fair head-to-head comparison).
+        reps = synthesize_reps(
+            gt, gen_meta["label_to_value"], seed=panel_cfg.seed,
+        )
+
         for engine in cfg.engines:
-            run_result = _run_engine_on_panel(engine, rgb, colorbar, n_layers_hint)
+            run_result = _run_engine_on_panel(
+                engine, rgb, colorbar, n_layers_hint, reps=reps,
+            )
             if not run_result["ok"]:
                 panel_record["engines"][engine] = {
                     "ok": False,
@@ -306,15 +316,17 @@ def default_benchmark(seed_base: int = 1000) -> BenchmarkConfig:
     return BenchmarkConfig(
         panels=tuple(panels),
         engines=(
-            # Default: only engines that DON'T require VLM seed vectors.
-            # kmeans_full / edge_guided / edge_grow all need `reps` and
-            # would silently fall back to v4_kmeans without it, which
-            # would mask engine differences in the benchmark.
+            # Engines without VLM seed requirements (run directly):
             "v4_kmeans",
             "v4_kmeans_colorbar",
             "v4_kmeans_pastel",
             "grayscale_agglomerative",
             "horizon_refinement",
+            # Engines that require VLM seed vectors (run with
+            # synthesized reps from `vlm_seeds.synthesize_reps`):
+            "kmeans_full",
+            "edge_guided",
+            "edge_grow",
         ),
         apply_realistic_noise=True,
     )
