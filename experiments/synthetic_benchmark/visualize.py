@@ -344,18 +344,44 @@ def render_overview_grid(
 
 
 def visualize_benchmark(
-    summary: dict,
+    summary_or_cfg,
     out_dir: str | Path = "visualizations",
     scale: float = 0.5,
     also_per_engine: bool = True,
 ) -> dict[str, list[str]]:
-    """Render all visualizations from a `run_benchmark` summary.
+    """Render all visualizations from a `run_benchmark` summary OR a
+    BenchmarkConfig. Returns {"per_engine": [...paths...], "panel_inputs":
+    [...], "overview": path or None}.
 
-    Returns {"per_engine": [...paths...], "panel_inputs": [...],
-             "overview": path or None}.
+    When given a BenchmarkConfig, this re-runs `run_benchmark` with
+    keep_artifacts=True so the JSON written elsewhere stays compact.
     """
     if not _HAVE_PIL:
         return {"per_engine": [], "panel_inputs": [], "overview": None}
+
+    # Lazy import to avoid circular dep at module load
+    from .runner import run_benchmark as _run  # noqa: PLC0415
+
+    if not isinstance(summary_or_cfg, dict):
+        # Treat as BenchmarkConfig
+        summary = _run(summary_or_cfg, output_path=None, keep_artifacts=True)
+    else:
+        summary = summary_or_cfg
+        # If artefacts are missing, re-run
+        if not summary.get("per_panel"):
+            return {"per_engine": [], "panel_inputs": [], "overview": None}
+        first = summary["per_panel"][0]
+        if "panel_rgb" not in first:
+            from .configs import BenchmarkConfig as _Bcfg  # noqa: PLC0415
+            cfg = _Bcfg(
+                panels=tuple(first["config"] for first in summary["per_panel"]),
+                engines=tuple(summary.get("config", {}).get("engines", ())),
+                apply_realistic_noise=summary.get("config", {}).get(
+                    "apply_realistic_noise", True,
+                ),
+            )
+            summary = _run(cfg, output_path=None, keep_artifacts=True)
+
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -379,8 +405,11 @@ def visualize_benchmark(
             for eng, edat in record["engines"].items():
                 if not edat.get("ok"):
                     continue
+                labels = edat.get("labels")
+                if labels is None:
+                    continue
                 path = render_per_engine(
-                    artefact, gt, edat["labels"], p_idx, eng,
+                    artefact, gt, labels, p_idx, eng,
                     out_dir=out_dir / "per_engine", scale=scale,
                 )
                 if path:
@@ -393,7 +422,6 @@ def visualize_benchmark(
         if path:
             panel_input_paths.append(path)
 
-        # Build grid data
         gd = {
             "panel_idx": p_idx,
             "config": record["config"],

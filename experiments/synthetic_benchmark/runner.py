@@ -127,6 +127,9 @@ def run_benchmark(
     `panel_rgb` and `gt_labels` (numpy arrays) for downstream
     visualisation. They will NOT serialise to JSON cleanly — convert
     them to lists first, or use only the in-memory summary.
+
+    When `output_path` is given, `keep_artifacts` is forced False so
+    the JSON stays compact (~170 KB vs ~30 MB with artefacts).
     """
     summary: dict[str, Any] = {
         "config": {
@@ -137,6 +140,14 @@ def run_benchmark(
         "per_panel": [],
         "aggregated": {},
     }
+
+    # When writing JSON, force keep_artifacts=False so panel_rgb /
+    # gt_labels / per-engine labels don't bloat the file (~30 MB
+    # otherwise). Callers wanting to visualise must pass output_path
+    # AFTER consuming the in-memory summary, or call visualize
+    # separately with a fresh keep_artifacts=True run.
+    if output_path is not None:
+        keep_artifacts = False
 
     for p_idx, panel_cfg in enumerate(cfg.panels):
         artefact = _generate_one(panel_cfg, cfg.apply_realistic_noise)
