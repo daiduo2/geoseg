@@ -66,6 +66,10 @@ validation/
 
 - 5 个 `newimage_p0..p4`：2026-06-06 → 2026-07-06，11–12 个 campaign、15–37 次运行，最终稳定在 5 区域结果；
 - 每个 panel 选的是**稳定的 merge/visual-audit 版本**，不是最后一次过度分割的 `labels_best_split_v3`（后者 8–12 区域）；
+- 查看证据：每个 panel 有 11 个查看目录、10 个 overlay-with-legend、5 个 comparison render；
+- 导出证据：本次补做了 SPECFEM 导出，`tomo.xyz` 在 `~/geoseg-artifacts/2026-10/best_exports/`，`Par_file` snippet / properties / polygons 在 `validation/best/exports/`；
+- 注意：历史数据里“导出”和“查看”是两条分离的流水线（432 个 tomo 集中在 agent_review/literature_test，查看集中在 fig6/newimage），所以 best 是“被频繁查看的集合 + 本次补导出”；
+- 物性目前是 `synthetic_gradient_placeholder`，不是从色条反演的真实速度；
 - 未纳入：`feng_fig6_p03..p07`（迭代 37–43 次，但最新结果碎片化）、`jtecto`（13–16 区域，过复杂）、silixa 系列（2 层，参考价值低）、3D schematic。
 
 ```bash

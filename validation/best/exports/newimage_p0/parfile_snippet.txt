@@ -1,0 +1,17 @@
+# --- geo-segment generated snippet ---
+# Place these lines into your SPECFEM2D Par_file
+
+MODEL                           = tomo
+TOMOGRAPHY_FILE                 = ./DATA/tomo_file.xyz
+
+# Model dimensions (must match tomography_file grid)
+nx_tomo                         = 490
+nz_tomo                         = 191
+dx_tomo                         = 1.000000
+dz_tomo                         = 1.000000
+
+# Color zone -> property mapping (for reference)
+#   layer_1   :  Vp=3000.0  Vs=1732.1  rho=2200.0
+#   layer_2   :  Vp=4000.0  Vs=2309.5  rho=2400.0
+#   layer_3   :  Vp=5000.0  Vs=2886.8  rho=2600.0
+#   layer_4   :  Vp=6000.0  Vs=3464.2  rho=2800.0

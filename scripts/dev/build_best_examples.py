@@ -25,6 +25,7 @@ from geoseg.core.image_ops import create_overlay
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUNS = Path.home() / "geoseg-artifacts" / "2026-10" / "runs"
 OUT = REPO_ROOT / "validation" / "best"
+EXPORT_ROOT = Path.home() / "geoseg-artifacts" / "2026-10" / "best_exports"
 
 CORE = [
     {
@@ -35,6 +36,7 @@ CORE = [
         "date": "2026-07-06",
         "campaigns": 11,
         "runs": 15,
+        "viewed": {"view_dirs": 11, "audit_dirs": 1, "legend": 10, "compare": 5},
         "note": "5 regions; stable merge result after 11 campaigns",
     },
     {
@@ -45,6 +47,7 @@ CORE = [
         "date": "2026-07-06",
         "campaigns": 12,
         "runs": 27,
+        "viewed": {"view_dirs": 11, "audit_dirs": 1, "legend": 10, "compare": 5},
         "note": "5 regions; stable merge result after 12 campaigns",
     },
     {
@@ -55,6 +58,7 @@ CORE = [
         "date": "2026-07-06",
         "campaigns": 12,
         "runs": 37,
+        "viewed": {"view_dirs": 11, "audit_dirs": 1, "legend": 10, "compare": 5},
         "note": "5 regions; most-iterated newimage panel",
     },
     {
@@ -65,6 +69,7 @@ CORE = [
         "date": "2026-07-06",
         "campaigns": 12,
         "runs": 17,
+        "viewed": {"view_dirs": 11, "audit_dirs": 1, "legend": 10, "compare": 5},
         "note": "5 regions; stable merge result",
     },
     {
@@ -75,6 +80,7 @@ CORE = [
         "date": "2026-07-06",
         "campaigns": 11,
         "runs": 15,
+        "viewed": {"view_dirs": 11, "audit_dirs": 1, "legend": 10, "compare": 5},
         "note": "5 regions; stable merge result",
     },
 ]
@@ -131,8 +137,43 @@ def overlay_image(image: np.ndarray, labels: np.ndarray, convention: str) -> np.
     return create_overlay(image, labels, None, alpha=0.62, boundary_mode="thin", skip_background=skip)
 
 
+def export_panel(labels: np.ndarray, panel_id: str, out: Path) -> dict:
+    from geoseg.modules.post_process.properties import generate_properties_for_layers
+    from geoseg.pipeline.export import run_post_process_and_export
+
+    export_dir = EXPORT_ROOT / panel_id
+    export_dir.mkdir(parents=True, exist_ok=True)
+    color_names = [f"layer_{i}" for i in sorted(set(int(v) for v in np.unique(labels)) - {0})]
+    props = generate_properties_for_layers(color_names)
+    result = run_post_process_and_export(
+        labels,
+        color_names=color_names,
+        properties_map=props,
+        output_dir=export_dir,
+        save_intermediates=True,
+    )
+    small_dir = out / "exports" / panel_id
+    small_dir.mkdir(parents=True, exist_ok=True)
+    copied = {}
+    for name in ("parfile_snippet.txt", "properties.json", "polygons.geojson"):
+        src = export_dir / name
+        if src.exists():
+            shutil.copy2(src, small_dir / name)
+            copied[name] = f"exports/{panel_id}/{name}"
+    tomo = export_dir / "tomo.xyz"
+    return {
+        "status": result["status"],
+        "n_components": result.get("n_components", 0),
+        "n_polygons": result.get("n_polygons", 0),
+        "properties_source": "synthetic_gradient_placeholder",
+        "tomo_xyz": str(tomo),
+        "tomo_size_mb": round(tomo.stat().st_size / 1e6, 2) if tomo.exists() else 0.0,
+        "files": copied,
+    }
+
+
 def build(items: list[dict], out: Path) -> list[dict]:
-    for sub in ("images", "labels", "overlays"):
+    for sub in ("images", "labels", "overlays", "exports"):
         shutil.rmtree(out / sub, ignore_errors=True)
         (out / sub).mkdir(parents=True, exist_ok=True)
 
@@ -156,11 +197,14 @@ def build(items: list[dict], out: Path) -> list[dict]:
         ov_path = out / "overlays" / f"{item['panel_id']}.jpg"
         Image.fromarray(ov).save(ov_path, quality=90)
 
+        export = export_panel(labels, item["panel_id"], out)
         manifest.append({
             **item,
             "convention": convention,
             "n_labels": len(set(np.unique(labels).tolist())),
             "shape": list(labels.shape),
+            "exported": export["status"] == "ok",
+            "export": export,
             "files": {
                 "image": f"images/{item['panel_id']}.jpg",
                 "labels": f"labels/{item['panel_id']}.npz",
@@ -201,7 +245,8 @@ def build(items: list[dict], out: Path) -> list[dict]:
     for r in manifest:
         lines.append(
             f"- `{r['panel_id']}` — {r['date']}, {r['campaigns']} campaigns / "
-            f"{r['runs']} runs, n={r['n_labels']}, {r['note']}"
+            f"{r['runs']} runs, n={r['n_labels']}, exported={r['exported']} "
+            f"({r['export']['n_polygons']} polygons), {r['note']}"
         )
     (out / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return manifest

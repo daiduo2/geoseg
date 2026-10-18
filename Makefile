@@ -23,7 +23,7 @@ DATASETS ?=
 PANEL ?=
 DRAWIO ?=
 
-.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check best history review
+.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check best history review usage
 
 help:
 	@echo "geoseg tasks:"
@@ -46,6 +46,7 @@ help:
 	@echo "  make corpus-check               verify corpus files and hashes"
 	@echo "  make best                       rebuild validation/best (most-iterated panels)"
 	@echo "  make history                    show panel -> campaign/run history"
+	@echo "  make usage                      rank panels by export and review evidence"
 	@echo "  make review                     regenerate numbered review sheets"
 	@echo "  make bench [OUT=runs/benchmark/results.json]"
 
@@ -122,3 +123,6 @@ history:
 
 review:
 	$(PY) scripts/dev/make_review_sheets.py
+
+usage:
+	$(PY) scripts/dev/export_view_history.py
