@@ -78,3 +78,4 @@ src/geoseg.egg-info/
 
 # Test environments
 .venv-test/
+visualizations/
