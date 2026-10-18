@@ -1,23 +1,19 @@
-import importlib.util
-from pathlib import Path
-
 import numpy as np
 
+from geoseg.modules.segment_engines.horizon.occlusion import (
+    bridge_boundary_with_endpoint_tangents as _bridge_boundary_with_endpoint_tangents,
+    detect_white_label_boxes,
+    repair_white_label_occluded_boundaries as _repair_white_label_occluded_boundaries,
+)
 
-SCRIPT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "scripts/process_j_tecto_2019_06_024_direct.py"
-)
-SPEC = importlib.util.spec_from_file_location("j_tecto_direct", SCRIPT_PATH)
-assert SPEC is not None and SPEC.loader is not None
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
-_bridge_boundary_with_endpoint_tangents = (
-    MODULE._bridge_boundary_with_endpoint_tangents
-)
-_repair_white_label_occluded_boundaries = (
-    MODULE._repair_white_label_occluded_boundaries
-)
+
+def test_detect_white_label_boxes_finds_compact_label() -> None:
+    panel = np.full((100, 150, 3), (80, 120, 160), dtype=np.uint8)
+    panel[40:60, 60:100] = 255
+
+    boxes = detect_white_label_boxes(panel)
+
+    assert any(x0 <= 60 and y0 <= 40 and x1 >= 100 and y1 >= 60 for x0, y0, x1, y1 in boxes)
 
 
 def test_endpoint_tangent_bridge_preserves_linear_boundary() -> None:
