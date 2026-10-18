@@ -18,10 +18,7 @@ from skimage.color import rgb2lab
 from skimage.segmentation import slic
 from scipy.cluster.vq import kmeans2
 
-from geoseg.modules.segment_engines._shared import (
-    _create_overlay,
-    adaptive_blur,
-)
+from geoseg.core.image_ops import adaptive_blur, create_overlay, distinct_colors
 from geoseg.modules.segment_engines.v4_kmeans import segment
 from geoseg.modules.segment_engines.metrics import compute_all
 
@@ -73,7 +70,7 @@ def segment_slic_kmeans(panel_rgb: np.ndarray, n_layers: int = 5) -> dict:
         if mask.any():
             palette[lbl] = panel_rgb[mask].mean(axis=0).astype(np.uint8)
 
-    overlay = _create_overlay(panel_rgb, out, palette)
+    overlay = create_overlay(panel_rgb, out, palette)
 
     return {
         "labels": out,
@@ -114,10 +111,9 @@ def run_comparison(image_path: str, n_layers: int = 5) -> dict:
     labels_post = ndimage.median_filter(row_med_post["labels"], size=5)
     # Rebuild overlay with postprocessed labels
     # Use seeds from row_med_post and remap colors
-    from geoseg.modules.segment_engines._shared import _distinct_colors
     n = int(labels_post.max()) + 1
-    palette = _distinct_colors(n)
-    overlay_post = _create_overlay(panel_rgb, labels_post, palette)
+    palette = distinct_colors(n)
+    overlay_post = create_overlay(panel_rgb, labels_post, palette)
     results["row_median_post"] = {
         "labels": labels_post,
         "overlay": overlay_post,

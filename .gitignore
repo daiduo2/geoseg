@@ -1,6 +1,6 @@
 # Python
-.venv/
-.venv_ocr/
+.venv
+.venv_ocr
 __pycache__/
 *.pyc
 *.pyo

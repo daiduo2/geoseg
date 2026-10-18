@@ -102,12 +102,14 @@
 python examples/geoseg/modules/segment_engines/demo.py
 
 # 视觉对比（baseline vs improved）
-python experiments/test_visual_comparison.py
+python scripts/checks/visual_comparison.py
 ```
 
 ## 实验目录
 
-- `experiments/segment_engines/fh_slic_experiment.py` — e028：FH + SLIC 分割实验
-- `experiments/segment_engines/spatial_regularized_experiment.py` — e029：空间正则化聚类实验
-- `experiments/segment_engines/anisotropic_preprocessing_experiment.py` — e030：各向异性预处理实验
+历史实验已归档到 `experiments/archive/`，结论见 `docs/ALGORITHM_FAMILY.md`：
+
+- `experiments/archive/2026-06-engine-experiments/fh_slic_experiment.py` — e028：FH + SLIC 分割实验
+- `experiments/archive/2026-06-engine-experiments/spatial_regularized_experiment.py` — e029：空间正则化聚类实验
+- `experiments/archive/2026-06-engine-experiments/anisotropic_preprocessing_experiment.py` — e030：各向异性预处理实验
 - `runs/visual_comparison/` — 视觉对比 overlay 输出
