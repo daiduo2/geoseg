@@ -1,7 +1,7 @@
 """Compatibility shims for legacy segment engine import paths."""
 
 from geoseg.modules.segment_engines.compat.full_pipeline import process_figure
-from geoseg.modules.segment_engines.compat.pipeline_stages import (
+from geoseg.pipeline.stages import (
     MIN_AUTO_SEGMENT_HEIGHT,
     MIN_AUTO_SEGMENT_WIDTH,
     classify_figure_stage,

@@ -7,7 +7,7 @@ from typing import Any
 
 from geoseg.batch.audit import run_visual_audit
 from geoseg.batch.entry import process_entry
-from geoseg.batch.export import export_reviewed
+from geoseg.batch.export_reviewed import export_reviewed
 from geoseg.batch.session import init_session
 from geoseg.session_state import (
     FigureStatus,

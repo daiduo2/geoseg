@@ -32,7 +32,7 @@
 | `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。核心引擎 + registry / policy / runner / retry 边界；engine dispatch 由 `registry.py` 的 callable path + adapter 驱动 | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `compat/`（legacy re-export）, `v4/` + `v4_kmeans.py` facade, `regional/` + `regional_fusion.py` facade, `edge/` shared helpers, `strategy/` + `strategy_memory.py` facade, `ensemble.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `vlm_reps.py` | [segment_engines/CLAUDE.md](../src/geoseg/modules/segment_engines/CLAUDE.md) |
 | `segment_engines/horizon/` | horizon refinement 内部实现 | `horizon_refinement.py` 只保留公共 facade；`occlusion.py` 提供白框遮挡下的界线段桥接与修复（`bridge_boundary_with_endpoint_tangents`, `repair_white_label_occluded_boundaries`） | — |
 | `segment_engines/internal/` | engine family 内部工具 | `shared.py`；`seeds/` 已按 search/cv/refine/scan/auto 拆分；旧 `_shared.py` 仅兼容 re-export | — |
-| `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py`；旧同名文件仅兼容 re-export/entrypoint | — |
+| `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py` | — |
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
 | `exporter/` | **M4**：SPECFEM2D/3D 模型导出。`tomography_file.xyz` + `Par_file` snippet | `specfem.py` | [exporter/CLAUDE.md](../src/geoseg/modules/exporter/CLAUDE.md) |
 | `editor/` | **Napari-based Shapes-primary 编辑器**（v0.8）。用户鼠标交互修改边界 | `napari_app.py` | [editor/CLAUDE.md](../src/geoseg/modules/editor/CLAUDE.md) |

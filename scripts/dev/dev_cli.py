@@ -83,6 +83,26 @@ def cmd_map(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_tools(_: argparse.Namespace) -> int:
+    import ast
+
+    rows = []
+    for path in sorted((REPO_ROOT / "scripts").glob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+            doc = (ast.get_docstring(tree) or "").strip().splitlines()
+        except SyntaxError:
+            doc = []
+        first = doc[0] if doc else ""
+        rows.append((path.name, first))
+    width = max(len(name) for name, _ in rows)
+    print("Maintained scripts (scripts/):")
+    for name, first in rows:
+        print(f"  {name:{width}s}  {first}")
+    print("\nTask wrappers live in the Makefile: run `make help`.")
+    return 0
+
+
 def cmd_bench(args: argparse.Namespace) -> int:
     sys.path.insert(0, str(REPO_ROOT / "experiments"))
     from synthetic_benchmark.runner import default_benchmark, run_benchmark
@@ -119,6 +139,10 @@ def main(argv: list[str] | None = None) -> int:
     bench = sub.add_parser("bench", help="run the synthetic engine benchmark")
     bench.add_argument("--out", default=None)
     bench.set_defaults(func=cmd_bench)
+
+    sub.add_parser("tools", help="list maintained scripts with their purpose").set_defaults(
+        func=cmd_tools
+    )
 
     args = parser.parse_args(argv)
     return args.func(args)

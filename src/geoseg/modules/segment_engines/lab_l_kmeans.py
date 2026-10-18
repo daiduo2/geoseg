@@ -8,7 +8,6 @@ brightness.
 from __future__ import annotations
 
 import numpy as np
-from PIL import Image
 from skimage.color import rgb2lab
 from sklearn.cluster import KMeans
 
@@ -80,9 +79,3 @@ def segment_lab_l_kmeans(
             "n_layers_actual": n_actual,
         },
     }
-
-
-def segment_from_path(panel_path: str, n_layers: int = 5) -> dict:
-    """Convenience wrapper for file paths."""
-    img = np.array(Image.open(panel_path).convert("RGB"))
-    return segment_lab_l_kmeans(img, n_layers=n_layers)

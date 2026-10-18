@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 
 from geoseg.modules.post_process.split import split_label_by_color_components
-from geoseg.modules.segment_engines.regional.models import FusionConfig, RegionalAudit
-from geoseg.modules.segment_engines.regional.overlay import generate_overlay_with_legend
+from geoseg.modules.segment_engines.regional.config import FusionConfig, RegionalAudit
+from geoseg.modules.segment_engines.regional.legend import generate_overlay_with_legend
 from geoseg.modules.segment_engines.regional.split_merge import fuse_with_freeze
 from geoseg.modules.segment_engines.regions import reorder_labels_top_to_bottom
 

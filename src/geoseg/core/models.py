@@ -27,7 +27,7 @@ class RegionalAudit:
     """Agent regional audit result.
 
     This is the single definition used by both the audit stage and regional
-    fusion; ``segment_engines/regional/models`` re-exports it.
+    fusion; ``segment_engines/regional/config`` re-exports it.
     """
 
     frozen_labels: list[int] = field(default_factory=list)

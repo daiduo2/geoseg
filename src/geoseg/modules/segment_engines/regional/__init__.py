@@ -1,8 +1,8 @@
 """Regional repair helpers for segmentation engines."""
 
 from geoseg.modules.segment_engines.regional.fusion import regional_segment
-from geoseg.modules.segment_engines.regional.models import FusionConfig, RegionalAudit
-from geoseg.modules.segment_engines.regional.overlay import (
+from geoseg.modules.segment_engines.regional.config import FusionConfig, RegionalAudit
+from geoseg.modules.segment_engines.regional.legend import (
     _draw_legend,
     draw_legend,
     generate_overlay_with_legend,

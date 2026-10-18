@@ -41,8 +41,7 @@
 | `policy.py` | 路由策略 |
 | `runner.py` | 按 registry spec 执行引擎，处理 fallback 和结果归一化 |
 | `retry.py` | retry 策略 |
-| `compat/` | legacy stage/full-pipeline/shared 兼容 re-export |
-| `pipeline_stages.py` | legacy stage helper 旧路径；实现集中在 `compat/` |
+| `compat/` | legacy shared / full-pipeline 兼容 re-export |
 | `full_pipeline.py` | `process_figure` 旧路径；实现集中在 `compat/` |
 | `horizon/` | horizon refinement 的 coarse/boundary/fitting/refine 实现 |
 | `vlm_reps.py` | VLM 种子点辅助 |

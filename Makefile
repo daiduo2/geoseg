@@ -17,19 +17,31 @@ IMAGES ?=
 SESSION ?=
 LABELS ?=
 EDIT_OUT ?= runs/edit
+RUN ?=
+TXT_DIR ?=
+DATASETS ?=
+PANEL ?=
+DRAWIO ?=
 
-.PHONY: help test check lint map segment batch export edit bench
+.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs
 
 help:
 	@echo "geoseg tasks:"
 	@echo "  make test                       run the test suite"
-	@echo "  make check                      compile + test (CI gate)"
+	@echo "  make check                      lint + compile + test (CI gate)"
 	@echo "  make lint                       ruff check (configured in pyproject.toml)"
 	@echo "  make map                        print public API and engine registry"
+	@echo "  make tools                      list maintained scripts with their purpose"
+	@echo "  make doctor                     environment health check"
 	@echo "  make segment IMAGE=x.png [N=5] [OUT=runs/cli] [NO_VLM=1] [FORCE=1]"
 	@echo "  make batch IMAGES=dir [OUT=runs/batch] [N=5]"
 	@echo "  make export SESSION=session.json [OUT=runs/export]"
 	@echo "  make edit LABELS=labels.npz [IMAGE=x.png] [EDIT_OUT=runs/edit]"
+	@echo "  make sandbox IMAGE=x.png PANEL=0  single-panel sandbox segmentation"
+	@echo "  make export-txt RUN=run_dir [OUT=run_dir/txt_export]"
+	@echo "  make reconstruct TXT_DIR=dir [OUT=dir]"
+	@echo "  make e2e [DATASETS='a b'] [NO_VLM=1]"
+	@echo "  make docs DRAWIO='docs/assets/flowcharts/*.drawio'"
 	@echo "  make bench [OUT=runs/benchmark/results.json]"
 
 test:
@@ -44,6 +56,9 @@ lint:
 
 map:
 	$(PY) scripts/dev/dev_cli.py map
+
+tools:
+	$(PY) scripts/dev/dev_cli.py tools
 
 segment:
 	@test -n "$(IMAGE)" || { echo "usage: make segment IMAGE=path/to/panel.png [N=5] [OUT=runs/cli]"; exit 1; }
@@ -65,3 +80,25 @@ edit:
 
 bench:
 	$(PY) scripts/dev/dev_cli.py bench $(if $(OUT),--out "$(OUT)",)
+
+doctor:
+	$(PY) scripts/env_check.py
+
+sandbox:
+	@test -n "$(IMAGE)" -a -n "$(PANEL)" || { echo "usage: make sandbox IMAGE=panel.png PANEL=0"; exit 1; }
+	$(PY) scripts/parallel_segment.py --image "$(IMAGE)" --panel-id "$(PANEL)"
+
+export-txt:
+	@test -n "$(RUN)" || { echo "usage: make export-txt RUN=run_dir [OUT=dir]"; exit 1; }
+	$(PY) scripts/export_segmentation_txt.py "$(RUN)" $(if $(OUT),--output-dir "$(OUT)",)
+
+reconstruct:
+	@test -n "$(TXT_DIR)" || { echo "usage: make reconstruct TXT_DIR=dir [OUT=dir]"; exit 1; }
+	$(PY) scripts/reconstruct_from_txt.py "$(TXT_DIR)" $(if $(OUT),--output-dir "$(OUT)",)
+
+e2e:
+	$(PY) scripts/run_e2e_batch.py $(if $(DATASETS),--datasets $(DATASETS),) $(if $(NO_VLM),--no-vlm,)
+
+docs:
+	@test -n "$(DRAWIO)" || { echo "usage: make docs DRAWIO='docs/assets/flowcharts/*.drawio'"; exit 1; }
+	$(PY) scripts/drawio_to_png.py $(DRAWIO)

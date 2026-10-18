@@ -135,15 +135,3 @@ def segment_seeded_region_grow(
             "n_layers_actual": n_actual,
         },
     }
-
-
-def segment_from_path(
-    panel_path: str,
-    seeds: Sequence[dict] | np.ndarray,
-    color_space: str = "LAB",
-) -> dict:
-    """Convenience wrapper for file paths."""
-    from PIL import Image
-
-    img = np.array(Image.open(panel_path).convert("RGB"))
-    return segment_seeded_region_grow(img, seeds=seeds, color_space=color_space)
