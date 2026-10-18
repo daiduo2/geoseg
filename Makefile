@@ -23,7 +23,7 @@ DATASETS ?=
 PANEL ?=
 DRAWIO ?=
 
-.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check best curated history review usage
+.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check curated history review usage
 
 help:
 	@echo "geoseg tasks:"
@@ -44,7 +44,6 @@ help:
 	@echo "  make docs DRAWIO='docs/assets/flowcharts/*.drawio'"
 	@echo "  make corpus                     rebuild validation/ from runs/"
 	@echo "  make corpus-check               verify corpus files and hashes"
-	@echo "  make best                       rebuild validation/best (most-iterated panels)"
 	@echo "  make curated                    rebuild validation/curated (session-curated panels)"
 	@echo "  make history                    show panel -> campaign/run history"
 	@echo "  make usage                      rank panels by export and review evidence"
@@ -115,9 +114,6 @@ corpus:
 
 corpus-check:
 	$(PY) scripts/dev/corpus.py check --hashes
-
-best:
-	$(PY) scripts/dev/build_best_examples.py
 
 curated:
 	$(PY) scripts/dev/build_curated_examples.py

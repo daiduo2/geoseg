@@ -31,7 +31,26 @@ RUNS = Path.home() / "geoseg-artifacts" / "2026-10" / "runs"
 OUT = REPO_ROOT / "validation" / "curated"
 EXPORT_ROOT = Path.home() / "geoseg-artifacts" / "2026-10" / "curated_exports"
 
-ITEMS = [
+NEWIMAGE = [
+    {
+        "panel_id": f"newimage_p{n}",
+        "labels": f"preprocess_newimage_iter5/panels/panel_{n}/labels.npz",
+        "image": f"panel_crops/panel_{n}.png",
+        "overlay": f"preprocess_newimage_iter5/panels/panel_{n}/overlay_legend.jpg",
+        "group": "newimage",
+        "structure": "layered",
+        "overlay_existing": True,
+        "session_evidence": (
+            "2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 "
+            "runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used "
+            "agent visual ROI + absorbing red lines/black crosses into the background "
+            "before colorbar matching; iter5 is the retained version."
+        ),
+    }
+    for n in range(5)
+]
+
+ITEMS = NEWIMAGE + [
     {
         "panel_id": "paper22_fig5a",
         "labels": "paper22/final/fig5a/labels.npz",
@@ -97,20 +116,6 @@ ITEMS = [
         ),
     },
     {
-        "panel_id": "schematic_panel1",
-        "labels": "3d_schematic_retune/best/panel_1_best_labels.npz",
-        "image": "3d_schematic_retune/panel_1/text_removed_best.png",
-        "overlay": "3d_schematic_retune/best/panel_1_best_overlay.jpg",
-        "group": "3d_schematic",
-        "structure": "schematic_3d",
-        "export": False,
-        "overlay_existing": True,
-        "session_evidence": (
-            "2026-06-19 user accepted panel2 and asked to rerun panel1 with the "
-            "same workflow; this is the retuned panel1 result."
-        ),
-    },
-    {
         "panel_id": "schematic_panel2",
         "labels": "3d_schematic_retune/best/panel_2_best_labels.npy",
         "image": "3d_schematic_retune/panel_2/text_removed_best.png",
@@ -121,20 +126,6 @@ ITEMS = [
         "overlay_existing": True,
         "session_evidence": (
             "User: '2026-06-19 我接受,你先把当前的 panel2 归档到此前的最佳 overlay 目录下'."
-        ),
-    },
-    {
-        "panel_id": "schematic_panel3_front",
-        "labels": "3d_schematic_correct_e2e/panel_3_front/labels_fused.npz",
-        "image": "3d_schematic_correct_e2e/panel_3_front/00_cleaned.jpg",
-        "overlay": "3d_schematic_correct_e2e/panel_3_front/03_fused.jpg",
-        "group": "3d_schematic",
-        "structure": "schematic_3d_front",
-        "export": False,
-        "overlay_existing": True,
-        "session_evidence": (
-            "2026-06-19 user: panel3 '当前的效果远远优于此前任何一次'; this is the "
-            "front-face fused result from the corrected e2e run."
         ),
     },
     {

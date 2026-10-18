@@ -60,52 +60,30 @@ validation/
 
 `source.image_path` 对 `redetected_crop` 记录可能指向临时裁剪文件，仅作溯源；实际使用 `files.image`。
 
-## best 子集（按时间/迭代次数筛出）
+## curated 子集（唯一 showcase，11 个 panel）
 
-`validation/best/` 不是人工挑“好看”的图，而是按历史迭代密度筛出的成熟样本：
+`validation/curated/` 汇总了从 session 与历史导出中找到的、你实际确认过效果的结果。按结构分组：
 
-- 5 个 `newimage_p0..p4`：2026-06-06 → 2026-07-06，11–12 个 campaign、15–37 次运行，最终稳定在 5 区域结果；
-- 每个 panel 选的是**稳定的 merge/visual-audit 版本**，不是最后一次过度分割的 `labels_best_split_v3`（后者 8–12 区域）；
-- 查看证据：每个 panel 有 11 个查看目录、10 个 overlay-with-legend、5 个 comparison render；
-- 导出证据：本次补做了 SPECFEM 导出，`tomo.xyz` 在 `~/geoseg-artifacts/2026-10/best_exports/`，`Par_file` snippet / properties / polygons 在 `validation/best/exports/`；
-- 注意：历史数据里“导出”和“查看”是两条分离的流水线（432 个 tomo 集中在 agent_review/literature_test，查看集中在 fig6/newimage），所以 best 是“被频繁查看的集合 + 本次补导出”；
-- 物性目前是 `synthetic_gradient_placeholder`，不是从色条反演的真实速度；
-- 未纳入：`feng_fig6_p03..p07`（迭代 37–43 次，但最新结果碎片化）、`jtecto`（13–16 区域，过复杂）、silixa 系列（2 层，参考价值低）、3D schematic。
+| 组 | panels | 结构 | 证据 |
+|---|---|---|---|
+| **newimage** | p0–p4 | layered | 2026-07-02：用 agent 视觉 ROI 把红线和黑十字吸收到背景，再走 colorbar 匹配；后续尝试“效果显然是越来越差的”，最终保留 `preprocess_newimage_iter5`。每个 panel 有 11 个查看目录、10 个 legend overlay、5 个 comparison；本次补做了 SPECFEM 导出 |
+| **paper22** | fig5a, fig6 | layered / boundary_driven | fig5a 带真实密度 2.65–3.5 g/cm³；fig6 由短黑/红边界驱动，alignment 0.9306、碎片 0 |
+| **ph01** | page8 panel3 | layered | 2026-06-20 指定放进 PPT；干净图从 fixture Page 8 第二行结构模型重建，重建 overlay 与历史 overlay 一致 |
+| **paper23** | fig7a, fault_guided | faulted | fig7a 11 步干预历史；fault_guided 修正图例吸收 + 3 处漏边界 |
+| **3D schematic** | panel2 | schematic_3d | 2026-06-19 “我接受，你先把当前的 panel2 归档到此前的最佳 overlay 目录下” |
 
-```bash
-make best          # 重建 validation/best
-make history       # panel -> campaign/run 时间线
-make review        # 重新生成带编号的 review sheets
-```
+说明：
 
-`best/` 内的 `manifest.jsonl` 记录每个 panel 的 campaign 数、run 数、首次/最后日期和所用版本。复杂案例可加 `--include-optional`（c11b8db、jtecto fig7/fig6b）。
-
-## curated 子集（来自 agent session 的人工干预记录）
-
-`validation/curated/` 是从 Codex session（2026-07-16/17）里找到的、你实际多轮纠正并固化的结果：
-
-| panel | 结构 | 区域数 | session 证据 |
-|---|---|---:|---|
-| `paper22_fig5a` | layered | 8 | OCR ROI + 残差分类 + `label_blur sigma=2.5`，并定向追踪 2.91/3.3 界面；带真实密度 2.65–3.5 g/cm³ |
-| `paper22_fig6` | boundary_driven | 6 | 你指出 fig6 的边界由短黑/红线段决定而非颜色；边界驱动 watershed 为最终结果，boundary alignment 0.9306、碎片 0 |
-| `ph01_page8_panel3` | layered | 7 | 2026-06-20 你要求把 ph01 page8 放进 PPT；干净图从 fixture Page 8 第二行结构模型重建，重建 overlay 与历史 overlay 一致；沿用历史 tomo/Par_file |
-| `paper23_fig7a` | faulted | 15 | 11 步干预历史：图例吸收、F3 右延伸、谷底 vs 内部交点修正，最终 `reviewed/` |
-| `paper23_fault_guided` | faulted | 14 | 你指出图例误分割和 3 处漏边界；最终 color labels + red barriers + tangent completion |
-
-另外从 session 里补进了 3 个你明确接受/称赞过的 3D 示意图结果：
-
-| panel | 结构 | 区域数 | session 证据 |
-|---|---|---:|---|
-| `schematic_panel1` | schematic_3d | 5 | 2026-06-19 接受 panel2 后要求用同一 workflow 重跑 panel1；这是重跑结果 |
-| `schematic_panel2` | schematic_3d | 4 | “我接受，你先把当前的 panel2 归档到此前的最佳 overlay 目录下” |
-| `schematic_panel3_front` | schematic_3d_front | 6 | “当前的效果远远优于此前任何一次”；front-face fused 结果 |
-
-说明：`schematic_*` 是 3D 羽流/示意图压力样本，不参与 2D 层状界面测试；`paper22_fig5a`/`fig6` 仍是最干净的主验证集。`ph01_page8` 只找到 labels + overlay + tomo，干净原图缺失，暂不纳入。fig6 的后续迭代你已明确说“问题越改越多”，所以不纳入 best。
-
-你在做 PPT 时选的三个例子正是 **newimage + paper22 + paper23**；加上 3D 示意图后，showcase 覆盖 2D 层状、边界驱动、断层、3D 羽流四类。
+- 3D 只保留 `schematic_panel2`。`panel1` 和 `panel3_front` 的效果目前不够好，已移除；3D 不参与 2D 层状界面测试。
+- `newimage` 是 2D 层状主验证集之一；`paper22_fig5a`/`fig6` 是最干净的人工确认样本。
+- 除 3D 外都已导出：小文件在 `validation/curated/exports/`，`tomo.xyz` 在 `~/geoseg-artifacts/2026-10/curated_exports/`。3D 的 3480×1740 tomo 太大，未导出。
+- 物性：`paper22_fig5a` 的 rho 是论文真实密度，Vp/Vs 为占位；其余为 `synthetic_gradient_placeholder`。
+- 未纳入：silixa 系列（你自己说“图确实简单过头了”）、fig6 后续迭代（“问题越改越多”）、jtecto（13–16 区域过复杂）。
 
 ```bash
 make curated     # 重建 validation/curated 并补导出
+make history     # panel -> campaign/run 时间线
+make review      # 重新生成带编号的 review sheets
 ```
 
 ## 使用
