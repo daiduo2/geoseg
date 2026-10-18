@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from geoseg.preprocessing.label_merge import merge_artifact_labels
 

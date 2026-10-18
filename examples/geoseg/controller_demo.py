@@ -34,9 +34,9 @@ def _make_synthetic_conceptual(size: tuple[int, int] = (120, 200)) -> np.ndarray
         angle = rng.random() * 3.14159
         length = rng.integers(8, 30)
         color = [30, 30, 30]
-        for l in range(length):
-            px = int(x + l * np.cos(angle))
-            py = int(y + l * np.sin(angle))
+        for step in range(length):
+            px = int(x + step * np.cos(angle))
+            py = int(y + step * np.sin(angle))
             if 0 <= px < w and 0 <= py < h:
                 img[py, px] = color
 

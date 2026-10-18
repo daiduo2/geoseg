@@ -160,7 +160,7 @@ def main() -> None:
         print(f"  -> {len(paper_targets)} targets found")
 
     print(f"\n{'='*60}")
-    print(f"VLM Classification Complete")
+    print("VLM Classification Complete")
     print(f"Total targets: {len(all_targets)}")
     print(f"Results: {RESULTS_FILE}")
     print(f"{'='*60}")
@@ -210,7 +210,7 @@ def main() -> None:
             print(f"ERROR: {exc}")
 
     print(f"\n{'='*60}")
-    print(f"Pipeline Complete")
+    print("Pipeline Complete")
     print(f"Results: {PIPELINE_RESULTS_FILE}")
     print(f"{'='*60}")
 

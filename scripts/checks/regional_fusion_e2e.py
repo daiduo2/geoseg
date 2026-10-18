@@ -11,7 +11,6 @@ Steps:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import numpy as np
@@ -77,7 +76,7 @@ def main():
     frozen = [lbl for lbl, _ in sorted_labels[:2]]
     retry = [lbl for lbl, _ in sorted_labels[2:]]
 
-    print(f"\n[Step 4] Simulated agent audit:")
+    print("\n[Step 4] Simulated agent audit:")
     print(f"  Frozen labels: {frozen} (best alignment)")
     print(f"  Retry labels: {retry} (need improvement)")
 
@@ -125,11 +124,11 @@ def main():
     print("SUMMARY")
     print("=" * 60)
     print(f"Output directory: {output_dir}")
-    print(f"  01_overlay_primary.jpg    - v4_kmeans (primary)")
-    print(f"  02_overlay_legend.jpg     - primary with legend")
-    print(f"  03_overlay_fused.jpg      - regional fusion result")
-    print(f"  04_overlay_secondary.jpg  - edge_guided (secondary, solo)")
-    print(f"\nFusion config:")
+    print("  01_overlay_primary.jpg    - v4_kmeans (primary)")
+    print("  02_overlay_legend.jpg     - primary with legend")
+    print("  03_overlay_fused.jpg      - regional fusion result")
+    print("  04_overlay_secondary.jpg  - edge_guided (secondary, solo)")
+    print("\nFusion config:")
     print(f"  Frozen: {frozen} (kept from v4_kmeans)")
     print(f"  Retry:  {retry} (replaced by edge_guided)")
 

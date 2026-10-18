@@ -14,7 +14,6 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
-    QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,

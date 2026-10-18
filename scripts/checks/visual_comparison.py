@@ -14,12 +14,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy import ndimage
-from skimage.color import rgb2lab
 from skimage.segmentation import slic
 from scipy.cluster.vq import kmeans2
 
 from geoseg.core.image_ops import adaptive_blur, create_overlay, distinct_colors
-from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans
+from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans as segment
 from geoseg.modules.segment_engines.metrics import compute_all
 
 
@@ -178,4 +177,4 @@ if __name__ == "__main__":
             n = m.get("n_layers", 0)
             print(f"  {name:20s}: layers={n}, BA={ba:.3f}, frag_area={frag:.4f}")
 
-    print(f"\nOverlays saved to: runs/visual_comparison/")
+    print("\nOverlays saved to: runs/visual_comparison/")

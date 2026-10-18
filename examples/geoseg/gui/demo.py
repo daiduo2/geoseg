@@ -51,9 +51,9 @@ def _make_test_image() -> tuple[np.ndarray, np.ndarray]:
     for _ in range(60):
         x, y = rng.integers(10, w - 10), rng.integers(10, h - 10)
         angle = rng.random() * 3.14159
-        for l in range(rng.integers(5, 20)):
-            px = int(x + l * np.cos(angle))
-            py = int(y + l * np.sin(angle))
+        for step in range(rng.integers(5, 20)):
+            px = int(x + step * np.cos(angle))
+            py = int(y + step * np.sin(angle))
             if 0 <= px < w and 0 <= py < h:
                 img[py, px] = [30, 30, 30]
 

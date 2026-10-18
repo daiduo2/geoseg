@@ -14,7 +14,7 @@ from skimage.color import rgb2gray
 from skimage.filters import sobel
 from skimage.measure import label, regionprops
 
-from geoseg.core.image_ops import create_overlay, distinct_colors
+from geoseg.core.image_ops import distinct_colors
 from geoseg.modules.visual_audit.color_residual import (
     compute_color_residual_map,
     create_color_residual_overlay,

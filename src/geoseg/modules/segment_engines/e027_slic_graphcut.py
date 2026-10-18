@@ -112,13 +112,13 @@ def _graph_cut_icm(segments: np.ndarray, sp_means: np.ndarray, seeds_rgb: np.nda
             current = int(labels[sp])
             best_energy = float("inf")
             best_label = current
-            for l in range(n_labels):
-                e = float(data[sp, l])
+            for label_idx in range(n_labels):
+                e = float(data[sp, label_idx])
                 for neighbor in adj.get(sp, []):
-                    e += smoothness(sp, int(neighbor), l, int(labels[neighbor]))
+                    e += smoothness(sp, int(neighbor), label_idx, int(labels[neighbor]))
                 if e < best_energy:
                     best_energy = e
-                    best_label = l
+                    best_label = label_idx
             if best_label != current:
                 labels[sp] = best_label
                 changed = True
@@ -130,13 +130,13 @@ def _postprocess(labels: np.ndarray, n_labels: int, min_component_frac: float) -
     h, w = labels.shape
     min_area = max(1, int(h * w * min_component_frac))
     cleaned = np.zeros_like(labels)
-    for l in range(n_labels):
-        mask = labels == l
+    for label_idx in range(n_labels):
+        mask = labels == label_idx
         if not mask.any():
             continue
         mask_filled = ndimage.binary_fill_holes(mask)
         mask_clean = morphology.remove_small_objects(mask_filled, max_size=min_area)
-        cleaned[mask_clean] = l
+        cleaned[mask_clean] = label_idx
     return cleaned
 
 
@@ -191,10 +191,10 @@ def _create_overlay(panel_rgb: np.ndarray, labels: np.ndarray, seeds_rgb: np.nda
     overlay = panel_rgb.copy()
     colors = _distinct_colors(len(seeds_rgb))
     alpha = 0.65
-    for l in range(len(colors)):
-        mask = labels == l
+    for label_idx in range(len(colors)):
+        mask = labels == label_idx
         if mask.any():
-            overlay[mask] = (overlay[mask] * (1 - alpha) + colors[l] * alpha).astype(np.uint8)
+            overlay[mask] = (overlay[mask] * (1 - alpha) + colors[label_idx] * alpha).astype(np.uint8)
     boundaries = segmentation.find_boundaries(labels, mode="thin")
     overlay[boundaries] = [255, 255, 255]
     return overlay

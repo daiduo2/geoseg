@@ -90,20 +90,13 @@ def _build_layer_y(
         bottoms = bottoms_with_dip
 
     # Warp: per-column vertical wobble for the bottom boundary of each
-    # layer. We approximate by generating per-layer bottom offsets.
-    xs = np.arange(h)  # along the height axis; we apply shift to bottom y
-    bottoms_arr = np.array(bottoms, dtype=np.float64)
+    # layer. The wobble itself is applied in `_render_scalar_field`; this
+    # loop only preserves the original two RNG draws per layer so generated
+    # panels stay reproducible.
     if warp_amplitude > 0:
-        for i in range(n_layers):
-            amp = warp_amplitude * (i + 1) / n_layers
-            # Per-row bottom: keep endpoints fixed, sine in between
-            phase = rng.random() * 2 * np.pi
-            freq = rng.uniform(1.0, 3.0)
-            wobble = amp * np.sin(np.linspace(0, freq * np.pi, h) + phase)
-            # Don't actually move the bottom by per-row — bottom is a
-            # scalar. Instead, generate per-row layer assignment via
-            # smooth functions later. For now, store bottoms; warping
-            # is applied in `_render_scalar_field`.
+        for _ in range(n_layers):
+            rng.random()
+            rng.uniform(1.0, 3.0)
 
     pairs: list[tuple[int, int]] = []
     prev_bottom = 0
@@ -130,7 +123,6 @@ def _render_scalar_field(
     field = np.zeros((h, w), dtype=np.float32)
 
     # Per-layer boundary y-position as a function of column x
-    xs = np.arange(w, dtype=np.float32)
     # Single shared phase/freq for all layers keeps neighbouring
     # boundaries in lockstep so wobble doesn't leave gap rows between
     # layers (BUG3 in audit). Amplitude scales per layer so deeper

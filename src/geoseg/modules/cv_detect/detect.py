@@ -5,7 +5,6 @@ Designed for geophysics cross-section figures with multiple panels arranged hori
 """
 
 import numpy as np
-from scipy import ndimage
 
 
 def find_panel_candidates(

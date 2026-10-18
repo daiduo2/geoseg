@@ -48,8 +48,8 @@ def main() -> int:
         for _ in range(40):
             x, y = rng.integers(10, 190), rng.integers(10, 110)
             angle = rng.random() * 3.14159
-            for l in range(rng.integers(8, 25)):
-                px, py = int(x + l * np.cos(angle)), int(y + l * np.sin(angle))
+            for step in range(rng.integers(8, 25)):
+                px, py = int(x + step * np.cos(angle)), int(y + step * np.sin(angle))
                 if 0 <= px < 200 and 0 <= py < 120:
                     img2[py, px] = [30, 30, 30]
         Image.fromarray(img2).save(images_dir / "img2_conceptual.png")

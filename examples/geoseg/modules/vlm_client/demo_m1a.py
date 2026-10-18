@@ -11,7 +11,6 @@ WARNING: mode="auto" calls Claude CLI and consumes API tokens (~$0.15-0.30 per p
 import json
 from pathlib import Path
 
-import numpy as np
 
 from geoseg.modules.pdf_extractor.extract import rasterize_page
 from .client import review_page_overview

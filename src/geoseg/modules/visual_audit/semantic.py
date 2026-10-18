@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 from skimage.color import rgb2gray
 from skimage.filters import sobel
-from skimage.measure import label, regionprops
+from skimage.measure import label
 
 from geoseg.modules.visual_audit.color_residual import compute_color_residual_audit
 
@@ -90,7 +90,7 @@ def compute_layer_order_score(labels: np.ndarray) -> dict:
 
     return {
         "median_y": {int(k): round(v, 2) for k, v in medians.items()},
-        "ordered_labels": [int(l) for l in labels_sorted],
+        "ordered_labels": [int(label) for label in labels_sorted],
         "monotonic": is_monotonic,
     }
 
@@ -120,6 +120,7 @@ def compute_plume_fidelity(
     cc = label(plume_mask, connectivity=2)
     n_components = int(cc.max())
 
+    plume_frac: float | None = None
     if gt_mask is not None and gt_mask.any():
         intersection = (plume_mask & gt_mask).sum()
         union = (plume_mask | gt_mask).sum()
@@ -133,6 +134,7 @@ def compute_plume_fidelity(
     return {
         "plume_label": plume_label,
         "iou": round(iou, 4),
+        "plume_fraction": round(plume_frac, 4) if plume_frac is not None else None,
         "split": n_components > 1,
         "n_components": n_components,
     }

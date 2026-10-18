@@ -100,7 +100,7 @@ def compose_side_by_side(left: np.ndarray, right: np.ndarray, gap: int = 20, bg_
     draw = ImageDraw.Draw(pil)
     try:
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", max(14, h // 40))
-    except:
+    except Exception:
         font = ImageFont.load_default()
 
     draw.text((10, 10), "ORIGINAL", fill=(255, 255, 255), font=font)
@@ -127,7 +127,6 @@ def main() -> None:
 
     for i, target in enumerate(targets, 1):
         fig_key = target["fig_key"]
-        paper = target.get("paper", "unknown")
 
         # Find image path
         img_path = target.get("img_path", "")

@@ -229,7 +229,6 @@ def merge_warm_labels(
         lbl_mask = labels == lbl
         ys, xs = np.where(lbl_mask)
         width_ratio = (xs.max() - xs.min() + 1) / w
-        area_ratio = lbl_mask.sum() / (h * w)
 
         # Per-label override or heuristic default
         if lbl in per_crop:

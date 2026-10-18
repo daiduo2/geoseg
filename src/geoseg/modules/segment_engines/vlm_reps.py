@@ -103,8 +103,6 @@ def vertical_scan_reps(
     from scipy.signal import find_peaks
 
     h, w = panel_rgb.shape[:2]
-    bg_rgb = _estimate_background_color(panel_rgb)
-
     # Average 3 central columns for robustness
     cx = w // 2
     cols = [max(0, min(cx + i, w - 1)) for i in range(-1, 2)]

@@ -50,8 +50,6 @@ def _edge_guided_kmeans(
     """Edge-guided K-means: standard K-means + selective boundary-pixel snapping."""
     h, w = panel_lab.shape[:2]
     flat_lab = panel_lab.reshape(-1, 3)
-    k = seeds_lab.shape[0]
-
     centroids, labels_flat = kmeans2(
         flat_lab,
         seeds_lab,

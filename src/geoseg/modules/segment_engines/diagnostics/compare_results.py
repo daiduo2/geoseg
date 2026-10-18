@@ -20,7 +20,6 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from geoseg.core.image_ops import saturation_ratio
 from geoseg.pipeline.segment import run_segmentation_stage
 
 

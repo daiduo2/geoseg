@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy import ndimage
-from scipy.cluster.vq import kmeans2
-from skimage.color import lab2rgb, rgb2lab
+from skimage.color import rgb2lab
 
 from geoseg.modules.segment_engines.internal.color import (
     _label_by_nearest,
@@ -15,7 +14,6 @@ from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 from geoseg.modules.segment_engines.v4.pastel import segment_pastel_faded
 from geoseg.modules.segment_engines.v4.palette import _sample_colorbar_seeds
 from geoseg.modules.segment_engines.v4.postprocess import (
-    _enhance_close_boundaries,
     _fill_holes,
     _remove_small_components,
 )
@@ -25,7 +23,6 @@ def segment_colorbar_guided(
     panel_rgb: np.ndarray,
     colorbar_rgb: np.ndarray,
     n_layers: int = 5,
-    color_dist_threshold: float = 55.0,
     explicit_seeds: list[dict] | None = None,
     n_color_zones: int = 0,
 ) -> dict:
@@ -41,10 +38,8 @@ def segment_colorbar_guided(
     panel_lab = rgb2lab(panel_rgb)
 
     effective_n_layers = n_layers
-    effective_threshold = color_dist_threshold
     if n_color_zones >= 3:
         effective_n_layers = max(n_layers, n_color_zones + 1)
-        effective_threshold = 35.0
 
     if explicit_seeds is not None and len(explicit_seeds) > 0:
         seeds_rgb = np.array([s["rgb"] for s in explicit_seeds], dtype=np.uint8)

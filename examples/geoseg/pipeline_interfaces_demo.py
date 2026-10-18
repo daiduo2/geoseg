@@ -13,12 +13,6 @@ from __future__ import annotations
 import numpy as np
 
 from geoseg.core.models import (
-    PanelInput,
-    SegmentationResult,
-    QualityReview,
-    PanelDetector,
-    Segmenter,
-    QualityReviewer,
     make_whole_image_panel,
     empty_segmentation_result,
 )

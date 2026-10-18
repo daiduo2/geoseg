@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -283,7 +283,7 @@ def _run_per_panel_segmentation(
             {
                 "panel_id": panel_id,
                 "bbox": [x, y, pw, ph],
-                "labels": sorted({int(l) for l in np.unique(labels) if l >= 0}),
+                "labels": sorted({int(label) for label in np.unique(labels) if label >= 0}),
                 "artifact_labels": artifact_labels,
             }
         )

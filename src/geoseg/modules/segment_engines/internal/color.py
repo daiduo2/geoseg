@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-from skimage.color import rgb2lab
 
 from geoseg.core.image_ops import (
     SATURATION_THRESHOLD,

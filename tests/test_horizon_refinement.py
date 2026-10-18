@@ -9,7 +9,6 @@ Covers:
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from geoseg.modules.segment_engines.horizon_refinement import (
     _adjust_boundaries,

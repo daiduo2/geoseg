@@ -12,7 +12,6 @@ Usage:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -76,7 +75,7 @@ def run_demo() -> None:
     labels_layer = viewer.add_labels(labels, name="regions")
 
     # Layer 3: Shapes (user interaction — boundary polygons)
-    shapes_layer = viewer.add_shapes(
+    viewer.add_shapes(
         polygons,
         shape_type="polygon",
         name="boundaries",

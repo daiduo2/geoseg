@@ -47,7 +47,6 @@ def test_pixel_accuracy_with_ignore_mask():
     pa = pixel_accuracy(pred, gt, ignore_mask=ignore)
     assert 0.0 <= pa <= 1.0
     # All non-ignored pixels are wrong
-    nonignored = (~ignore).sum()
     assert pa == 0.0
 
 

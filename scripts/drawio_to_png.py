@@ -6,14 +6,12 @@ Usage:
 """
 
 import argparse
-import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import matplotlib
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 def parse_style(style: str) -> dict:

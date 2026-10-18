@@ -55,9 +55,9 @@ def test_synthetic_conceptual_runs_end_to_end() -> None:
         y = rng.integers(20, 300)
         angle = rng.random() * 3.14159
         length = rng.integers(8, 30)
-        for l in range(length):
-            px = int(x + l * np.cos(angle))
-            py = int(y + l * np.sin(angle))
+        for step in range(length):
+            px = int(x + step * np.cos(angle))
+            py = int(y + step * np.sin(angle))
             if 0 <= px < 560 and 0 <= py < 320:
                 img[py, px] = [25, 25, 25]
 
@@ -137,9 +137,9 @@ def test_grayscale_image_is_processed() -> None:
         x = rng.integers(20, 380)
         y = rng.integers(20, 220)
         angle = rng.random() * 3.14159
-        for l in range(rng.integers(8, 25)):
-            px = int(x + l * np.cos(angle))
-            py = int(y + l * np.sin(angle))
+        for step in range(rng.integers(8, 25)):
+            px = int(x + step * np.cos(angle))
+            py = int(y + step * np.sin(angle))
             if 0 <= px < 400 and 0 <= py < 240:
                 img[py, px] = 30
 
@@ -186,7 +186,6 @@ def test_multi_panel_figure() -> None:
 
 def test_batch_processor_resume() -> None:
     """Batch processor should skip already-processed images on resume."""
-    rng = np.random.default_rng(123)
     with tempfile.TemporaryDirectory() as td:
         td_path = Path(td)
         images_dir = td_path / "images"

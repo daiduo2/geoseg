@@ -19,7 +19,6 @@ Test scenario:
 from __future__ import annotations
 
 import numpy as np
-from scipy import ndimage
 from skimage.color import rgb2gray
 from skimage.measure import label, regionprops
 

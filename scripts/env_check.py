@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -230,7 +229,7 @@ def perform_checks() -> dict[str, Any]:
 
 
 def print_text_report(checks: dict[str, Any]) -> None:
-    print(f"geoseg environment check")
+    print("geoseg environment check")
     print(f"Project root: {checks['project_root']}")
     print(f"Venv path:    {checks['venv_path']}")
 

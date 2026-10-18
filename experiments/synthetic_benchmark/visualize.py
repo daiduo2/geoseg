@@ -184,7 +184,6 @@ def render_per_engine(
             rp = m.get("representative_point", {})
             x, y = int(rp.get("x", -1)), int(rp.get("y", -1))
             if 0 <= x < blended.shape[1] and 0 <= y < blended.shape[0]:
-                cv = m.get("color_name", "?")
                 # Cross marker, white border + black interior
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     xx, yy = x + dx, y + dy

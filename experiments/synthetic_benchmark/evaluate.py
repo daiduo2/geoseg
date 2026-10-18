@@ -24,7 +24,7 @@ from typing import Any
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from skimage import segmentation
-from skimage.measure import label, regionprops
+from skimage.measure import label
 
 from geoseg.modules.segment_engines.diagnostics.metrics import (
     boundary_alignment,

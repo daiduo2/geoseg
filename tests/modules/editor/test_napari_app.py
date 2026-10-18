@@ -18,7 +18,6 @@ import pytest
 os.environ.setdefault("NAPARI_TEST", "1")
 
 try:
-    import napari
 
     NAPARI_AVAILABLE = True
 except Exception:

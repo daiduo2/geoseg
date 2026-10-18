@@ -290,7 +290,7 @@ class SegmentationView(QGraphicsView):
             big_layers = {ri.layer_id for ri in self._region_items if not ri.is_small}
             for lid in sorted(big_layers):
                 act = menu.addAction(f"Assign to layer {lid}")
-                act.triggered.connect(lambda _=None, l=lid: self._assign_layer(item, l))
+                act.triggered.connect(lambda _=None, layer=lid: self._assign_layer(item, layer))
             menu.exec(event.globalPos())
         else:
             super().contextMenuEvent(event)

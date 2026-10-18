@@ -66,22 +66,22 @@ def main() -> None:
     print(f"Skipped: {total_skipped}")
     print(f"Total panels: {total_panels}")
 
-    print(f"\n--- Figure Types ---")
+    print("\n--- Figure Types ---")
     for ft, count in sorted(all_figure_types.items(), key=lambda x: -x[1]):
         print(f"  {ft}: {count}")
 
-    print(f"\n--- Engine Distribution ---")
+    print("\n--- Engine Distribution ---")
     for engine, count in sorted(all_engines.items(), key=lambda x: -x[1]):
         pct = count / total_panels * 100 if total_panels > 0 else 0
         print(f"  {engine}: {count} ({pct:.1f}%)")
 
-    print(f"\n--- Vivid Panel Routing ---")
+    print("\n--- Vivid Panel Routing ---")
     print(f"  Vivid panels (sat >= 0.5): {vivid_total}")
     print(f"  Vivid -> non-v4 engines: {vivid_non_v4}")
     if vivid_total > 0:
         print(f"  Non-v4 ratio: {vivid_non_v4 / vivid_total * 100:.1f}%")
     else:
-        print(f"  Non-v4 ratio: N/A")
+        print("  Non-v4 ratio: N/A")
 
     # Check if all engines were exercised
     expected_engines = {"grayscale", "v4_kmeans", "edge_guided", "edge_grow", "kmeans_full", "ensemble"}
@@ -104,8 +104,8 @@ def main() -> None:
     if missing:
         print(f"\n[!] MISSING ENGINES: {', '.join(missing)}")
     else:
-        print(f"\n[OK] All expected engines exercised")
-        print(f"  Final engine counts including best-quality runs:")
+        print("\n[OK] All expected engines exercised")
+        print("  Final engine counts including best-quality runs:")
         for engine, count in sorted(all_engines.items(), key=lambda x: -x[1]):
             print(f"    {engine}: {count}")
 

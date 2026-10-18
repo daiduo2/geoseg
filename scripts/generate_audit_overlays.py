@@ -73,7 +73,6 @@ def main() -> None:
     for i, target in enumerate(targets, 1):
         fig_key = target["fig_key"]
         paper = target.get("paper", "unknown")
-        fig_name = target.get("fig_name", fig_key.split("/")[-1])
 
         # Find image path
         img_path = target.get("img_path", "")

@@ -21,7 +21,6 @@ import numpy as np
 from scipy import ndimage
 from skimage.color import rgb2gray, rgb2lab
 from skimage.filters import sobel
-from skimage.measure import label, regionprops
 
 
 def _edge_density(gray: np.ndarray) -> float:

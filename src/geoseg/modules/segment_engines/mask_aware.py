@@ -141,8 +141,6 @@ def regional_segment_with_text_mask(
     assigns text pixels to the nearest non-text label afterwards.
     """
     from geoseg.modules.segment_engines.regional_fusion import (
-        FusionConfig,
-        RegionalAudit,
         regional_segment,
     )
 

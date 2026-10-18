@@ -69,7 +69,7 @@ def test_process_image_per_panel_outputs_exist(synthetic_config):
 
 
 def test_process_image_per_panel_label_offsets_avoid_collision(synthetic_config):
-    result = process_image(synthetic_config)
+    process_image(synthetic_config)
 
     full = np.load(synthetic_config.output_dir / "09_per_panel_labels.npz")["labels"]
     # Extract per-panel regions and verify their label sets do not overlap.

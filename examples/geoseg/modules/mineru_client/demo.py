@@ -20,7 +20,7 @@ def main():
     print(f"Extracting: {pdf_path}")
     result = upload_and_extract(pdf_path, is_ocr=False, enable_formula=True, enable_table=True, language="en")
 
-    print(f"\nExtraction complete!")
+    print("\nExtraction complete!")
     print(f"  state={result['state']}")
     print(f"  full_zip_url={result.get('full_zip_url', 'N/A')}")
     print(f"  err_msg={result.get('err_msg', '')}")
@@ -32,7 +32,7 @@ def main():
     zip_url = result.get("full_zip_url")
     if zip_url:
         import requests
-        print(f"\nDownloading zip ...")
+        print("\nDownloading zip ...")
         zip_resp = requests.get(zip_url, timeout=60)
         zip_resp.raise_for_status()
         zip_path = out_dir / "extracted.zip"

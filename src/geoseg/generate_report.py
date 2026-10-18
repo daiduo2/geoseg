@@ -14,8 +14,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-import json
-import mimetypes
 from pathlib import Path
 from typing import Any
 
@@ -159,9 +157,9 @@ def _css() -> str:
 
 def _generate_card(entry: dict[str, Any], idx: int) -> str:
     """Generate HTML for one figure card."""
-    status = entry.get("status", "pending")
     fig_id = entry["figure_id"]
     source = entry["source_path"]
+    status = entry.get("status", "pending")
     classification = entry.get("classification") or {}
     segmentation = entry.get("segmentation") or {}
     skip_reason = entry.get("skip_reason", "")
@@ -252,7 +250,6 @@ def _generate_modal(entry: dict[str, Any], idx: int) -> str:
     """Generate HTML for one figure detail modal."""
     fig_id = entry["figure_id"]
     source = entry["source_path"]
-    status = entry.get("status", "pending")
     classification = entry.get("classification") or {}
     panels = entry.get("panels") or {}
     segmentation = entry.get("segmentation") or {}

@@ -10,7 +10,6 @@ Verification:
 import json
 from pathlib import Path
 
-import numpy as np
 from PIL import Image
 
 from .extract import extract_pdf, save_extracted_images, rasterize_page
@@ -58,7 +57,7 @@ def main():
     img_count = len(page7["images"])
     dims = [(img["width"], img["height"]) for img in page7["images"]]
 
-    print(f"\n=== Verification: Page 7 ===")
+    print("\n=== Verification: Page 7 ===")
     print(f"Images: {img_count}")
     for i, (w, h) in enumerate(dims):
         print(f"  Image {i}: {w}x{h}")

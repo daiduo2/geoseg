@@ -29,7 +29,6 @@ def main() -> int:
     total_error = 0
     total_panels_ok = 0
     total_panels_error = 0
-    engine_counts: dict[str, int] = {}
     error_reasons: dict[str, int] = {}
     artifact_missing: dict[str, int] = {}
 
@@ -65,7 +64,7 @@ def main() -> int:
             stem = Path(fname).stem
             img_out_dir = output_dir / stem
             if not img_out_dir.exists():
-                artifact_missing[f"missing_dir"] = artifact_missing.get("missing_dir", 0) + 1
+                artifact_missing["missing_dir"] = artifact_missing.get("missing_dir", 0) + 1
                 continue
             for suffix in ("_tomo.xyz", "_polygons.geojson", "_properties.json"):
                 if not any(f.name.endswith(suffix) for f in img_out_dir.iterdir()):
@@ -86,16 +85,16 @@ def main() -> int:
         print(f"Panels with error: {total_panels_error}")
 
     if error_reasons:
-        print(f"\n--- Error Reasons ---")
+        print("\n--- Error Reasons ---")
         for reason, count in sorted(error_reasons.items(), key=lambda x: -x[1]):
             print(f"  {reason[:60]}: {count}")
 
     if artifact_missing:
-        print(f"\n--- Missing Artifacts ---")
+        print("\n--- Missing Artifacts ---")
         for artifact, count in sorted(artifact_missing.items(), key=lambda x: -x[1]):
             print(f"  {artifact}: {count}")
     else:
-        print(f"\n[OK] All processed images have complete artifacts")
+        print("\n[OK] All processed images have complete artifacts")
 
     # Figure type distribution
     fig_types: dict[str, int] = {}
@@ -104,7 +103,7 @@ def main() -> int:
         fig_types[ft] = fig_types.get(ft, 0) + 1
 
     if fig_types:
-        print(f"\n--- Figure Type Distribution ---")
+        print("\n--- Figure Type Distribution ---")
         for ft, count in sorted(fig_types.items(), key=lambda x: -x[1]):
             print(f"  {ft}: {count} ({pct(count, total):.1f}%)")
 

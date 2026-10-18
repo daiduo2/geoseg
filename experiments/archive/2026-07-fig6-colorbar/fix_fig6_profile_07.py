@@ -121,7 +121,6 @@ def variant_b_colorbar_guided_with_median(panel_rgb, colorbar_rgb, n_layers=7):
         panel_rgb,
         colorbar_rgb,
         n_layers=n_layers,
-        color_dist_threshold=35.0,  # Tighter boundary merging for more layers
     )
 
     # Additional median post-processing

@@ -162,10 +162,10 @@ def main() -> int:
                     panels_with_seg,
                     key=lambda p: p["review"].get("n_layers_found", 0),
                 )
-                print(f"  target_id mismatch fallback")
+                print("  target_id mismatch fallback")
 
         if target_panel is None:
-            print(f"  no panel with segmentation")
+            print("  no panel with segmentation")
             continue
 
         seg = target_panel["segmentation"]

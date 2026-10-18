@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 from scipy import ndimage
-from skimage.draw import line, polygon_perimeter
+from skimage.draw import line
 from skimage.measure import find_contours
 
 

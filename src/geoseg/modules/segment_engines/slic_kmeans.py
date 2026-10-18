@@ -15,7 +15,6 @@ from __future__ import annotations
 import numpy as np
 from scipy import ndimage
 from scipy.cluster.vq import kmeans2
-from skimage.color import rgb2lab
 from skimage.segmentation import slic
 
 from geoseg.modules.segment_engines.internal.color import _distinct_colors

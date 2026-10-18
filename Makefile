@@ -24,7 +24,7 @@ help:
 	@echo "geoseg tasks:"
 	@echo "  make test                       run the test suite"
 	@echo "  make check                      compile + test (CI gate)"
-	@echo "  make lint                       ruff check (advisory; legacy violations remain)"
+	@echo "  make lint                       ruff check (configured in pyproject.toml)"
 	@echo "  make map                        print public API and engine registry"
 	@echo "  make segment IMAGE=x.png [N=5] [OUT=runs/cli] [NO_VLM=1] [FORCE=1]"
 	@echo "  make batch IMAGES=dir [OUT=runs/batch] [N=5]"
@@ -35,12 +35,12 @@ help:
 test:
 	$(UV) run pytest -q
 
-check:
+check: lint
 	$(UV) run python -m compileall -q src
 	$(UV) run pytest -q
 
 lint:
-	$(UV) run ruff check src tests scripts
+	$(UV) run ruff check .
 
 map:
 	$(PY) scripts/dev/dev_cli.py map

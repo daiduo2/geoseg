@@ -69,7 +69,6 @@ def synthesize_reps(
     Order is by label id ascending (1, 2, ..., N), matching the
     generator's label assignment.
     """
-    rng = np.random.default_rng(seed)
     h, w = gt_labels.shape
     reps: list[dict] = []
     for lbl in sorted(label_to_value.keys()):

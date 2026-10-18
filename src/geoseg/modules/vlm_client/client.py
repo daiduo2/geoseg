@@ -15,7 +15,6 @@ Test scenario:
 """
 
 import json
-import os
 import shutil
 import subprocess
 from datetime import datetime, timezone
