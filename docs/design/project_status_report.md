@@ -29,27 +29,27 @@ geoseg v2 是一个**从地球物理解释图里自动提取速度分区概念�
 
 ### 2.1 整体 Pipeline
 
-![整体 Pipeline](assets/flowcharts/previews/pipeline_overall.png)
+![整体 Pipeline](../assets/flowcharts/previews/pipeline_overall.png)
 
 ### 2.2 人机交互决策点
 
-![人机交互决策点](assets/flowcharts/previews/hitl_interaction.png)
+![人机交互决策点](../assets/flowcharts/previews/hitl_interaction.png)
 
 ### 2.3 批量处理流程
 
-![批量处理流程](assets/flowcharts/previews/batch_workflow.png)
+![批量处理流程](../assets/flowcharts/previews/batch_workflow.png)
 
 ### 2.4 napari 边界编辑
 
-![napari 边界编辑](assets/flowcharts/previews/napari_editor.png)
+![napari 边界编辑](../assets/flowcharts/previews/napari_editor.png)
 
 ### 2.5 区域融合重试
 
-![区域融合重试](assets/flowcharts/previews/regional_fusion.png)
+![区域融合重试](../assets/flowcharts/previews/regional_fusion.png)
 
 ### 2.6 项目架构
 
-![项目架构](assets/flowcharts/previews/project_architecture.png)
+![项目架构](../assets/flowcharts/previews/project_architecture.png)
 
 ### 2.7 PPT 专用版（按幻灯片占位符重新排版）
 

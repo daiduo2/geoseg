@@ -20,7 +20,7 @@
 ## 已知限制
 
 当前概念模型图使用**位图 fallback**（`ph01.jpg`）：
-- 矢量图形提取在并行 session 中开发，规格见 [`docs/PDF_VECTOR_EXTRACTION_SPEC.md`](../../../docs/PDF_VECTOR_EXTRACTION_SPEC.md)
+- 矢量图形提取在并行 session 中开发，规格见 [`docs/design/PDF_VECTOR_EXTRACTION_SPEC.md`](../../../docs/design/PDF_VECTOR_EXTRACTION_SPEC.md)
 - 矢量提取成熟后**替换数据源**，pipeline 内部接口不变
 
 ## 不做

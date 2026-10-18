@@ -8,7 +8,7 @@ to obtain a bitmap that the existing CV/VLM pipeline can consume.
 This module is independent: it does not import from `extract.py` and is not
 imported by it. Callers decide which path to use.
 
-See `docs/PDF_VECTOR_EXTRACTION_SPEC.md` for the contract.
+See `docs/design/PDF_VECTOR_EXTRACTION_SPEC.md` for the contract.
 """
 
 from pathlib import Path

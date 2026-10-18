@@ -244,7 +244,7 @@ v1 中 horizon refinement 由 `frag > 0.02` 硬阈值触发。v2 中改为：
 - [x] `visual-audit` skill 重写完成，示例输出为 RegionalAudit JSON
 - [x] `sandbox-segment` skill 完成 critic-executor 闭环描述
 - [x] `batch-segment` skill 移除 `AUDIT_FAILED` 状态和硬拒绝相关规则
-- [x] `.claude/skills/README.md`、 `docs/CODEBASE.md`、 `docs/project_status_report.md` 中 visual audit 描述同步更新
+- [x] `.claude/skills/README.md`、 `docs/CODEBASE.md`、 `docs/design/project_status_report.md` 中 visual audit 描述同步更新
 - [ ] 至少一个真实 panel 跑通新闭环：初始分割 → audit → regional_fusion → re-audit → accept
 
 ---

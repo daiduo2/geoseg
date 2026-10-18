@@ -215,7 +215,7 @@ uv run pytest
 1. 以 `docs/CODEBASE.md` 为当前真实地图。
 2. 将实时架构说明集中到：
    - `docs/CODEBASE.md`
-   - `docs/refactor_roadmap_2026-07-14.md`
+   - `docs/design/refactor_roadmap_2026-07-14.md`
    - 模块内 `CLAUDE.md`
 3. 搜索过时关键词时，区分历史文档和当前架构文档：
 

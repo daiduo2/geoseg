@@ -112,9 +112,10 @@ uv run pytest tests/test_integration_ph01.py
 | 文档 | 用途 |
 |------|------|
 | [`DESIGN.md`](./DESIGN.md) | 一页设计稿 **v0.7 已签字**（2026-05-23）。§4 = JSON schema 契约、§5 = 模块行预算、§8 = 开工顺序 |
-| [`refactor_roadmap_2026-07-14.md`](./refactor_roadmap_2026-07-14.md) | 当前架构收口后的后续重构待办与执行验收清单 |
-| [`PDF_VECTOR_EXTRACTION_SPEC.md`](./PDF_VECTOR_EXTRACTION_SPEC.md) | M0.5v 矢量提取规格（并行 session 开发，状态：待开发） |
-| [`ALGORITHM_FAMILY.md`](./ALGORITHM_FAMILY.md) | e001-e027 实验全景 + 算法路由设计 |
+| [`refactor_roadmap_2026-07-14.md`](./design/refactor_roadmap_2026-07-14.md) | 当前架构收口后的后续重构待办与执行验收清单 |
+| [`PDF_VECTOR_EXTRACTION_SPEC.md`](./design/PDF_VECTOR_EXTRACTION_SPEC.md) | M0.5v 矢量提取规格（并行 session 开发，状态：待开发） |
+| [`ALGORITHM_FAMILY.md`](./ALGORITHM_FAMILY.md) | e001-e038 实验全景、算法路由，以及第 7 节的教训与反模式 |
+| [`design/`](./design/) | 历史 PRD、项目状态报告、重构记录（只读参考，不代表当前架构） |
 
 ## 已废弃（不维护）
 
