@@ -443,7 +443,7 @@ def test_scripts_and_examples_do_not_import_legacy_segment_engine_shared_shim():
 def test_parallel_segment_uses_public_runner_not_concrete_engines():
     imports = _imported_modules(REPO_ROOT / "scripts" / "parallel_segment.py")
 
-    assert "geoseg.experiments" in imports
+    assert "geoseg.api" in imports
     assert "geoseg.modules.segment_engines.runner" not in imports
     assert "geoseg.modules.segment_engines.v4_kmeans" not in imports
     assert "geoseg.modules.segment_engines.ensemble" not in imports

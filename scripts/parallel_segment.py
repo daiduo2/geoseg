@@ -17,17 +17,17 @@ from PIL import Image
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.experiments import compute_all
-from geoseg.experiments import run_engine
-from geoseg.experiments import record_attempt
+from geoseg.api import compute_all
+from geoseg.api import run_engine
+from geoseg.api import record_attempt
 from geoseg.core.image_ops import (
     saturation_ratio,
     adaptive_blur,
     estimate_noise_level,
     create_overlay,
 )
-from geoseg.experiments import color_zones_to_reps
-from geoseg.experiments import extract_colorbar
+from geoseg.api import color_zones_to_reps
+from geoseg.api import extract_colorbar
 
 
 def _compute_score(metrics: dict) -> float:

@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 from geoseg.batch.audit import run_visual_audit
-from geoseg.compat.controller import run_pipeline
+from geoseg.pipeline.run import run_pipeline
 
 
 def process_entry(

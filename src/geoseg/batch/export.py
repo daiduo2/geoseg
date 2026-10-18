@@ -15,7 +15,7 @@ def export_reviewed(
     output_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Export all figures marked REVIEWED in the session."""
-    from geoseg.compat.controller import run_post_process_and_export
+    from geoseg.pipeline.export import run_post_process_and_export
 
     state = load_session(session_path)
     ready = list_ready_for_export(state)

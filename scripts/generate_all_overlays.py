@@ -18,7 +18,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.pipeline.segment import run_segmentation_stage
+from geoseg.api import run_segmentation_stage
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 OUT_DIR = Path("runs/new_papers_vlm/all_overlays")

@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image
 
 from geoseg.core.image_ops import create_overlay, row_median_filter
-from geoseg.experiments import (
+from geoseg.api import (
     refine_boundaries,
     segment_edge_guided,
     segment_ensemble,

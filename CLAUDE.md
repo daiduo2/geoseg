@@ -15,8 +15,9 @@
 ### 跨模块访问边界
 
 - 产品代码禁止直接 import `geoseg.modules.segment_engines._shared`、`segment_engines.internal`、`router._run_engine` 等私有符号。
-- 按名称运行分割引擎：`from geoseg.modules.segment_engines.runner import run_engine`（不要手写 engine dispatch）。
-- scripts / examples / experiments 常用 helper（CV、VLM、engine）走 `from geoseg.experiments import ...`，而不是从 `internal/` 拉。
+- 按名称运行分割引擎：`from geoseg.api import run_engine`（不要手写 engine dispatch）。
+- 端到端单图处理：`from geoseg.api import run_pipeline`；完整编排只在 `pipeline/run.py`。
+- scripts / examples / experiments 常用 helper（CV、VLM、engine）走 `from geoseg.api import ...`，而不是从 `internal/` 拉。
 - 需要 overlay / distinct colors / saturation ratio / preprocessing 等跨模块能力，从 `geoseg.core.image_ops` 导入。
 
 ## Segmentation Engines

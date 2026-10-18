@@ -23,7 +23,7 @@ from scipy import ndimage
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.pipeline.segment import run_segmentation_stage
+from geoseg.api import run_segmentation_stage
 
 RESULTS_FILE = Path("runs/new_papers_vlm/pipeline_results.json")
 RETRY_FILE = Path("runs/new_papers_vlm/retry_results.json")

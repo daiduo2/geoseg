@@ -10,8 +10,9 @@
 - Pipeline 由 Codex skill 驱动：agent 直接读取图像做语义/视觉判断，Python 只提供确定性工具函数。
 - 核心交互路径：agent 跑 pipeline -> 展示 overlay -> 必要时启动 napari -> 用户编辑 labels -> agent 复算/确认 -> 导出。
 - 会话状态由 `src/geoseg/session_state.py` 管理。
+- **公共入口是 `src/geoseg/api.py`**：scripts / skills / notebooks 只从这里导入；新增可复用能力先加到这里。
 - 稳定数据契约优先放在 `src/geoseg/core/models.py`；`src/geoseg/compat/pipeline_interfaces.py` 仅作为兼容导出层保留。
-- `src/geoseg/compat/controller.py` 是兼容入口；新编排逻辑应优先放在 `src/geoseg/pipeline/`。
+- 端到端编排在 `src/geoseg/pipeline/run.py:run_pipeline`；`src/geoseg/compat/controller.py` 只做转发。
 
 ## Skill Boundaries
 

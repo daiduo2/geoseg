@@ -20,7 +20,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.experiments import classify_figure
+from geoseg.api import classify_figure
 
 PAPERS: dict[str, str] = {
     "ph01": "runs/M0.5/images",

@@ -12,7 +12,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.experiments import classify
+from geoseg.api import classify
 
 PAPER_DIR = Path("papers_new/to_process/deep_tomo_2024")
 

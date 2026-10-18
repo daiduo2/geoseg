@@ -25,9 +25,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.compat.controller import run_pipeline
-from geoseg.experiments import classify_figure
-from geoseg.experiments import detect_panels
+from geoseg.api import run_pipeline
+from geoseg.api import classify_figure
+from geoseg.api import detect_panels
 
 # ---------------------------------------------------------------------------
 # Configuration

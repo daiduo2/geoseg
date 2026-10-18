@@ -23,15 +23,16 @@ python -m geoseg.pipeline_interfaces_demo
 
 ## 架构要点
 
+- `api.py`：**唯一公共入口**。scripts / skills / notebooks 只从这里导入；新增可复用能力先加到这里
 - `compat/pipeline_interfaces.py`：模块间历史接口契约（TypedDict + Protocol）。新代码从 `core/models.py` 导入
 - `session_state.py`：**CLI HITL 会话状态**。持久化每张 figure 的生命周期（pending → classified → segmented → reviewed → exported），支持回溯到上游阶段（classify / panel / segment）
-- `compat/controller.py`：`run_pipeline(img_rgb, config) → dict` 是历史组装入口，串联 classify → segment → post-process → export；新编排在 `pipeline/`
-- `batch/`：基于 `compat.controller.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
+- `pipeline/run.py`：**端到端编排** `run_pipeline`（classify → segment → post-process → export）；`compat/controller.py` 只做转发
+- `batch/`：基于 `pipeline.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
 - `compat/batch_processor.py`：旧导入和 `python -m geoseg.compat.batch_processor` 兼容入口
 - `compat/api/`：FastAPI HTTP app assembly、route modules、schema、序列化实现
 - `batch/`：batch CLI、directory orchestration、entry processing、audit/export helpers
-- ~~`server.py`~~：旧 FastAPI app 兼容入口（v0.7 路线已废弃）
-- ~~`gui/`~~：PySide6 交互视图 **已废弃**。`geoseg-gui/`（Tauri）同步废弃
+- ~~`compat/server.py`~~：旧 FastAPI app 兼容入口（v0.7 路线已废弃）
+- ~~`compat/gui/`~~：PySide6 交互视图 **已废弃**。`geoseg-gui/`（Tauri）同步废弃
 
 ## CLI Human-in-the-Loop 交互模型（v0.8）
 

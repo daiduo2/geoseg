@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-from geoseg.compat.controller import run_pipeline
+from geoseg.api import run_pipeline
 
 
 def _make_synthetic_conceptual(size: tuple[int, int] = (120, 200)) -> np.ndarray:

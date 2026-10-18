@@ -13,7 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from geoseg.compat.batch_processor import process_directory
+from geoseg.batch import process_directory
 
 
 DATASETS = ["gras2019", "zailac2023", "ma_2022"]
@@ -31,7 +31,7 @@ def main() -> int:
 
     properties_map = None
     if args.properties_json:
-        from geoseg.modules.post_process.properties import load_properties_json
+        from geoseg.api import load_properties_json
         properties_map = load_properties_json(args.properties_json)
 
     for dataset in args.datasets:

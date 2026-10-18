@@ -12,10 +12,10 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.experiments import vertical_scan_reps
-from geoseg.experiments import run_engine
-from geoseg.experiments import review_segmentation_quality
-from geoseg.experiments import detect_panels
+from geoseg.api import vertical_scan_reps
+from geoseg.api import run_engine
+from geoseg.api import review_segmentation_quality
+from geoseg.api import detect_panels
 
 OUT_DIR = Path("runs/new_papers_vlm/all_overlays")
 AUDIT_DIR = Path("runs/new_papers_vlm/quality_review_audit_deep_tomo")
@@ -121,7 +121,7 @@ def process(img_path: Path, desc: str, n_hint: int, engine: str | None = None, s
     if engine:
         seg = run_engine(engine, panel_img, reps, None, n_layers)
     else:
-        from geoseg.experiments import route_and_segment
+        from geoseg.api import route_and_segment
         seg = route_and_segment(
             panel_img, reps=reps, n_layers=n_layers,
             quality_preference="balanced", is_velocity_model=True, retry_on_underseg=True,

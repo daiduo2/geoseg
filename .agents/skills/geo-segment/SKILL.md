@@ -234,7 +234,7 @@ to original `labels.npz`:
 uv run python -c "
 from pathlib import Path
 from geoseg.session_state import load_session, update_figure, FigureStatus, ExportRecord
-from geoseg.compat.controller import run_post_process_and_export
+from geoseg.api import run_post_process_and_export
 
 state = load_session('{session_path}')
 entry = ...  # find figure

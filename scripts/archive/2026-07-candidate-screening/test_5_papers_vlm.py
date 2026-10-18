@@ -20,7 +20,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from geoseg.compat.controller import run_pipeline
-from geoseg.experiments import classify_figure
+from geoseg.api import classify_figure
 
 PAPERS: dict[str, str] = {
     "khosroanjom2024": "runs/literature_test/khosroanjom2024/mineru/extracted/images",

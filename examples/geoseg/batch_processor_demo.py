@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from geoseg.compat.batch_processor import process_directory
+from geoseg.batch import process_directory
 
 
 def _make_image(name: str, size: tuple[int, int], color: int | tuple[int, int, int]) -> np.ndarray:

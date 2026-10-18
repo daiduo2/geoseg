@@ -8,16 +8,16 @@
 
 | 路径 | 职责 | 备注 |
 |------|------|------|
+| `api.py` | **唯一公共入口**：pipeline、stage、引擎、图像工具、导出、编辑、契约类型 | scripts / skills / notebooks 只从这里导入 |
 | `core/models.py` | 稳定数据契约：`PanelInput`、`SegmentationResult`、`FigureClassification` 等 | 新代码优先从这里导入 |
 | `core/image_ops.py` | 跨模块图像工具 facade：overlay、distinct colors、saturation ratio | 产品代码不要直接依赖 `segment_engines/internal/shared.py` 或旧 `_shared.py` |
+| `pipeline/run.py` | **端到端编排**：`run_pipeline` = classify → segment → post-process → export | `compat.controller` 只做转发 |
 | `pipeline/segment.py` | segmentation stage orchestration | 直接编排 classify/detect/review/segment stage |
 | `pipeline/stages/` | figure 级 classify/detect/review/panel segment/summary stage helpers | `segment_engines/*` stage helper 文件只保留兼容 re-export |
-| `pipeline/export.py` | post-process + SPECFEM export stage | `controller.py` 通过它导出 panel |
-| `api/` | FastAPI app assembly、routes、schema、serialization 实现 | `server.py` 只保留 app 兼容入口 |
-| `batch/` | 批处理 CLI、目录编排、单 entry 处理、审计与导出实现 | `batch_processor.py` 只保留兼容入口 |
-| `controller.py` | 兼容入口：`run_pipeline`、`run_post_process_and_export` | 新 stage 编排优先放 `pipeline/` |
-| `pipeline_interfaces.py` | 兼容导出层 | 新代码改用 `core/models.py` |
-| `experiments.py` | repo 脚本使用的实验 facade | scripts 里的常见 CV/VLM/engine helper 从这里导入 |
+| `pipeline/export.py` | post-process + SPECFEM export stage | `pipeline/run.py` 通过它导出 panel |
+| `batch/` | 批处理 CLI、目录编排、单 entry 处理、审计与导出实现 | 外部调用用 `geoseg.batch` |
+| `preprocessing/` | 图像预处理与 artifact 吸收（在主管线上） | `absorb_artifacts`、`rectify_quadrilateral` 等 |
+| `compat/` | 历史兼容入口（controller / server / api / gui / batch_processor / pipeline_interfaces） | 产品代码禁止从这里导入，见 `tests/test_public_api.py` |
 
 ## 模块（`src/geoseg/modules/`）
 
@@ -44,21 +44,19 @@
 - 需要 overlay/colors/saturation/preprocessing heuristics 等跨模块能力时，从 `geoseg.core.image_ops` 导入。
 - 需要按名称运行分割引擎时，从 `geoseg.modules.segment_engines.runner import run_engine` 导入。
 - `segment_engines/` 内部可以使用 `internal/shared.py`，旧 `_shared.py` 只保留给历史代码兼容。
-- `scripts/`、`examples/` 不再导入旧 `_shared.py` aggregate shim；脚本常用 CV/VLM/engine helper 走 `geoseg.experiments`，实验性算法内部 helper 若仍在脚本中使用，保持局部、显式。
+- `scripts/`、`examples/` 不再导入旧 `_shared.py` aggregate shim；脚本常用 CV/VLM/engine helper 走 `geoseg.api`，实验性算法内部 helper 若仍在脚本中使用，保持局部、显式。
 - sandbox/agent 脚本按名称试跑多个引擎时走 `run_engine`，不要手写具体 engine dispatch。
 
 ## 组装层（`src/geoseg/` 根级）
 
 | 文件 | 职责 |
 |------|------|
+| `api.py` | **唯一公共入口**；scripts / skills / notebooks 只依赖它 |
 | `core/` | 稳定数据模型和跨模块 facade |
-| `pipeline/` | Stage 编排：segment/export 等 |
-| `pipeline_interfaces.py` | 旧导入兼容层；新代码使用 `core/models.py` |
-| `controller.py` | 端到端兼容 facade：`figure image → classify → segment → post-process → export SPECFEM` |
+| `pipeline/` | Stage 编排 + 端到端 `run_pipeline` |
 | `batch/` | 批量目录处理。支持 resume、单图错误隔离、结构化 JSON summary |
-| `batch_processor.py` | 旧导入/`python -m` 兼容入口；新代码使用 `geoseg.batch` |
-| `api/` | FastAPI HTTP 后端 schema、序列化、endpoint |
-| `server.py` | 旧 FastAPI app 兼容入口 |
+| `preprocessing/` | 图像预处理与 artifact 吸收 |
+| `compat/` | 历史兼容入口（controller / server / api / gui / batch_processor / pipeline_interfaces） |
 | `gui/` | PySide6 GUI 包（v0.7 已废弃） |
 
 ## Skills（`.claude/skills/`）
