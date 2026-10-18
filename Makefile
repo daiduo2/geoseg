@@ -23,7 +23,7 @@ DATASETS ?=
 PANEL ?=
 DRAWIO ?=
 
-.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs
+.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check
 
 help:
 	@echo "geoseg tasks:"
@@ -42,6 +42,8 @@ help:
 	@echo "  make reconstruct TXT_DIR=dir [OUT=dir]"
 	@echo "  make e2e [DATASETS='a b'] [NO_VLM=1]"
 	@echo "  make docs DRAWIO='docs/assets/flowcharts/*.drawio'"
+	@echo "  make corpus                     rebuild validation/ from runs/"
+	@echo "  make corpus-check               verify corpus files and hashes"
 	@echo "  make bench [OUT=runs/benchmark/results.json]"
 
 test:
@@ -102,3 +104,9 @@ e2e:
 docs:
 	@test -n "$(DRAWIO)" || { echo "usage: make docs DRAWIO='docs/assets/flowcharts/*.drawio'"; exit 1; }
 	$(PY) scripts/drawio_to_png.py $(DRAWIO)
+
+corpus:
+	$(PY) scripts/dev/build_corpus.py --clean
+
+corpus-check:
+	$(PY) scripts/dev/corpus.py check --hashes

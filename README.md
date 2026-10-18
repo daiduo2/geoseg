@@ -238,6 +238,19 @@ make bench                                  # synthetic engine benchmark
 Scripts and skills should import from `geoseg.api`; see
 [`docs/CODEBASE.md`](docs/CODEBASE.md) for the layer map.
 
+## Validation corpus
+
+`validation/` holds 123 pixel-aligned panels recovered from the run history
+(72 multi-region panels, 51 single-region failures kept as negatives) plus 74
+label-only records whose source images are gone. Tiers, label conventions,
+splits and the recommended acceptance protocol are documented in
+[`validation/README.md`](validation/README.md).
+
+```bash
+make corpus          # rebuild from runs/
+make corpus-check    # verify files, shapes and hashes
+```
+
 GUI tests are excluded from CI on macOS runners. See [`tests/`](tests/).
 
 ## License

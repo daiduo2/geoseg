@@ -95,3 +95,17 @@ visualizations/
 
 # Early generated outputs left under src
 /src/runs
+
+# Validation corpus: small, reproducible, and tracked
+!validation/README.md
+!validation/manifest.jsonl
+!validation/labels_only.jsonl
+!validation/report.json
+!validation/splits/
+!validation/splits/*.txt
+!validation/images/
+!validation/images/*.jpg
+!validation/labels/
+!validation/labels/*.npz
+!validation/overlays/
+!validation/overlays/*.jpg
