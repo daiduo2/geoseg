@@ -60,6 +60,22 @@ validation/
 
 `source.image_path` 对 `redetected_crop` 记录可能指向临时裁剪文件，仅作溯源；实际使用 `files.image`。
 
+## best 子集（按时间/迭代次数筛出）
+
+`validation/best/` 不是人工挑“好看”的图，而是按历史迭代密度筛出的成熟样本：
+
+- 5 个 `newimage_p0..p4`：2026-06-06 → 2026-07-06，11–12 个 campaign、15–37 次运行，最终稳定在 5 区域结果；
+- 每个 panel 选的是**稳定的 merge/visual-audit 版本**，不是最后一次过度分割的 `labels_best_split_v3`（后者 8–12 区域）；
+- 未纳入：`feng_fig6_p03..p07`（迭代 37–43 次，但最新结果碎片化）、`jtecto`（13–16 区域，过复杂）、silixa 系列（2 层，参考价值低）、3D schematic。
+
+```bash
+make best          # 重建 validation/best
+make history       # panel -> campaign/run 时间线
+make review        # 重新生成带编号的 review sheets
+```
+
+`best/` 内的 `manifest.jsonl` 记录每个 panel 的 campaign 数、run 数、首次/最后日期和所用版本。复杂案例可加 `--include-optional`（c11b8db、jtecto fig7/fig6b）。
+
 ## 使用
 
 ```python
