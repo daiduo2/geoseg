@@ -13,10 +13,23 @@ node_modules/
 geoseg-gui/node_modules/
 geoseg-gui/dist/
 
-# Generated artifacts
-runs/
-docs/all_overlays/
-docs/all_overlays.zip
+# Generated artifacts. These paths are symlinks to ~/geoseg-artifacts on the
+# dev machine; git must ignore both the real directory and the symlink form.
+/runs
+/output
+/tmp
+/docs/all_overlays
+/docs/all_overlays.zip
+/experiments/3d_schematic/experiments/text_removal_v2/brightness
+/experiments/3d_schematic/experiments/text_removal_v2/final_pipeline
+/experiments/3d_schematic/experiments/text_removal_v2/median_fill
+/experiments/3d_schematic/experiments/text_removal_v2/mser_params
+/experiments/3d_schematic/experiments/text_removal_v2/second_pass
+/experiments/3d_schematic/experiments/text_removal_v2/stroke_width
+/experiments/3d_schematic/results/experiment_plan_repair/group_a_replacement
+/experiments/3d_schematic/results/experiment_plan_repair/group_b_detect_repair
+/experiments/3d_schematic/results/experiment_plan_repair/group_c_post_smooth
+/experiments/3d_schematic/results/experiment_plan_repair/mask_comparison
 *.png
 !tests/fixtures/**/*.png
 *.jpg
@@ -79,3 +92,6 @@ src/geoseg.egg-info/
 # Test environments
 .venv-test/
 visualizations/
+
+# Early generated outputs left under src
+/src/runs
