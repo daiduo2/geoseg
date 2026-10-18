@@ -79,6 +79,47 @@ ITEMS = [
         ),
     },
     {
+        "panel_id": "schematic_panel1",
+        "labels": "3d_schematic_retune/best/panel_1_best_labels.npz",
+        "image": "3d_schematic_retune/panel_1/text_removed_best.png",
+        "overlay": "3d_schematic_retune/best/panel_1_best_overlay.jpg",
+        "group": "3d_schematic",
+        "structure": "schematic_3d",
+        "export": False,
+        "overlay_existing": True,
+        "session_evidence": (
+            "2026-06-19 user accepted panel2 and asked to rerun panel1 with the "
+            "same workflow; this is the retuned panel1 result."
+        ),
+    },
+    {
+        "panel_id": "schematic_panel2",
+        "labels": "3d_schematic_retune/best/panel_2_best_labels.npy",
+        "image": "3d_schematic_retune/panel_2/text_removed_best.png",
+        "overlay": "3d_schematic_retune/best/panel_2_best_overlay.jpg",
+        "group": "3d_schematic",
+        "structure": "schematic_3d",
+        "export": False,
+        "overlay_existing": True,
+        "session_evidence": (
+            "User: '2026-06-19 我接受,你先把当前的 panel2 归档到此前的最佳 overlay 目录下'."
+        ),
+    },
+    {
+        "panel_id": "schematic_panel3_front",
+        "labels": "3d_schematic_correct_e2e/panel_3_front/labels_fused.npz",
+        "image": "3d_schematic_correct_e2e/panel_3_front/00_cleaned.jpg",
+        "overlay": "3d_schematic_correct_e2e/panel_3_front/03_fused.jpg",
+        "group": "3d_schematic",
+        "structure": "schematic_3d_front",
+        "export": False,
+        "overlay_existing": True,
+        "session_evidence": (
+            "2026-06-19 user: panel3 '当前的效果远远优于此前任何一次'; this is the "
+            "front-face fused result from the corrected e2e run."
+        ),
+    },
+    {
         "panel_id": "paper23_fault_guided",
         "labels": "sandbox/paper23_fault_guided/secondary_labels.npz",
         "image": "sandbox/paper23_connected/cropped_profile.png",
@@ -157,7 +198,7 @@ def build() -> list[dict]:
     for item in ITEMS:
         lp = RUNS / item["labels"]
         ip = RUNS / item["image"]
-        labels = np.load(lp)["labels"].astype(np.int32)
+        labels = (np.load(lp)["labels"] if lp.suffix == ".npz" else np.load(lp)).astype(np.int32)
         image = np.array(Image.open(ip).convert("RGB"))
         if labels.shape != image.shape[:2]:
             raise ValueError(f"{item['panel_id']}: {labels.shape} != {image.shape[:2]}")
@@ -167,10 +208,17 @@ def build() -> list[dict]:
         out_overlay = OUT / "overlays" / f"{item['panel_id']}.jpg"
         np.savez_compressed(out_labels, labels=labels)
         Image.fromarray(image).save(out_image, quality=92)
-        ov = overlay(image, labels)
-        Image.fromarray(ov).save(out_overlay, quality=92)
+        if item.get("overlay_existing"):
+            shutil.copy2(RUNS / item["overlay"], out_overlay)
+            ov = np.array(Image.open(out_overlay).convert("RGB"))
+        else:
+            ov = overlay(image, labels)
+            Image.fromarray(ov).save(out_overlay, quality=92)
 
-        export = export_panel(labels, item)
+        if item.get("export", True):
+            export = export_panel(labels, item)
+        else:
+            export = {"status": "skipped", "reason": "schematic_3d", "n_components": 0, "n_polygons": 0, "properties_source": None, "tomo_xyz": None, "tomo_size_mb": 0.0, "files": {}}
         manifest.append({
             **item,
             "tier": "human",

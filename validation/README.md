@@ -91,7 +91,17 @@ make review        # 重新生成带编号的 review sheets
 | `paper23_fig7a` | faulted | 15 | 11 步干预历史：图例吸收、F3 右延伸、谷底 vs 内部交点修正，最终 `reviewed/` |
 | `paper23_fault_guided` | faulted | 14 | 你指出图例误分割和 3 处漏边界；最终 color labels + red barriers + tangent completion |
 
-这四个 panel 里，`paper22_fig5a` 和 `paper22_fig6` 是最干净、最适合作为新方向主验证的；`paper23` 两个是断层/强边界压力样本。你在做 PPT 时选的三个例子正是 **newimage + paper22 + paper23**，所以 `validation/best`（newimage）和 `validation/curated`（paper22/23）合起来就是完整的 showcase。
+另外从 session 里补进了 3 个你明确接受/称赞过的 3D 示意图结果：
+
+| panel | 结构 | 区域数 | session 证据 |
+|---|---|---:|---|
+| `schematic_panel1` | schematic_3d | 5 | 2026-06-19 接受 panel2 后要求用同一 workflow 重跑 panel1；这是重跑结果 |
+| `schematic_panel2` | schematic_3d | 4 | “我接受，你先把当前的 panel2 归档到此前的最佳 overlay 目录下” |
+| `schematic_panel3_front` | schematic_3d_front | 6 | “当前的效果远远优于此前任何一次”；front-face fused 结果 |
+
+说明：`schematic_*` 是 3D 羽流/示意图压力样本，不参与 2D 层状界面测试；`paper22_fig5a`/`fig6` 仍是最干净的主验证集。`ph01_page8` 只找到 labels + overlay + tomo，干净原图缺失，暂不纳入。fig6 的后续迭代你已明确说“问题越改越多”，所以不纳入 best。
+
+你在做 PPT 时选的三个例子正是 **newimage + paper22 + paper23**；加上 3D 示意图后，showcase 覆盖 2D 层状、边界驱动、断层、3D 羽流四类。
 
 ```bash
 make curated     # 重建 validation/curated 并补导出
