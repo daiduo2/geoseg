@@ -8,8 +8,8 @@ import numpy as np
 from fastapi import APIRouter, File, Form, UploadFile
 from PIL import Image, ImageDraw
 
-from geoseg.api.schemas import SegmentationResult
-from geoseg.api.serialization import segmentation_to_api, upload_to_ndarray
+from geoseg.compat.api.schemas import SegmentationResult
+from geoseg.compat.api.serialization import segmentation_to_api, upload_to_ndarray
 
 router = APIRouter(prefix="/api/manual")
 

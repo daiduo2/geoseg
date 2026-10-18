@@ -586,7 +586,7 @@ geoseg-gui/
 │   │   └── ManualPipeline.svelte       # Pipeline A 画布页
 │   └── App.svelte
 ├── src-tauri/
-│   └── src/main.rs         # Tauri 入口，spawn Python sidecar (`python -m geoseg.server`)
+│   └── src/main.rs         # Tauri 入口，spawn Python sidecar (`python -m geoseg.compat.server`)
 └── package.json
 ```
 
@@ -694,7 +694,7 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 ### Week 2: Tauri + TS 骨架 + FigureSelector + FigureReview
 
 3. **初始化 `geoseg-gui/`**：`npm create tauri-app` → 选 Svelte + TypeScript
-4. **`src-tauri/src/main.rs`**：spawn Python sidecar（`python -m geoseg.server`）
+4. **`src-tauri/src/main.rs`**：spawn Python sidecar（`python -m geoseg.compat.server`）
 5. **`src/lib/api.ts`** + **`src/lib/types.ts`**：HTTP 客户端 + 类型定义
 6. **`src/components/FigureSelector.svelte`**：缩略图网格 + CV 分类标记
 7. **`src/components/FigureReview.svelte`**：figure 原图 + caption 显示 + 人工标记面板（has_colorbar / n_panels / figure_type）
@@ -769,7 +769,7 @@ def test_analyze_segment_export_with_ph01(tmp_path, monkeypatch):
 
 | 模块 | 跑通判据(必须全部满足) | 产物路径 |
 |------|------|----------|
-| **M7-FastAPI** | ① `python -m geoseg.server` 启动成功，监听 8000 端口; ② `curl -F image=@test.png http://localhost:8000/api/agent/detect-panels` 返回 JSON 数组且每个元素含 `id`/`bbox`/`source`; ③ `curl -F image=@test.png -F polygon='[{"x":0,"y":0},...]' http://localhost:8000/api/manual/segment-from-polygon` 返回 JSON 含 `contours` + `overlay_base64` | `runs/M7/curl_test.log` |
+| **M7-FastAPI** | ① `python -m geoseg.compat.server` 启动成功，监听 8000 端口; ② `curl -F image=@test.png http://localhost:8000/api/agent/detect-panels` 返回 JSON 数组且每个元素含 `id`/`bbox`/`source`; ③ `curl -F image=@test.png -F polygon='[{"x":0,"y":0},...]' http://localhost:8000/api/manual/segment-from-polygon` 返回 JSON 含 `contours` + `overlay_base64` | `runs/M7/curl_test.log` |
 | **M8-Tauri骨架** | ① `npm run tauri dev` 启动窗口无报错; ② 窗口可加载测试图像并显示; ③ Python sidecar 自动启动且 API 可访问 | `runs/M8/screenshot.png` |
 | **M9-FigureReview** | ① FigureSelector 显示缩略图网格，点击后进入 FigureReview; ② FigureReview 面板显示原图 + caption + 人工标记选项（has_colorbar / n_panels / figure_type） | `runs/M9/figure_review.png` |
 | **M10-Panel获取** | ① 手动框选：在 figure 底图上拖拽生成 panel 框，PanelSelector 显示列表; ② CV 辅助：调用 `POST /api/agent/detect-panels` 获取候选框，叠加显示后用户确认/修正/删除; ③ 整图 fallback：不框选时整张图作为一个 panel | `runs/M10/panel_selection.png` |

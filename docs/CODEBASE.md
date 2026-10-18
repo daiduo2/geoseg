@@ -121,7 +121,7 @@ uv run pytest tests/test_integration_ph01.py
 - `src/geoseg/modules/vlm_client/client.py` 中的 `_call_claude_cli` / `_call_with_retry`（`claude -p` subprocess）— **已在代码中标记 DEPRECATED**。语义推理全面迁移至 `.claude/skills/`（`figure-classify`、`sandbox-segment`），agent 直接 Read 看图 + Bash 调用工具
 - `src/geoseg/modules/vlm_client/client.py` 中的 `classify_figure` / `review_page_overview` / `review_segmentation_quality` — 保留供 legacy code / stub mode 使用，新代码应走 skill
 - `src/geoseg/modules/segment_engines/router.py` 是兼容 facade。新代码应优先导入 `policy.select_engine`、`runner.run_engine`、`retry.retry_undersegmentation`
-- `src/geoseg/gui/` — v0.7 起全面废弃
+- `src/geoseg/compat/gui/` — v0.7 起全面废弃
 - `geoseg-gui/` — Tauri 前端（v0.7）已废弃
 - `src/geoseg/modules/e026_algo/` — `segment_engines/` 已完全替代
 

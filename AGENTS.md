@@ -10,8 +10,8 @@
 - Pipeline 由 Codex skill 驱动：agent 直接读取图像做语义/视觉判断，Python 只提供确定性工具函数。
 - 核心交互路径：agent 跑 pipeline -> 展示 overlay -> 必要时启动 napari -> 用户编辑 labels -> agent 复算/确认 -> 导出。
 - 会话状态由 `src/geoseg/session_state.py` 管理。
-- 稳定数据契约优先放在 `src/geoseg/core/models.py`；`src/geoseg/pipeline_interfaces.py` 仅作为兼容导出层保留。
-- `src/geoseg/controller.py` 是兼容入口；新编排逻辑应优先放在 `src/geoseg/pipeline/`。
+- 稳定数据契约优先放在 `src/geoseg/core/models.py`；`src/geoseg/compat/pipeline_interfaces.py` 仅作为兼容导出层保留。
+- `src/geoseg/compat/controller.py` 是兼容入口；新编排逻辑应优先放在 `src/geoseg/pipeline/`。
 
 ## Skill Boundaries
 
@@ -61,7 +61,7 @@
 - `batch-segment` 的 segmenter agent 并发上限是 5。
 - HITL 阶段不能并行，必须等待用户反馈。
 - Napari review 是阻塞式 GUI：agent 启动 napari，用户保存/关闭后 agent 继续。
-- 不新增 Tauri/FastAPI 产品前端；`src/geoseg/server.py` 仅作为历史兼容/本地调试代码。
+- 不新增 Tauri/FastAPI 产品前端；`src/geoseg/compat/server.py` 仅作为历史兼容/本地调试代码。
 - 不新增长期 markdown，除非归入 `docs/CODEBASE.md`、`docs/DESIGN.md`、现有 skill 文档或模块 `AGENTS.md`。
 
 ## Response Convention

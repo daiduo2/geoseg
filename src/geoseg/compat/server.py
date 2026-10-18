@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from geoseg.api.app import app
+from geoseg.compat.api.app import app
 
 
 if __name__ == "__main__":

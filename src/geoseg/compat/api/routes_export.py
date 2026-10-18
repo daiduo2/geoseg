@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from fastapi import APIRouter, File, Form, UploadFile
 
-from geoseg.api.schemas import ExportSpecfemResponse
+from geoseg.compat.api.schemas import ExportSpecfemResponse
 
 router = APIRouter(prefix="/api/export")
 

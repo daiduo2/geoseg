@@ -20,7 +20,7 @@ except ImportError as exc:
         "fastapi testclient not available. Install with: pip install httpx"
     ) from exc
 
-from geoseg.server import app
+from geoseg.compat.server import app
 
 client = TestClient(app)
 

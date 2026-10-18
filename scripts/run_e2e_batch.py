@@ -13,7 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from geoseg.batch_processor import process_directory
+from geoseg.compat.batch_processor import process_directory
 
 
 DATASETS = ["gras2019", "zailac2023", "ma_2022"]

@@ -17,7 +17,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.controller import run_pipeline
+from geoseg.compat.controller import run_pipeline
 
 OUTPUT_ROOT = Path("runs/5_papers_vlm_test/pipeline_results")
 REPORT_PATH = Path("runs/5_papers_vlm_test/pipeline_report.json")

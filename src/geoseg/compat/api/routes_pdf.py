@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, File, UploadFile
 
-from geoseg.api.schemas import PdfImportResponse, PdfStatusResponse
+from geoseg.compat.api.schemas import PdfImportResponse, PdfStatusResponse
 
 router = APIRouter(prefix="/api/pdf")
 

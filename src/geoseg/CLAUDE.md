@@ -1,8 +1,8 @@
 # geoseg 组装层
 
-> 本目录下的 `controller.py` 为后端组装兼容层；批处理实现已迁移到 `batch/`。
+> 本目录下的 `compat/` 集中存放历史兼容入口（controller / batch_processor / server / api / gui / pipeline_interfaces）；批处理实现已迁移到 `batch/`。
 > `session_state.py` 为 CLI 交互模型的持久化状态层。
-> `gui/` 和 `server.py` 已废弃（Tauri/FastAPI 前端路线已终止）。
+> `compat/gui/` 和 `compat/server.py` 已废弃（Tauri/FastAPI 前端路线已终止）。
 > 启动 cc 时：`cd geoseg && cc` 会自动加载本文件 + 根 CLAUDE.md。
 
 ## Build / Test
@@ -23,12 +23,12 @@ python -m geoseg.pipeline_interfaces_demo
 
 ## 架构要点
 
-- `pipeline_interfaces.py`：模块间接口契约（TypedDict + Protocol）
+- `compat/pipeline_interfaces.py`：模块间历史接口契约（TypedDict + Protocol）。新代码从 `core/models.py` 导入
 - `session_state.py`：**CLI HITL 会话状态**。持久化每张 figure 的生命周期（pending → classified → segmented → reviewed → exported），支持回溯到上游阶段（classify / panel / segment）
-- `controller.py`：`run_pipeline(img_rgb, config) → dict` 是组装层的核心 API，串联 classify → segment → post-process → export
-- `batch/`：基于 `controller.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
-- `batch_processor.py`：旧导入和 `python -m geoseg.batch_processor` 兼容入口
-- `api/`：FastAPI HTTP app assembly、route modules、schema、序列化实现
+- `compat/controller.py`：`run_pipeline(img_rgb, config) → dict` 是历史组装入口，串联 classify → segment → post-process → export；新编排在 `pipeline/`
+- `batch/`：基于 `compat.controller.run_pipeline` 的批量 service/CLI，支持 resume、单图错误隔离、JSON summary
+- `compat/batch_processor.py`：旧导入和 `python -m geoseg.compat.batch_processor` 兼容入口
+- `compat/api/`：FastAPI HTTP app assembly、route modules、schema、序列化实现
 - `batch/`：batch CLI、directory orchestration、entry processing、audit/export helpers
 - ~~`server.py`~~：旧 FastAPI app 兼容入口（v0.7 路线已废弃）
 - ~~`gui/`~~：PySide6 交互视图 **已废弃**。`geoseg-gui/`（Tauri）同步废弃

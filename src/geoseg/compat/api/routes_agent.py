@@ -8,13 +8,13 @@ from typing import Any
 import numpy as np
 from fastapi import APIRouter, File, Form, UploadFile
 
-from geoseg.api.schemas import (
+from geoseg.compat.api.schemas import (
     AgentProcessFigureResponse,
     PanelInput,
     PanelReviewOut,
     SegmentationResult,
 )
-from geoseg.api.serialization import segmentation_to_api, upload_to_ndarray
+from geoseg.compat.api.serialization import segmentation_to_api, upload_to_ndarray
 
 router = APIRouter(prefix="/api/agent")
 
@@ -32,7 +32,7 @@ async def process_figure_agent(
     img_rgb = upload_to_ndarray(image)
     text_block_data: list[dict] = json.loads(text_blocks)
 
-    from geoseg.controller import run_pipeline
+    from geoseg.compat.controller import run_pipeline
 
     result = run_pipeline(
         img_rgb,

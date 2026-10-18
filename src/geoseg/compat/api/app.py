@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from geoseg.api.routes_agent import router as agent_router
-from geoseg.api.routes_export import router as export_router
-from geoseg.api.routes_manual import router as manual_router
-from geoseg.api.routes_pdf import router as pdf_router
+from geoseg.compat.api.routes_agent import router as agent_router
+from geoseg.compat.api.routes_export import router as export_router
+from geoseg.compat.api.routes_manual import router as manual_router
+from geoseg.compat.api.routes_pdf import router as pdf_router
 
 
 def create_app() -> FastAPI:

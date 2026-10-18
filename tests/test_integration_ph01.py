@@ -16,8 +16,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from geoseg.batch_processor import process_directory
-from geoseg.controller import run_pipeline
+from geoseg.compat.batch_processor import process_directory
+from geoseg.compat.controller import run_pipeline
 from geoseg.session_state import get_summary, FigureStatus
 
 

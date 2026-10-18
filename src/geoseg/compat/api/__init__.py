@@ -1,5 +1,5 @@
 """HTTP API package for geoseg."""
 
-from geoseg.api.app import app
+from geoseg.compat.api.app import app
 
 __all__ = ["app"]

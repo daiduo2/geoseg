@@ -103,27 +103,27 @@ def test_full_pipeline_process_figure_forwards_to_segmentation_stage(monkeypatch
 
 
 def test_gui_main_window_uses_segment_engine_package_entrypoint():
-    imports = _imported_modules(SRC_ROOT / "gui" / "main_window.py")
+    imports = _imported_modules(SRC_ROOT / "compat" / "gui" / "main_window.py")
 
     assert "geoseg.modules.segment_engines" in imports
     assert "geoseg.modules.segment_engines.router" not in imports
 
 
 def test_api_app_module_remains_app_assembly_only():
-    imports = _imported_modules(SRC_ROOT / "api" / "app.py")
+    imports = _imported_modules(SRC_ROOT / "compat" / "api" / "app.py")
 
-    assert "geoseg.api.routes_agent" in imports
-    assert "geoseg.api.routes_manual" in imports
-    assert "geoseg.api.routes_export" in imports
-    assert "geoseg.api.routes_pdf" in imports
+    assert "geoseg.compat.api.routes_agent" in imports
+    assert "geoseg.compat.api.routes_manual" in imports
+    assert "geoseg.compat.api.routes_export" in imports
+    assert "geoseg.compat.api.routes_pdf" in imports
     assert not any(imported.startswith("geoseg.modules") for imported in imports)
 
 
 def test_api_routes_use_segment_engine_package_entrypoint():
     imports = set()
     for path in [
-        SRC_ROOT / "api" / "routes_agent.py",
-        SRC_ROOT / "api" / "routes_manual.py",
+        SRC_ROOT / "compat" / "api" / "routes_agent.py",
+        SRC_ROOT / "compat" / "api" / "routes_manual.py",
     ]:
         imports.update(_imported_modules(path))
 
@@ -132,14 +132,14 @@ def test_api_routes_use_segment_engine_package_entrypoint():
 
 
 def test_server_module_remains_thin_entrypoint():
-    imports = _imported_modules(SRC_ROOT / "server.py")
+    imports = _imported_modules(SRC_ROOT / "compat" / "server.py")
 
-    assert "geoseg.api.app" in imports
+    assert "geoseg.compat.api.app" in imports
     assert not any(imported.startswith("geoseg.modules") for imported in imports)
 
 
 def test_batch_processor_module_remains_thin_entrypoint():
-    imports = _imported_modules(SRC_ROOT / "batch_processor.py")
+    imports = _imported_modules(SRC_ROOT / "compat" / "batch_processor.py")
 
     assert "geoseg.batch.cli" in imports
     assert "geoseg.batch.service" in imports
@@ -396,7 +396,7 @@ def test_diagnostics_use_segmentation_stage_facade():
 
 def test_product_code_imports_contracts_from_core_models():
     offenders: list[str] = []
-    forbidden = "geoseg.pipeline_interfaces"
+    forbidden = "geoseg.compat.pipeline_interfaces"
 
     for path in _python_files():
         rel = path.relative_to(REPO_ROOT)

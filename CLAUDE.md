@@ -92,7 +92,7 @@ Skill 索引见 `.claude/skills/README.md`。常用：
 - `src/geoseg/modules/post_process/`、`modules/exporter/`：确定性后处理与导出。
 - `src/geoseg/modules/editor/`：napari 编辑器 adapter。
 - `src/geoseg/cli/`：可打包命令行入口。
-- `src/geoseg/api/`：FastAPI HTTP app（兼容入口，不作为产品前端）。
+- `src/geoseg/compat/api/`：FastAPI HTTP app（兼容入口，不作为产品前端）。
 - `scripts/`：开发/审计/批处理辅助脚本，不作为稳定 API。
 - `experiments/`：实验代码。实验可以调用内部细节，但进入 `src/geoseg/` 前必须满足下面的 Promotion Rules。
 
@@ -113,7 +113,7 @@ Skill 索引见 `.claude/skills/README.md`。常用：
 - `batch-segment` 的 segmenter agent **并发上限是 5**，写在 `.claude/skills/batch-segment/SKILL.md` 的 Dynamic Workflow stage 3。
 - HITL 阶段不能并行——必须等待用户反馈。
 - Napari review 是阻塞式 GUI：agent 启动 napari，用户保存/关闭后 agent 继续。
-- 不新增 Tauri / FastAPI / PySide6 产品前端；`src/geoseg/server.py`、`src/geoseg/gui/` 只保留历史兼容/本地调试代码。
+- 不新增 Tauri / FastAPI / PySide6 产品前端；`src/geoseg/compat/server.py`、`src/geoseg/compat/gui/` 只保留历史兼容/本地调试代码。
 - 不新增长期 markdown——归入 `docs/CODEBASE.md`、`docs/DESIGN.md`、现有 skill 文档或模块 `CLAUDE.md`。
 - git 提交粒度按功能，不按文件；commit message 解释 *why* 和 *what visual fact* 而不只是 *what changed*。
 

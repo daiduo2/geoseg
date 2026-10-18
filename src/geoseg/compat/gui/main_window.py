@@ -29,11 +29,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from geoseg.gui.figure_selector import FigureSelectorDialog
-from geoseg.gui.panel_selector import PanelSelectorDialog
-from geoseg.gui.pdf_import_worker import PdfImportWorker
-from geoseg.gui.pdf_page_review_worker import PdfPageReviewWorker
-from geoseg.gui.segmentation_view import SegmentationView
+from geoseg.compat.gui.figure_selector import FigureSelectorDialog
+from geoseg.compat.gui.panel_selector import PanelSelectorDialog
+from geoseg.compat.gui.pdf_import_worker import PdfImportWorker
+from geoseg.compat.gui.pdf_page_review_worker import PdfPageReviewWorker
+from geoseg.compat.gui.segmentation_view import SegmentationView
 from geoseg.modules.exporter.specfem import (
     labels_to_grids,
     write_parfile_snippet,

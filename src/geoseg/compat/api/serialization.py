@@ -11,7 +11,7 @@ from fastapi import UploadFile
 from PIL import Image
 from skimage import measure
 
-from geoseg.api.schemas import SegmentationMeta, SegmentationResult
+from geoseg.compat.api.schemas import SegmentationMeta, SegmentationResult
 
 
 def upload_to_ndarray(upload: UploadFile) -> np.ndarray:

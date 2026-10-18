@@ -5,7 +5,7 @@ interactive view.  This avoids relying on the segmentation pipeline to
 successfully split a toy synthetic image.
 
 Run:
-    python -m geoseg.gui.demo
+    python -m geoseg.compat.gui.demo
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import sys
 import numpy as np
 from PySide6.QtWidgets import QApplication
 
-from geoseg.gui.main_window import MainWindow
+from geoseg.compat.gui.main_window import MainWindow
 
 
 def _make_test_image() -> tuple[np.ndarray, np.ndarray]:

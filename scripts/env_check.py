@@ -45,7 +45,7 @@ PYTHON_DEPS: list[tuple[str, str | None]] = [
 
 PROJECT_MODULES = [
     "geoseg",
-    "geoseg.controller",
+    "geoseg.compat.controller",
     "geoseg.session_state",
     "geoseg.modules.cv_detect",
     "geoseg.modules.segment_engines",
