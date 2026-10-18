@@ -94,7 +94,7 @@ def _frangi_segment(
     return labels, vesselness
 
 
-def segment(
+def segment_tubular(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 2,
@@ -115,7 +115,7 @@ def segment(
     labels, vesselness = _frangi_segment(panel_rgb, **kwargs)
 
     if n_layers > 2 and labels.max() > 0:
-        from geoseg.modules.segment_engines.v4_kmeans import segment as v4_segment
+        from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans as v4_segment
 
         tube_mask = labels > 0
         masked_rgb = panel_rgb.copy()

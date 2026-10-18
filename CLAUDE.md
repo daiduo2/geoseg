@@ -116,6 +116,7 @@ Skill 索引见 `.claude/skills/README.md`。常用：
 - Napari review 是阻塞式 GUI：agent 启动 napari，用户保存/关闭后 agent 继续。
 - 不新增 Tauri / FastAPI / PySide6 产品前端；`src/geoseg/compat/server.py`、`src/geoseg/compat/gui/` 只保留历史兼容/本地调试代码。
 - 不新增长期 markdown——归入 `docs/CODEBASE.md`、`docs/DESIGN.md`、现有 skill 文档或模块 `CLAUDE.md`。
+- 日常任务用 `make`：`make test` / `make check` / `make map` / `make segment IMAGE=...` / `make bench`；不要再靠记忆翻 `scripts/`。
 - git 提交粒度按功能，不按文件；commit message 解释 *why* 和 *what visual fact* 而不只是 *what changed*。
 
 ## Response Convention

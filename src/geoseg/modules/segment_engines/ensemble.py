@@ -141,7 +141,7 @@ def _compute_palette(
     return np.array(palette, dtype=np.uint8), color_names
 
 
-def segment(
+def segment_ensemble(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,
@@ -184,7 +184,7 @@ def segment(
 
     if sat >= SAT_MIXED:
         t0 = time.perf_counter()
-        result_km = kmeans_full.segment(panel_rgb, reps, max_auto_k=max_auto_k)
+        result_km = kmeans_full.segment_kmeans_full(panel_rgb, reps, max_auto_k=max_auto_k)
         timings["kmeans"] = time.perf_counter() - t0
         km_consistency = _compute_consistency(result_km["labels"])
         algo_results.append((result_km, km_consistency))
@@ -192,7 +192,7 @@ def segment(
 
     if sat >= SAT_VIVID:
         t0 = time.perf_counter()
-        result_eg = edge_guided_mod.segment(panel_rgb, reps, max_auto_k=max_auto_k, edge_weight=0.3)
+        result_eg = edge_guided_mod.segment_edge_guided(panel_rgb, reps, max_auto_k=max_auto_k, edge_weight=0.3)
         timings["edge_guided"] = time.perf_counter() - t0
         eg_consistency = _compute_consistency(result_eg["labels"])
         algo_results.append((result_eg, eg_consistency))

@@ -58,7 +58,7 @@ def test_run_engine_preserves_seed_palette(monkeypatch):
             "meta": {"engine": "v4_kmeans"},
         }
 
-    monkeypatch.setattr(v4_kmeans, "segment", fake_segment)
+    monkeypatch.setattr(v4_kmeans, "segment_v4_kmeans", fake_segment)
 
     result = run_engine(
         "v4_kmeans",

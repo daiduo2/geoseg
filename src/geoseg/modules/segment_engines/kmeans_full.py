@@ -24,7 +24,7 @@ from geoseg.modules.segment_engines.internal.seeds import (
 )
 
 
-def segment(
+def segment_kmeans_full(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,

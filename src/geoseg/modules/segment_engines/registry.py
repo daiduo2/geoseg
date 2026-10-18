@@ -28,7 +28,7 @@ class EngineSpec:
 ENGINE_REGISTRY: dict[str, EngineSpec] = {
     "grayscale_agglomerative": EngineSpec(
         "grayscale_agglomerative",
-        "geoseg.modules.segment_engines.grayscale:segment",
+        "geoseg.modules.segment_engines.grayscale:segment_grayscale_agglomerative",
         adapter="grayscale",
     ),
     "v4_kmeans_colorbar": EngineSpec(
@@ -43,39 +43,39 @@ ENGINE_REGISTRY: dict[str, EngineSpec] = {
     ),
     "v4_kmeans": EngineSpec(
         "v4_kmeans",
-        "geoseg.modules.segment_engines.v4_kmeans:segment",
+        "geoseg.modules.segment_engines.v4_kmeans:segment_v4_kmeans",
         adapter="v4",
         fallback_engine=None,
     ),
     "kmeans_full": EngineSpec(
         "kmeans_full",
-        "geoseg.modules.segment_engines.kmeans_full:segment",
+        "geoseg.modules.segment_engines.kmeans_full:segment_kmeans_full",
         requires_reps=True,
     ),
     "edge_guided": EngineSpec(
         "edge_guided",
-        "geoseg.modules.segment_engines.edge_guided:segment",
+        "geoseg.modules.segment_engines.edge_guided:segment_edge_guided",
         requires_reps=True,
     ),
     "edge_grow": EngineSpec(
         "edge_grow",
-        "geoseg.modules.segment_engines.edge_grow:segment",
+        "geoseg.modules.segment_engines.edge_grow:segment_edge_grow",
         requires_reps=True,
     ),
     "ensemble": EngineSpec(
         "ensemble",
-        "geoseg.modules.segment_engines.ensemble:segment",
+        "geoseg.modules.segment_engines.ensemble:segment_ensemble",
         requires_reps=True,
     ),
     "tubular": EngineSpec(
         "tubular",
-        "geoseg.modules.segment_engines.tubular_structure:segment",
+        "geoseg.modules.segment_engines.tubular_structure:segment_tubular",
         adapter="reps_keyword",
         fallback_engine=None,
     ),
     "horizon_refinement": EngineSpec(
         "horizon_refinement",
-        "geoseg.modules.segment_engines.horizon_refinement:segment",
+        "geoseg.modules.segment_engines.horizon_refinement:segment_horizon_refinement",
         adapter="horizon_refinement",
         fallback_engine="v4_kmeans",
         is_post_processor=True,

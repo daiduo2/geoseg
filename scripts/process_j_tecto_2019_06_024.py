@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-from geoseg.modules.segment_engines.edge_guided import segment as segment_edge_guided
+from geoseg.modules.segment_engines.edge_guided import segment_edge_guided as segment_edge_guided
 from geoseg.modules.segment_engines.mask_aware import _fill_text_nearest
 from geoseg.modules.segment_engines.horizon_refinement import refine_label_blur
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend

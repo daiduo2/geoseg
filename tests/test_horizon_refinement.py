@@ -18,7 +18,7 @@ from geoseg.modules.segment_engines.horizon_refinement import (
     _separator_mask,
     refine_boundaries,
     refine_label_blur,
-    segment,
+    segment_horizon_refinement,
 )
 
 
@@ -194,7 +194,7 @@ def test_segment_returns_protocol_dict() -> None:
     panel_rgb[:50, :] = [180, 60, 60]
     panel_rgb[50:, :] = [60, 60, 180]
 
-    result = segment(panel_rgb, n_layers=2)
+    result = segment_horizon_refinement(panel_rgb, n_layers=2)
 
     assert "labels" in result
     assert "overlay" in result
@@ -213,7 +213,7 @@ def test_segment_with_coarse_labels() -> None:
     coarse[40:80, :] = 2
     coarse[80:, :] = 3
 
-    result = segment(panel_rgb, n_layers=3, coarse_labels=coarse)
+    result = segment_horizon_refinement(panel_rgb, n_layers=3, coarse_labels=coarse)
 
     assert result["meta"]["n_layers"] >= 2
     assert result["labels"].shape == (h, w)

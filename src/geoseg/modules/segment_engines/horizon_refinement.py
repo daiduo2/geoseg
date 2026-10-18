@@ -24,7 +24,7 @@ from geoseg.modules.segment_engines.horizon.refine import (
     _compute_fragmentation_score,
     refine_boundaries,
     refine_label_blur,
-    segment,
+    segment_horizon_refinement,
 )
 
 __all__ = [
@@ -46,5 +46,5 @@ __all__ = [
     "_separator_mask",
     "refine_boundaries",
     "refine_label_blur",
-    "segment",
+    "segment_horizon_refinement",
 ]

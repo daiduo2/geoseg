@@ -97,7 +97,7 @@ def _edge_guided_kmeans(
     return centroids, labels_snapped
 
 
-def segment(
+def segment_edge_guided(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,

@@ -2,13 +2,13 @@
 
 This module is the single entry point for the synthetic benchmark. It
 is intentionally thin: generate → optionally noise → for each engine,
-call via `geoseg.experiments.run_engine` → collect metrics → return
+call via `geoseg.api.run_engine` → collect metrics → return
 JSON-serialisable summary.
 
 Why call geoseg through the experiments facade and not directly? Per
 CODEBASE.md: "产品代码不得直接依赖 segment_engines/_shared、segment_engines/internal
 或 router._run_engine; ... 需要按名称运行分割引擎时，从 geoseg.modules.segment_engines.runner
-import run_engine". The `geoseg.experiments` facade re-exports that.
+import run_engine". The `geoseg.api` facade re-exports that.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ def _run_engine_on_panel(
     n_layers_hint: int,
     reps: list[dict] | None = None,
 ) -> dict[str, Any]:
-    """Run one engine via geoseg.experiments.run_engine.
+    """Run one engine via geoseg.api.run_engine.
 
     If `colorbar_rgb` is given, we crop the last `colorbar_rgb.shape[1]`
     columns off `rgb` before passing it as `panel_rgb`. Per the engine
@@ -90,7 +90,7 @@ def _run_engine_on_panel(
     `requires_reps=True` in the registry (kmeans_full, edge_guided,
     edge_grow) will run their primary path when reps is non-empty.
     """
-    from geoseg.experiments import run_engine
+    from geoseg.api import run_engine
 
     panel = rgb
     if colorbar_rgb is not None and colorbar_rgb.ndim == 3:

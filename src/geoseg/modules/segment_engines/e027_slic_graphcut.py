@@ -140,7 +140,7 @@ def _postprocess(labels: np.ndarray, n_labels: int, min_component_frac: float) -
     return cleaned
 
 
-def segment(
+def segment_e027_slic_graphcut(
     panel_rgb: np.ndarray,
     n_layers: int = 7,
     compactness: int = _DEFAULT_COMPACTNESS,

@@ -240,7 +240,7 @@ def refine_boundaries(
     return refined_labels, boundaries
 
 
-def segment(
+def segment_horizon_refinement(
     panel_rgb: np.ndarray,
     *,
     n_layers: int = 5,
@@ -298,5 +298,5 @@ __all__ = [
     "_compute_fragmentation_score",
     "refine_boundaries",
     "refine_label_blur",
-    "segment",
+    "segment_horizon_refinement",
 ]

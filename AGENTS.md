@@ -7,6 +7,7 @@
 ## Current Architecture
 
 - 源码位于 `src/geoseg/`，测试位于 `tests/`，示例位于 `examples/`，实验位于 `experiments/`。
+- 日常任务用 `make`：`make test`、`make check`、`make map`、`make segment IMAGE=...`、`make bench`（见 `Makefile`）。
 - Pipeline 由 Codex skill 驱动：agent 直接读取图像做语义/视觉判断，Python 只提供确定性工具函数。
 - 核心交互路径：agent 跑 pipeline -> 展示 overlay -> 必要时启动 napari -> 用户编辑 labels -> agent 复算/确认 -> 导出。
 - 会话状态由 `src/geoseg/session_state.py` 管理。

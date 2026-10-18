@@ -16,7 +16,7 @@ from PIL import Image
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from geoseg.modules.segment_engines.kmeans_full import segment as seg_kmeans
+from geoseg.modules.segment_engines.kmeans_full import segment_kmeans_full as seg_kmeans
 from geoseg.modules.segment_engines.horizon_refinement import (
     refine_boundaries,
     _compute_fragmentation_score,

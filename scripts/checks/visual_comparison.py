@@ -19,7 +19,7 @@ from skimage.segmentation import slic
 from scipy.cluster.vq import kmeans2
 
 from geoseg.core.image_ops import adaptive_blur, create_overlay, distinct_colors
-from geoseg.modules.segment_engines.v4_kmeans import segment
+from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans
 from geoseg.modules.segment_engines.metrics import compute_all
 
 

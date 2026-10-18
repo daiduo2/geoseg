@@ -24,8 +24,8 @@ from geoseg.modules.segment_engines.regional_fusion import (
     generate_overlay_with_legend,
     regional_segment,
 )
-from geoseg.modules.segment_engines.v4_kmeans import segment as v4_segment
-from geoseg.modules.segment_engines.edge_guided import segment as eg_segment
+from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans as v4_segment
+from geoseg.modules.segment_engines.edge_guided import segment_edge_guided as eg_segment
 
 
 def main():

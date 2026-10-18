@@ -32,14 +32,14 @@ Each engine is a Python function; you construct the call inline:
 
 | Engine | Best For | Example Call |
 |--------|----------|--------------|
-| `v4_kmeans` | General purpose, vivid colors | `uv run python -c "from geoseg.modules.segment_engines.v4_kmeans import segment; ..."` |
-| `kmeans_full` | Vivid colors with rep seeds | `uv run python -c "from geoseg.modules.segment_engines.kmeans_full import segment; ..."` |
-| `edge_guided` | Smooth geological boundaries | `uv run python -c "from geoseg.modules.segment_engines.edge_guided import segment; ..."` |
-| `edge_grow` | Region growing from edges | `uv run python -c "from geoseg.modules.segment_engines.edge_grow import segment; ..."` |
-| `ensemble` | Best quality (slow) | `uv run python -c "from geoseg.modules.segment_engines.ensemble import segment; ..."` |
-| `grayscale` | Near-zero saturation | `uv run python -c "from geoseg.modules.segment_engines.grayscale import segment; ..."` |
-| `lab_l_kmeans` | Low-contrast / gradient / funnel on similar hue background | `uv run python -c "from geoseg.modules.segment_engines.lab_l_kmeans import segment; ..."` |
-| `seeded_region_grow` | Funnel / plume where agent can place seed points | `uv run python -c "from geoseg.modules.segment_engines.seeded_region_grow import segment; ..."` |
+| `v4_kmeans` | General purpose, vivid colors | `uv run python -c "from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans; ..."` |
+| `kmeans_full` | Vivid colors with rep seeds | `uv run python -c "from geoseg.modules.segment_engines.kmeans_full import segment_kmeans_full; ..."` |
+| `edge_guided` | Smooth geological boundaries | `uv run python -c "from geoseg.modules.segment_engines.edge_guided import segment_edge_guided; ..."` |
+| `edge_grow` | Region growing from edges | `uv run python -c "from geoseg.modules.segment_engines.edge_grow import segment_edge_grow; ..."` |
+| `ensemble` | Best quality (slow) | `uv run python -c "from geoseg.modules.segment_engines.ensemble import segment_ensemble; ..."` |
+| `grayscale` | Near-zero saturation | `uv run python -c "from geoseg.modules.segment_engines.grayscale import segment_grayscale_agglomerative; ..."` |
+| `lab_l_kmeans` | Low-contrast / gradient / funnel on similar hue background | `uv run python -c "from geoseg.modules.segment_engines.lab_l_kmeans import segment_lab_l_kmeans; ..."` |
+| `seeded_region_grow` | Funnel / plume where agent can place seed points | `uv run python -c "from geoseg.modules.segment_engines.seeded_region_grow import segment_seeded_region_grow; ..."` |
 | `horizon_refinement` | Post-process: smooth boundaries | `uv run python -c "from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries; ..."` |
 
 Each `segment()` call returns a dict with:
@@ -119,7 +119,7 @@ Save the resulting labels, overlay, and engine metadata.
 uv run python -c "
 import json, pathlib, numpy as np
 from PIL import Image
-from geoseg.modules.segment_engines.v4_kmeans import segment as v4_segment
+from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans as v4_segment
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
 
 panel_id = '{panel_id}'
@@ -171,7 +171,7 @@ spatial position and subtle lightness differences, even if the hues are similar.
 uv run python -c "
 import json, pathlib, numpy as np
 from PIL import Image
-from geoseg.modules.segment_engines.seeded_region_grow import segment
+from geoseg.modules.segment_engines.seeded_region_grow import segment_seeded_region_grow
 from geoseg.modules.segment_engines.regional_fusion import generate_overlay_with_legend
 
 panel_id = '{panel_id}'
@@ -189,7 +189,7 @@ seeds = [
 ]
 (out / 'seeds.json').write_text(json.dumps(seeds), encoding='utf-8')
 
-result = segment(img, seeds=seeds, color_space='LAB')
+result = segment_seeded_region_grow(img, seeds=seeds, color_space='LAB')
 np.savez_compressed(out / 'labels.npz', labels=result['labels'])
 overlay = generate_overlay_with_legend(img, result['labels'])
 Image.fromarray(overlay).save(out / 'overlay_legend.jpg', quality=90)

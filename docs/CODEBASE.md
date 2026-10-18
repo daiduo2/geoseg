@@ -18,6 +18,8 @@
 | `batch/` | 批处理 CLI、目录编排、单 entry 处理、审计与导出实现 | 外部调用用 `geoseg.batch` |
 | `preprocessing/` | 图像预处理与 artifact 吸收（在主管线上） | `absorb_artifacts`、`rectify_quadrilateral` 等 |
 | `compat/` | 历史兼容入口（controller / server / api / gui / batch_processor / pipeline_interfaces） | 产品代码禁止从这里导入，见 `tests/test_public_api.py` |
+| `Makefile` | 日常任务入口：`test` / `check` / `map` / `segment` / `batch` / `export` / `edit` / `bench` | 不依赖 `just`；`make map` 由 `scripts/dev/dev_cli.py` 生成 |
+| `scripts/dev/dev_cli.py` | `make` 背后的实现：单图 pipeline、API/registry 地图、合成基准 | 开发工具，不是产品 API |
 
 ## 模块（`src/geoseg/modules/`）
 

@@ -55,22 +55,20 @@ from geoseg.modules.post_process import (
     split_label_by_color_components,
 )
 from geoseg.modules.segment_engines import route_and_segment, run_engine
-from geoseg.modules.segment_engines.edge_grow import segment as segment_edge_grow
-from geoseg.modules.segment_engines.edge_guided import segment as segment_edge_guided
-from geoseg.modules.segment_engines.ensemble import segment as segment_ensemble
-from geoseg.modules.segment_engines.grayscale import (
-    segment as segment_grayscale_agglomerative,
-)
+from geoseg.modules.segment_engines.edge_grow import segment_edge_grow
+from geoseg.modules.segment_engines.edge_guided import segment_edge_guided
+from geoseg.modules.segment_engines.ensemble import segment_ensemble
+from geoseg.modules.segment_engines.grayscale import segment_grayscale_agglomerative
 from geoseg.modules.segment_engines.horizon.occlusion import (
     bridge_boundary_with_endpoint_tangents,
     repair_white_label_occluded_boundaries,
 )
 from geoseg.modules.segment_engines.horizon_refinement import refine_boundaries
-from geoseg.modules.segment_engines.kmeans_full import segment as segment_kmeans_full
+from geoseg.modules.segment_engines.kmeans_full import segment_kmeans_full
 from geoseg.modules.segment_engines.metrics import compute_all
-from geoseg.modules.segment_engines.slic_kmeans import segment as segment_slic_kmeans
+from geoseg.modules.segment_engines.slic_kmeans import segment_slic_kmeans
 from geoseg.modules.segment_engines.strategy_memory import record_attempt
-from geoseg.modules.segment_engines.v4_kmeans import segment as segment_v4_kmeans
+from geoseg.modules.segment_engines.v4_kmeans import segment_v4_kmeans
 from geoseg.modules.segment_engines.vlm_reps import (
     color_zones_to_reps,
     vertical_scan_reps,

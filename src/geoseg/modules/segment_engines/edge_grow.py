@@ -65,7 +65,7 @@ def _region_grow_dijkstra_edge(
     return best_label
 
 
-def segment(
+def segment_edge_grow(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     n_layers: int = 5,

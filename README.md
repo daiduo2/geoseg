@@ -221,6 +221,23 @@ uv run pytest                              # full suite
 uv run pytest tests/test_integration_ph01.py  # smoke after schema changes
 ```
 
+## Task shortcuts
+
+The `Makefile` collects the common development tasks; `just` is not required.
+
+```bash
+make check                                  # compile + full test suite
+make map                                    # public API + engine registry
+make segment IMAGE=path/to/panel.png N=5    # full pipeline on one figure
+make batch IMAGES=runs/figures OUT=runs/batch
+make export SESSION=runs/session.json
+make edit LABELS=runs/out/labels.npz IMAGE=path/to/panel.png
+make bench                                  # synthetic engine benchmark
+```
+
+Scripts and skills should import from `geoseg.api`; see
+[`docs/CODEBASE.md`](docs/CODEBASE.md) for the layer map.
+
 GUI tests are excluded from CI on macOS runners. See [`tests/`](tests/).
 
 ## License

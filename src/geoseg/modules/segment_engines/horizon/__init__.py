@@ -7,7 +7,11 @@ from geoseg.modules.segment_engines.horizon.occlusion import (
     fit_boundary_endpoint,
     repair_white_label_occluded_boundaries,
 )
-from geoseg.modules.segment_engines.horizon.refine import refine_boundaries, refine_label_blur, segment
+from geoseg.modules.segment_engines.horizon.refine import (
+    refine_boundaries,
+    refine_label_blur,
+    segment_horizon_refinement,
+)
 
 __all__ = [
     "_coarse_segment",
@@ -17,5 +21,5 @@ __all__ = [
     "refine_boundaries",
     "refine_label_blur",
     "repair_white_label_occluded_boundaries",
-    "segment",
+    "segment_horizon_refinement",
 ]

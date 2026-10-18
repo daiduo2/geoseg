@@ -8,6 +8,7 @@
 - 支持 `n_layers`、`reps`（种子点）、`colorbar_rgb` 等参数
 - 返回标准 `SegmentationResult`（`labels` + `overlay` + `meta`）
 - `registry.py` / `policy.py` / `runner.py` / `retry.py`：稳定调度边界。`registry.py` 维护 engine metadata、callable path 和 adapter；`runner.py` 只按 registry 加载并执行
+- **命名约定**：每个引擎模块导出的入口是 `segment_<engine>`（如 `segment_v4_kmeans`、`segment_edge_guided`）；不要新增裸 `segment` 函数。需要按名称调度时用 `runner.run_engine(name, ...)`
 - `diagnostics/metrics.py`：多引擎评估与对比
 - `strategy/` + `strategy_memory.py` facade：agent 策略学习（引擎选择历史与效果追踪）
 - `internal/shared.py`：引擎间内部共享工具函数

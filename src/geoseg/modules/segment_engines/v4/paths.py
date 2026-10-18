@@ -12,7 +12,7 @@ from geoseg.modules.segment_engines.v4.pastel import segment_pastel_faded
 JET_VIVID_RATIO = 0.05
 
 
-def segment(
+def segment_v4_kmeans(
     panel_rgb: np.ndarray,
     reps: list[dict] | None = None,
     colorbar_rgb: np.ndarray | None = None,
@@ -47,7 +47,7 @@ def segment(
 
 __all__ = [
     "JET_VIVID_RATIO",
-    "segment",
+    "segment_v4_kmeans",
     "segment_colorbar_guided",
     "segment_jet_vivid",
     "segment_pastel_faded",

@@ -65,7 +65,7 @@ def _color_gradient(panel_rgb: np.ndarray, color_space: str, sigma: float = 2.0)
     return grad
 
 
-def segment(
+def segment_seeded_region_grow(
     panel_rgb: np.ndarray,
     n_layers: int | None = None,
     reps: list[dict] | None = None,
@@ -146,4 +146,4 @@ def segment_from_path(
     from PIL import Image
 
     img = np.array(Image.open(panel_path).convert("RGB"))
-    return segment(img, seeds=seeds, color_space=color_space)
+    return segment_seeded_region_grow(img, seeds=seeds, color_space=color_space)

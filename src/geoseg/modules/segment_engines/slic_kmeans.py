@@ -23,7 +23,7 @@ from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 from geoseg.modules.segment_engines.internal.regions import _reorder_labels_by_median_y
 
 
-def segment(
+def segment_slic_kmeans(
     panel_rgb: np.ndarray,
     n_layers: int = 5,
     n_segments: int = 500,

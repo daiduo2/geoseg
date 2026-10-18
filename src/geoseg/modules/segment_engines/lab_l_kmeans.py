@@ -15,7 +15,7 @@ from sklearn.cluster import KMeans
 from geoseg.modules.segment_engines.internal.overlay import _create_overlay
 
 
-def segment(
+def segment_lab_l_kmeans(
     panel_rgb: np.ndarray,
     n_layers: int = 5,
     reps: list[dict] | None = None,
@@ -85,4 +85,4 @@ def segment(
 def segment_from_path(panel_path: str, n_layers: int = 5) -> dict:
     """Convenience wrapper for file paths."""
     img = np.array(Image.open(panel_path).convert("RGB"))
-    return segment(img, n_layers=n_layers)
+    return segment_lab_l_kmeans(img, n_layers=n_layers)

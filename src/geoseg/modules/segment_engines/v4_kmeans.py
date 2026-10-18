@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from geoseg.modules.segment_engines.v4 import (
     JET_VIVID_RATIO,
-    segment,
+    segment_v4_kmeans,
     segment_colorbar_guided,
     segment_jet_vivid,
     segment_pastel_faded,
@@ -25,7 +25,7 @@ __all__ = [
     "_nearest_median",
     "_remove_small_components",
     "_sample_colorbar_seeds",
-    "segment",
+    "segment_v4_kmeans",
     "segment_colorbar_guided",
     "segment_jet_vivid",
     "segment_pastel_faded",

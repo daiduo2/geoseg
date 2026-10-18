@@ -102,7 +102,7 @@ def test_product_code_does_not_reach_into_compat() -> None:
 def test_experiments_facade_is_gone() -> None:
     assert not (SRC_ROOT / "experiments.py").exists()
     offenders: list[str] = []
-    for root in ("src", "tests", "scripts", "examples"):
+    for root in ("src", "tests", "scripts", "examples", "experiments"):
         for path in (REPO_ROOT / root).rglob("*.py"):
             if "__pycache__" in path.parts:
                 continue

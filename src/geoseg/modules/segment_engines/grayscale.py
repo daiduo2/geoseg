@@ -8,7 +8,7 @@ Test scenario:
     >>> import numpy as np
     >>> img = np.full((100, 200, 3), 128, dtype=np.uint8)
     >>> img[30:70, :] = 200
-    >>> result = segment(img, n_layers=2)
+    >>> result = segment_grayscale_agglomerative(img, n_layers=2)
     >>> assert result["labels"].shape == (100, 200)
     >>> assert len(np.unique(result["labels"])) == 2
 """
@@ -176,7 +176,7 @@ def _merge_tiny_regions(
     return out_clean
 
 
-def segment(
+def segment_grayscale_agglomerative(
     panel_rgb: np.ndarray,
     n_layers: int = 5,
     reps: list[dict] | None = None,

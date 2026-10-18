@@ -212,7 +212,7 @@ src/geoseg/
 4. **保守分类**——假阴性优于假阳性。
 5. **VLM 判断优先**——视觉判断 > 量化指标。
 6. **状态不可变**——session state 更新返回新对象；每一步都落盘。
-7. **不再新增 Tauri/FastAPI 产品前端**——`api/` 与 `server.py` 仅作为历史兼容保留。
+7. **不再新增 Tauri/FastAPI 产品前端**——`compat/api/` 与 `compat/server.py` 仅作为历史兼容保留。
 
 ## 测试
 
@@ -220,6 +220,22 @@ src/geoseg/
 uv run pytest                                # 完整测试
 uv run pytest tests/test_integration_ph01.py # schema 改动后的冒烟测试
 ```
+
+## 常用任务
+
+`Makefile` 收敛了日常命令（不依赖 `just`）：
+
+```bash
+make check                                   # 编译 + 完整测试
+make map                                     # 公共 API + 引擎 registry
+make segment IMAGE=path/to/panel.png N=5     # 单图完整流水线
+make batch IMAGES=runs/figures OUT=runs/batch
+make export SESSION=runs/session.json
+make edit LABELS=runs/out/labels.npz IMAGE=path/to/panel.png
+make bench                                   # 合成引擎基准
+```
+
+scripts / skills 统一从 `geoseg.api` 导入；分层地图见 [`docs/CODEBASE.md`](docs/CODEBASE.md)。
 
 macOS runner 上的 GUI 测试在 CI 中被排除。详见 [`tests/`](tests/)。
 
