@@ -1,8 +1,8 @@
 """VLM prompt templates and JSON schema definitions (pydantic v2).
 
 Test scenario:
-    >>> from geoseg.modules.vlm_client.prompts import PageOverview
-    >>> overview = PageOverview(**{"page_idx": 7, ...})
+    >>> from geoseg.modules.vlm_client.prompts import PageOverviewSchema
+    >>> overview = PageOverviewSchema(**{"page_idx": 7, ...})
     >>> assert overview.confidence >= 0.7
 """
 
@@ -23,7 +23,7 @@ class CategoryCheck(BaseModel):
     evidence: str = Field(description="Specific visual evidence for this judgment")
 
 
-class FigureClassification(BaseModel):
+class FigureClassificationSchema(BaseModel):
     figure_type: Literal[
         "velocity_model",
         "geological_cross_section",
@@ -85,7 +85,7 @@ class ColorZone(BaseModel):
     colorbar_value: int = Field(ge=0, le=100)
 
 
-class PageOverview(BaseModel):
+class PageOverviewSchema(BaseModel):
     page_idx: int
     image_size: dict = Field(default_factory=dict)
     figure_type: Literal[
@@ -188,7 +188,7 @@ CRITICAL RULES:
 - confidence must be a float between 0.0 and 1.0 reflecting your certainty.
 - If the figure is unclear or not a velocity model, set figure_type to "uncertain" and confidence < 0.7.
 
-Respond in JSON format matching the PageOverview schema.
+Respond in JSON format matching the PageOverviewSchema schema.
 """
 
 FIGURE_CLASSIFICATION_PROMPT = """\
@@ -252,7 +252,7 @@ CRITICAL RULES:
 - confidence must be a float between 0.0 and 1.0.
 - Do NOT skip the category_checklist. You MUST evaluate every category.
 
-Respond in JSON format matching the FigureClassification schema.
+Respond in JSON format matching the FigureClassificationSchema schema.
 """
 
 SEGMENTATION_QUALITY_PROMPT = """\

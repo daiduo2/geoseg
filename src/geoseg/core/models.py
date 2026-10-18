@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from typing import NotRequired, Protocol, TypedDict, runtime_checkable
 
 import numpy as np
@@ -21,13 +22,21 @@ class PanelInput(TypedDict):
     confidence: NotRequired[float | None]
 
 
-class RegionalAudit(TypedDict, total=False):
-    """Agent regional audit result."""
+@dataclass
+class RegionalAudit:
+    """Agent regional audit result.
 
-    frozen_labels: list[int]
-    retry_labels: list[int]
-    notes: str
-    iteration: int
+    This is the single definition used by both the audit stage and regional
+    fusion; ``segment_engines/regional/models`` re-exports it.
+    """
+
+    frozen_labels: list[int] = field(default_factory=list)
+    retry_labels: list[int] = field(default_factory=list)
+    notes: str = ""
+    iteration: int = 0
+    repair_strategy: str = "regional_fusion"
+    secondary_engine: str = ""
+    local_fixes: list[dict] = field(default_factory=list)
 
 
 class SegmentationMeta(TypedDict):

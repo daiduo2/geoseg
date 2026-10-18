@@ -10,9 +10,9 @@ from fastapi import APIRouter, File, Form, UploadFile
 
 from geoseg.compat.api.schemas import (
     AgentProcessFigureResponse,
-    PanelInput,
+    ApiPanelInput,
     PanelReviewOut,
-    SegmentationResult,
+    ApiSegmentationResult,
 )
 from geoseg.compat.api.serialization import segmentation_to_api, upload_to_ndarray
 
@@ -70,8 +70,8 @@ async def process_figure_agent(
     )
 
 
-@router.post("/detect-panels", response_model=list[PanelInput])
-async def detect_panels_agent(image: UploadFile = File(...)) -> list[PanelInput]:
+@router.post("/detect-panels", response_model=list[ApiPanelInput])
+async def detect_panels_agent(image: UploadFile = File(...)) -> list[ApiPanelInput]:
     """Detect panels in a figure image using CV."""
     img_rgb = upload_to_ndarray(image)
 
@@ -84,7 +84,7 @@ async def detect_panels_agent(image: UploadFile = File(...)) -> list[PanelInput]
         bboxes = [make_whole_image_panel(img_rgb)]
 
     return [
-        PanelInput(
+        ApiPanelInput(
             id=pb["id"],
             bbox=pb["bbox"],
             source=pb.get("source", "cv_detect"),
@@ -94,13 +94,13 @@ async def detect_panels_agent(image: UploadFile = File(...)) -> list[PanelInput]
     ]
 
 
-@router.post("/segment", response_model=SegmentationResult)
+@router.post("/segment", response_model=ApiSegmentationResult)
 async def segment_agent(
     image: UploadFile = File(...),
     n_layers: int = Form(5),
     reps: str | None = Form(None),
     boundary_mode: str = Form("none"),
-) -> SegmentationResult:
+) -> ApiSegmentationResult:
     """Segment a panel image using the automatic router."""
     img_rgb = upload_to_ndarray(image)
 

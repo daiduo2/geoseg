@@ -32,8 +32,8 @@ from .prompts import (
     PAGE_OVERVIEW_PROMPT,
     FIGURE_CLASSIFICATION_PROMPT,
     SEGMENTATION_QUALITY_PROMPT,
-    PageOverview,
-    FigureClassification,
+    PageOverviewSchema,
+    FigureClassificationSchema,
     SegmentationQualityReview,
 )
 
@@ -201,7 +201,7 @@ def review_page_overview(
     audit_dir: Path | None = None,
     mode: Literal["auto", "stub"] = "auto",
     min_confidence: float | None = None,
-) -> PageOverview | dict:
+) -> PageOverviewSchema | dict:
     """Review a page image for figure type, panels, and target selection (VLM-0).
 
     Args:
@@ -213,7 +213,7 @@ def review_page_overview(
         min_confidence: Override confidence threshold. Default: MIN_CONFIDENCE (0.7).
 
     Returns:
-        PageOverview pydantic model (auto mode) or dict with prompt/audit_path (stub).
+        PageOverviewSchema pydantic model (auto mode) or dict with prompt/audit_path (stub).
 
     Raises:
         RuntimeError: CLI failure.
@@ -252,16 +252,16 @@ Text blocks on page ({len(text_blocks)}):
         return {
             "prompt": prompt,
             "audit_path": audit_path,
-            "schema_class": PageOverview,
+            "schema_class": PageOverviewSchema,
             "image_audit_path": img_path,
             "step": "page_overview",
         }
 
     # Auto mode: call Claude CLI
-    schema = _build_json_schema(PageOverview)
+    schema = _build_json_schema(PageOverviewSchema)
     structured, wrapper = _call_with_retry(prompt, schema)
 
-    instance = PageOverview.model_validate(structured)
+    instance = PageOverviewSchema.model_validate(structured)
 
     # Audit FIRST — even if confidence is low (for post-mortem analysis)
     api_meta = {
@@ -296,7 +296,7 @@ def classify_figure(
     audit_dir: Path | None = None,
     mode: Literal["auto", "stub"] = "auto",
     min_confidence: float | None = None,
-) -> FigureClassification | dict:
+) -> FigureClassificationSchema | dict:
     """Semantic figure classification using VLM (VLM-C).
 
     This is the SECOND-LINE filter after the fast CV heuristic classifier.
@@ -309,7 +309,7 @@ def classify_figure(
         min_confidence: Override confidence threshold. Default: MIN_CONFIDENCE (0.7).
 
     Returns:
-        FigureClassification model (auto mode) or dict with prompt/audit_path (stub).
+        FigureClassificationSchema model (auto mode) or dict with prompt/audit_path (stub).
 
     Raises:
         RuntimeError: CLI failure.
@@ -339,15 +339,15 @@ def classify_figure(
         return {
             "prompt": prompt,
             "audit_path": audit_path,
-            "schema_class": FigureClassification,
+            "schema_class": FigureClassificationSchema,
             "image_audit_path": img_path,
             "step": "figure_classification",
         }
 
-    schema = _build_json_schema(FigureClassification)
+    schema = _build_json_schema(FigureClassificationSchema)
     structured, wrapper = _call_with_retry(prompt, schema)
 
-    instance = FigureClassification.model_validate(structured)
+    instance = FigureClassificationSchema.model_validate(structured)
 
     api_meta = {
         "cost_usd": wrapper.get("total_cost_usd"),
@@ -537,7 +537,7 @@ def parse_response(raw_json: dict, schema_class: type, min_confidence: float = M
 
     Args:
         raw_json: The JSON dict returned by the VLM.
-        schema_class: One of PageOverview, FigureClassification.
+        schema_class: One of PageOverviewSchema, FigureClassificationSchema.
         min_confidence: Minimum confidence threshold (default 0.7).
 
     Returns:

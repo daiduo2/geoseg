@@ -10,7 +10,7 @@ Schema change protocol (DESIGN.md §4):
 2. Bump `VERSION` string in `prompts.py`
 3. Find all consumers:
    ```bash
-   grep -rln "PageOverview\|PanelReview\|SegmentationReview" src/geoseg/ tests/
+   grep -rln "PageOverviewSchema\|PanelReview\|SegmentationReview" src/geoseg/ tests/
    ```
 4. Update each consumer to match new schema
 5. Run integration test:

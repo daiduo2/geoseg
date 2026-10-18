@@ -4,18 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
-@dataclass
-class RegionalAudit:
-    """Agent regional audit result."""
-
-    frozen_labels: list[int] = field(default_factory=list)
-    retry_labels: list[int] = field(default_factory=list)
-    notes: str = ""
-    iteration: int = 0
-    repair_strategy: str = "regional_fusion"
-    secondary_engine: str = ""
-    local_fixes: list[dict] = field(default_factory=list)
+from geoseg.core.models import RegionalAudit
 
 
 @dataclass

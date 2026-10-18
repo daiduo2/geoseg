@@ -136,7 +136,7 @@ Algorithm Selector
 | `vlm_client.review_page_overview` (M1a) | e025 的 VLM 语义判断：figure_type, panel 数, is_velocity, 物理量 |
 | `cv_detect` (M1b) | e024 router 的像素特征提取 + panel detect |
 | `segment_engines/` (M3) | 候选算法引擎池：e026 / e027 / v4_kmeans / edge_guided / ensemble |
-| `e026_algo/components.py` | 统一后处理：shape filter + component extract |
+| `post_process/polygon.py` | 统一后处理：shape filter + component extract（e026_algo 已删除） |
 | `vlm_client.review_panel_detection` (M1c) | 检查 CV panel detect 是否漏/错 |
 | `vlm_client.review_segmentation` (M3.5) | 评估分割质量，决定是否换引擎重试 |
 

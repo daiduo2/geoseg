@@ -25,7 +25,7 @@
 |------|------|----------|----------|
 | `mineru_client/` | **M0.5-MinerU**：MinerU v4 API 客户端。上传 PDF → 轮询提取 → 下载 figure 图片 + caption markdown + content_list.json | `client.py`, `review_extracted.py` | — |
 | `pdf_extractor/` | **M0.5-Fallback**：PyMuPDF 提取 `{XObject(Image) + 页面文字块}`；`rasterize_page()` 整页/区域 rasterize。MinerU 拆分 figure 或提取尺寸过小时 fallback | `extract.py`, `vector_extract.py` | [pdf_extractor/CLAUDE.md](../src/geoseg/modules/pdf_extractor/CLAUDE.md) |
-| `cv_detect/` | **M1b**：CV 检测 panel 候选 bbox。子模块：figure 分类器、panel 检测器（含 e026 版）、colorbar 提取器、质量过滤器 | `detect.py`, `figure_classifier.py`, `panel_detector.py`, `panel_detector_e026.py`, `colorbar_extractor.py`, `quality_filter.py` | [cv_detect/CLAUDE.md](../src/geoseg/modules/cv_detect/CLAUDE.md) |
+| `cv_detect/` | **M1b**：CV 检测 panel 候选 bbox。子模块：figure 分类器、panel 检测器、colorbar 提取器、质量过滤器 | `detect.py`, `figure_classifier.py`, `panel_detector.py`, `colorbar_extractor.py`, `quality_filter.py` | [cv_detect/CLAUDE.md](../src/geoseg/modules/cv_detect/CLAUDE.md) |
 | `vlm_client/` | **Schema + Prompt 定义库**。VLM 调用已全面迁移至 agent skill（`figure-classify` / `sandbox-segment`），本模块不再作为 LLM 调用出口。保留 schema（pydantic）和 prompt 模板供 skill 与 legacy code 引用 | `client.py`（`_call_claude_cli` 已 DEPRECATED）, `prompts.py` | [vlm_client/CLAUDE.md](../src/geoseg/modules/vlm_client/CLAUDE.md) |
 | `segment_engines/` | **M3-Engine Family**：多算法分割引擎族。核心引擎 + registry / policy / runner / retry 边界；engine dispatch 由 `registry.py` 的 callable path + adapter 驱动 | `router.py`（兼容 facade）, `registry.py`, `policy.py`, `runner.py`, `retry.py`, `compat/`（legacy re-export）, `v4/` + `v4_kmeans.py` facade, `regional/` + `regional_fusion.py` facade, `edge/` shared helpers, `strategy/` + `strategy_memory.py` facade, `ensemble.py`, `edge_guided.py`, `edge_grow.py`, `e027_slic_graphcut.py`, `kmeans_full.py`, `grayscale.py`, `vlm_reps.py` | [segment_engines/CLAUDE.md](../src/geoseg/modules/segment_engines/CLAUDE.md) |
 | `segment_engines/horizon/` | horizon refinement 内部实现 | `horizon_refinement.py` 只保留公共 facade；`occlusion.py` 提供白框遮挡下的界线段桥接与修复（`bridge_boundary_with_endpoint_tangents`, `repair_white_label_occluded_boundaries`） | — |
@@ -33,7 +33,6 @@
 | `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py`；旧同名文件仅兼容 re-export/entrypoint | — |
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
 | `exporter/` | **M4**：SPECFEM2D/3D 模型导出。`tomography_file.xyz` + `Par_file` snippet | `specfem.py` | [exporter/CLAUDE.md](../src/geoseg/modules/exporter/CLAUDE.md) |
-| `e026_algo/` | ~~已弃用。`segment_engines/` 已完全替代~~ | ~~`core.py`, `components.py`~~ | [e026_algo/CLAUDE.md](../src/geoseg/modules/e026_algo/CLAUDE.md) |
 | `editor/` | **Napari-based Shapes-primary 编辑器**（v0.8）。用户鼠标交互修改边界 | `napari_app.py` | [editor/CLAUDE.md](../src/geoseg/modules/editor/CLAUDE.md) |
 | `visual_audit/` | **视觉审计**：生成 overlay-with-legend 与辅助视图，为 agent 视觉批评提供输入；不输出 PASS/FAIL | `views.py`, `crops.py`, `semantic.py`, `report.py` | — |
 
@@ -122,12 +121,10 @@ uv run pytest tests/test_integration_ph01.py
 - `src/geoseg/modules/segment_engines/router.py` 是兼容 facade。新代码应优先导入 `policy.select_engine`、`runner.run_engine`、`retry.retry_undersegmentation`
 - `src/geoseg/compat/gui/` — v0.7 起全面废弃
 - `geoseg-gui/` — Tauri 前端（v0.7）已废弃
-- `src/geoseg/modules/e026_algo/` — `segment_engines/` 已完全替代
 
 ## 不要碰
 
 - `tests/fixtures/**/*.{pdf,png,jpg}` — 二进制数据，无源信息
-- `~/.claude/skills/geo-segment/` — e026 算法已复制进项目（`src/geoseg/modules/e026_algo/`），不再依赖外部 skill
 
 ## cc 启动建议
 

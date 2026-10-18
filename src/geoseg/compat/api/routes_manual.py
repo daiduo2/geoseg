@@ -8,18 +8,18 @@ import numpy as np
 from fastapi import APIRouter, File, Form, UploadFile
 from PIL import Image, ImageDraw
 
-from geoseg.compat.api.schemas import SegmentationResult
+from geoseg.compat.api.schemas import ApiSegmentationResult
 from geoseg.compat.api.serialization import segmentation_to_api, upload_to_ndarray
 
 router = APIRouter(prefix="/api/manual")
 
 
-@router.post("/segment-from-polygon", response_model=SegmentationResult)
+@router.post("/segment-from-polygon", response_model=ApiSegmentationResult)
 async def segment_from_polygon(
     image: UploadFile = File(...),
     polygon: str = Form(...),
     n_layers: int = Form(5),
-) -> SegmentationResult:
+) -> ApiSegmentationResult:
     """Segment using a user-drawn polygon mask."""
     img_rgb = upload_to_ndarray(image)
     polygon_points: list[dict[str, int]] = json.loads(polygon)
@@ -51,12 +51,12 @@ async def segment_from_polygon(
     )
 
 
-@router.post("/segment-from-rect", response_model=SegmentationResult)
+@router.post("/segment-from-rect", response_model=ApiSegmentationResult)
 async def segment_from_rect(
     image: UploadFile = File(...),
     bbox: str = Form(...),
     n_layers: int = Form(5),
-) -> SegmentationResult:
+) -> ApiSegmentationResult:
     """Segment inside a user-drawn bbox using grab-cut / graph-cut shrink."""
     _img_rgb = upload_to_ndarray(image)
     _bbox: tuple[int, int, int, int] = tuple(json.loads(bbox))  # type: ignore[assignment]
@@ -64,12 +64,12 @@ async def segment_from_rect(
     raise NotImplementedError("segment_from_rect stub - implement in Week 4")
 
 
-@router.post("/segment-from-stroke", response_model=SegmentationResult)
+@router.post("/segment-from-stroke", response_model=ApiSegmentationResult)
 async def segment_from_stroke(
     image: UploadFile = File(...),
     strokes: str = Form(...),
     n_layers: int = Form(5),
-) -> SegmentationResult:
+) -> ApiSegmentationResult:
     """Segment using brush strokes as seeds for region growing / watershed."""
     _img_rgb = upload_to_ndarray(image)
     _strokes: list[dict[str, int]] = json.loads(strokes)

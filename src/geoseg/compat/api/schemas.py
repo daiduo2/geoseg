@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
-class PanelInput(BaseModel):
+class ApiPanelInput(BaseModel):
     """Panel detection/selection minimal contract."""
 
     id: int = Field(..., description="Panel identifier (0-based)")
@@ -20,7 +20,7 @@ class PanelInput(BaseModel):
     confidence: float | None = Field(None, ge=0.0, le=1.0)
 
 
-class SegmentationMeta(BaseModel):
+class ApiSegmentationMeta(BaseModel):
     """Metadata describing how a segmentation was produced."""
 
     engine: str
@@ -29,7 +29,7 @@ class SegmentationMeta(BaseModel):
     quality_score: float | None = None
 
 
-class SegmentationResult(BaseModel):
+class ApiSegmentationResult(BaseModel):
     """Universal segmentation output for the HTTP API."""
 
     labels_base64: str | None = Field(
@@ -39,7 +39,7 @@ class SegmentationResult(BaseModel):
         ..., description="List of contour polygons, each is [{x:int, y:int}, ...]"
     )
     overlay_base64: str | None = Field(None, description="Base64 PNG overlay")
-    meta: SegmentationMeta
+    meta: ApiSegmentationMeta
 
 
 class FigureClassificationOut(BaseModel):
@@ -56,7 +56,7 @@ class PanelReviewOut(BaseModel):
     panel_id: int
     bbox: tuple[int, int, int, int]
     classification: dict[str, Any]
-    segmentation: SegmentationResult
+    segmentation: ApiSegmentationResult
     review: dict[str, Any]
 
 
@@ -105,11 +105,11 @@ __all__ = [
     "AgentProcessFigureResponse",
     "ExportSpecfemResponse",
     "FigureClassificationOut",
-    "PanelInput",
+    "ApiPanelInput",
     "PanelReviewOut",
     "PdfImportResponse",
     "PdfStatusResponse",
     "QualityReviewDialog",
-    "SegmentationMeta",
-    "SegmentationResult",
+    "ApiSegmentationMeta",
+    "ApiSegmentationResult",
 ]

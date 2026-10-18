@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from skimage.transform import resize
 
-from geoseg.modules.segment_engines.internal.preprocess import row_median_filter
+from geoseg.core.image_ops import row_median_filter
 
 
 def _coarse_segment(

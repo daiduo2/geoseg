@@ -11,7 +11,7 @@ from fastapi import UploadFile
 from PIL import Image
 from skimage import measure
 
-from geoseg.compat.api.schemas import SegmentationMeta, SegmentationResult
+from geoseg.compat.api.schemas import ApiSegmentationMeta, ApiSegmentationResult
 
 
 def upload_to_ndarray(upload: UploadFile) -> np.ndarray:
@@ -52,16 +52,16 @@ def overlay_to_base64(overlay: np.ndarray | None) -> str | None:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
-def segmentation_to_api(seg: dict[str, Any]) -> SegmentationResult:
+def segmentation_to_api(seg: dict[str, Any]) -> ApiSegmentationResult:
     """Convert internal segmentation dict to API response."""
     labels = seg["labels"]
     overlay = seg.get("overlay")
     meta = seg.get("meta", {})
-    return SegmentationResult(
+    return ApiSegmentationResult(
         labels_base64=labels_to_base64(labels),
         contours=labels_to_contours(labels),
         overlay_base64=overlay_to_base64(overlay),
-        meta=SegmentationMeta(
+        meta=ApiSegmentationMeta(
             engine=meta.get("engine", "unknown"),
             color_names=meta.get("color_names", []),
             n_layers=meta.get("n_layers", 0),

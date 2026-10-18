@@ -7,8 +7,8 @@ from .client import (
     parse_response,
 )
 from .prompts import (
-    PageOverview,
-    FigureClassification,
+    PageOverviewSchema,
+    FigureClassificationSchema,
     VERSION,
 )
 
@@ -17,7 +17,7 @@ __all__ = [
     "classify_figure",
     "quality_review",
     "parse_response",
-    "PageOverview",
-    "FigureClassification",
+    "PageOverviewSchema",
+    "FigureClassificationSchema",
     "VERSION",
 ]

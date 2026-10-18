@@ -74,7 +74,7 @@ Write the classification result as JSON to the audit path:
 runs/audit/{timestamp}_figure_classification.json
 ```
 
-JSON structure (matching `geoseg/modules/vlm_client/prompts.py:FigureClassification`):
+JSON structure (matching `geoseg/modules/vlm_client/prompts.py:FigureClassificationSchema`):
 
 ```json
 {

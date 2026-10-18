@@ -124,3 +124,41 @@ def test_pipeline_package_exports_orchestration(name: str) -> None:
 
     assert name in pipeline.__all__
     assert callable(getattr(pipeline, name))
+
+
+SINGLE_SOURCE_DEFINITIONS = {
+    # canonical contracts
+    "PanelInput": "core/models.py",
+    "SegmentationMeta": "core/models.py",
+    "SegmentationResult": "core/models.py",
+    "RegionalAudit": "core/models.py",
+    "FigureClassification": "core/models.py",
+    "PageOverview": "core/models.py",
+    # canonical image helpers
+    "adaptive_blur": "core/image_ops.py",
+    "row_median_filter": "core/image_ops.py",
+    "estimate_noise_level": "core/image_ops.py",
+    # canonical post-process / detection entry points
+    "extract_components": "modules/post_process/polygon.py",
+    "detect_panels": "modules/cv_detect/panel_detector.py",
+}
+
+
+def test_contracts_and_shared_helpers_have_one_definition() -> None:
+    definitions: dict[str, list[str]] = {}
+    for path in SRC_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        for node in tree.body:
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef)):
+                definitions.setdefault(node.name, []).append(
+                    str(path.relative_to(SRC_ROOT))
+                )
+
+    offenders = {
+        name: definitions.get(name, [])
+        for name, expected in SINGLE_SOURCE_DEFINITIONS.items()
+        if definitions.get(name, []) != [expected]
+    }
+    assert offenders == {}, f"duplicate definitions: {offenders}"

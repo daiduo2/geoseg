@@ -15,7 +15,6 @@
 | `detect.py` | 主入口，调度各子模块 |
 | `figure_classifier.py` | figure 分类器 |
 | `panel_detector.py` | panel 检测器（默认版） |
-| `panel_detector_e026.py` | panel 检测器（e026 实验版） |
 | `colorbar_extractor.py` | colorbar 提取器 |
 | `quality_filter.py` | 质量过滤器 |
 

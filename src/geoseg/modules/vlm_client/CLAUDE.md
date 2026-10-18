@@ -15,8 +15,8 @@
 
 | 函数 | 输入 | 输出 schema | 用途 | Protocol |
 |------|------|-------------|------|----------|
-| `classify_figure` | 图片 | `FigureClassification` | 语义分类 | `QualityReviewer` |
-| `review_page_overview` | 嵌入图 + caption | `PageOverview` | 颜色分区提示，辅助 colorbar | `QualityReviewer` |
+| `classify_figure` | 图片 | `FigureClassificationSchema` | 语义分类 | `QualityReviewer` |
+| `review_page_overview` | 嵌入图 + caption | `PageOverviewSchema` | 颜色分区提示，辅助 colorbar | `QualityReviewer` |
 | `review_segmentation_quality` | 原图 + 叠加对比图 | `SegmentationQualityReview` | 分割质量审查（VLM-SQ） | — |
 
 **注意**：上述函数仍可在 `mode="stub"` 或 legacy code 中调用。新代码（skill）应直接使用 `prompts.py` 中的 schema 定义，由 agent 自主完成语义推理。
