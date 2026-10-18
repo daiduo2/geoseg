@@ -162,3 +162,33 @@ def test_contracts_and_shared_helpers_have_one_definition() -> None:
         if definitions.get(name, []) != [expected]
     }
     assert offenders == {}, f"duplicate definitions: {offenders}"
+
+
+def test_pipeline_boundaries_use_contract_types() -> None:
+    import inspect
+
+    from geoseg.core.models import (
+        ExportSummary,
+        PanelExport,
+        PipelineResult,
+        PostProcessExportResult,
+        SegmentationStageResult,
+    )
+    from geoseg.pipeline.export import export_segmented_panels, run_post_process_and_export
+    from geoseg.pipeline.run import run_pipeline
+    from geoseg.pipeline.segment import run_segmentation_stage
+
+    def return_type(func):
+        return inspect.get_annotations(func, eval_str=True)["return"]
+
+    assert return_type(run_segmentation_stage) is SegmentationStageResult
+    assert return_type(run_pipeline) is PipelineResult
+    assert return_type(run_post_process_and_export) is PostProcessExportResult
+    assert return_type(export_segmented_panels) == tuple[list[PanelExport], ExportSummary]
+
+    assert {"classification", "panels", "summary"} <= set(
+        SegmentationStageResult.__annotations__
+    )
+    assert {"status", "classification", "panels", "summary"} <= set(
+        PipelineResult.__annotations__
+    )

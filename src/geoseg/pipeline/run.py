@@ -7,10 +7,10 @@ forwards here for backward compatibility.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
+from geoseg.core.models import PipelineResult
 from geoseg.pipeline.export import export_segmented_panels
 from geoseg.pipeline.segment import run_segmentation_stage
 
@@ -28,7 +28,7 @@ def run_pipeline(
     properties_map: dict[str, dict] | None = None,
     output_dir: str | Path | None = None,
     save_intermediates: bool = True,
-) -> dict[str, Any]:
+) -> PipelineResult:
     """Run the full geoseg pipeline on a single figure image.
 
     Returns a dict with ``status`` (``ok`` / ``skipped`` / ``empty``),

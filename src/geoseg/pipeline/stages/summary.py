@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 
 from geoseg.core.image_ops import saturation_ratio
+from geoseg.core.models import SegmentationStageResult
 
 
 def summarize_pipeline_result(
@@ -19,7 +20,7 @@ def summarize_pipeline_result(
     review_warnings: list[str],
     has_colorbar_hint: bool,
     target_panel_id: int,
-) -> dict[str, Any]:
+) -> SegmentationStageResult:
     """Build the figure-level segmentation result payload."""
     return {
         "classification": classification,

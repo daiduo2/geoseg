@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 
+from geoseg.core.models import SegmentationStageResult
 from geoseg.pipeline.stages import (
     classify_figure_stage,
     detect_panels_stage,
@@ -32,7 +33,7 @@ def run_segmentation_stage(
     use_vlm: bool = True,
     target_panel_id: int = -1,
     boundary_mode: str = "none",
-) -> dict[str, Any]:
+) -> SegmentationStageResult:
     """Run classification, panel detection, and segmentation for one figure."""
     review_warnings: list[str] = []
 

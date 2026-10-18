@@ -89,6 +89,88 @@ class FigureClassification(TypedDict):
     reason: NotRequired[str]
 
 
+class PanelReview(TypedDict, total=False):
+    """Per-panel review bookkeeping from the segmentation stage."""
+
+    n_layers_found: int
+    is_target_panel: bool
+    skipped_reason: str
+
+
+class PanelSegmentationResult(TypedDict, total=False):
+    """Per-panel record produced by ``run_segmentation_stage``."""
+
+    panel_id: int
+    bbox: list[int]
+    classification: FigureClassification
+    segmentation: SegmentationResult | None
+    review: PanelReview
+
+
+class SegmentationSummary(TypedDict, total=False):
+    """Figure-level summary attached to the segmentation stage result."""
+
+    status: str
+    reason: str
+    n_panels: int
+    total_layers: int
+    engines_used: list[str]
+    saturation_ratio: float
+    review_warnings: list[str]
+    vlm_has_colorbar: bool
+    vlm_target_panel_id: int
+
+
+class SegmentationStageResult(TypedDict):
+    """Return type of ``run_segmentation_stage`` (classification + panels)."""
+
+    classification: FigureClassification
+    panels: list[PanelSegmentationResult]
+    summary: SegmentationSummary
+
+
+class PanelExport(TypedDict, total=False):
+    """One entry of ``PipelineResult.panels`` after post-process/export."""
+
+    panel_id: int
+    bbox: list[int]
+    status: str
+    reason: str
+    n_components: int
+    n_polygons: int
+    color_names: list[str]
+    properties: dict[str, dict]
+    engines_used: str
+
+
+class ExportSummary(SegmentationSummary, total=False):
+    """Segmentation summary extended with export counts."""
+
+    n_panels_processed: int
+    n_panels_skipped: int
+
+
+class PostProcessExportResult(TypedDict, total=False):
+    """Return type of ``run_post_process_and_export``."""
+
+    status: str
+    reason: str
+    n_components: int
+    n_polygons: int
+    color_names: list[str]
+    properties: dict[str, dict]
+
+
+class PipelineResult(TypedDict, total=False):
+    """Return type of ``run_pipeline`` (status may be ok/skipped/empty)."""
+
+    status: str
+    reason: str
+    classification: FigureClassification
+    panels: list[PanelExport]
+    summary: ExportSummary
+
+
 class PageOverview(TypedDict, total=False):
     """Figure-level page overview output."""
 
@@ -231,11 +313,17 @@ def validate_segmentation_result(
 
 __all__ = [
     "BBoxXYWH",
+    "ExportSummary",
     "FigureClassification",
     "PageOverview",
     "PanelDetector",
+    "PanelExport",
     "PanelInput",
+    "PanelReview",
+    "PanelSegmentationResult",
+    "PipelineResult",
     "PipelineStep",
+    "PostProcessExportResult",
     "QualityReview",
     "QualityReviewer",
     "RegionalAudit",
@@ -243,6 +331,8 @@ __all__ = [
     "Segmenter",
     "SegmentationMeta",
     "SegmentationResult",
+    "SegmentationStageResult",
+    "SegmentationSummary",
     "coerce_bbox_xywh",
     "empty_segmentation_result",
     "make_panel_input",

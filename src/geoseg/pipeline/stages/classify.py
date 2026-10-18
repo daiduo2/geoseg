@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
 
 import numpy as np
 
+from geoseg.core.models import FigureClassification, SegmentationStageResult
 from geoseg.modules.cv_detect.figure_classifier import classify
 
 
@@ -16,7 +16,7 @@ MIN_AUTO_SEGMENT_HEIGHT = 200
 def maybe_skip_tiny_image(
     img_rgb: np.ndarray,
     review_warnings: list[str],
-) -> dict[str, Any] | None:
+) -> SegmentationStageResult | None:
     """Return a skipped result for images too small for automatic segmentation."""
     h, w = img_rgb.shape[:2]
     if w >= MIN_AUTO_SEGMENT_WIDTH and h >= MIN_AUTO_SEGMENT_HEIGHT:
@@ -41,7 +41,7 @@ def classify_figure_stage(
     skip_non_velocity_model: bool = True,
     use_vlm: bool = True,
     review_warnings: list[str] | None = None,
-) -> tuple[dict[str, Any], dict[str, Any] | None]:
+) -> tuple[FigureClassification, SegmentationStageResult | None]:
     """Classify a figure and optionally return a skipped pipeline result."""
     review_warnings = review_warnings if review_warnings is not None else []
     cls = classify(img_rgb)

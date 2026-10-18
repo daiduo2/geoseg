@@ -29,13 +29,20 @@ from geoseg.core.image_ops import (
 )
 from geoseg.core.models import (
     BBoxXYWH,
+    ExportSummary,
     FigureClassification,
     PageOverview,
+    PanelExport,
     PanelInput,
+    PanelSegmentationResult,
+    PipelineResult,
+    PostProcessExportResult,
     RegionalAudit,
     RGBColor,
     SegmentationMeta,
     SegmentationResult,
+    SegmentationStageResult,
+    SegmentationSummary,
 )
 from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar
 from geoseg.modules.cv_detect.figure_classifier import classify
@@ -143,11 +150,18 @@ __all__ = [
     "save_session",
     # contracts
     "BBoxXYWH",
+    "ExportSummary",
     "FigureClassification",
     "PageOverview",
+    "PanelExport",
     "PanelInput",
+    "PanelSegmentationResult",
+    "PipelineResult",
+    "PostProcessExportResult",
     "RegionalAudit",
     "RGBColor",
     "SegmentationMeta",
     "SegmentationResult",
+    "SegmentationStageResult",
+    "SegmentationSummary",
 ]

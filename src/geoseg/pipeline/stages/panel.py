@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 
 from geoseg.core.image_ops import saturation_ratio
+from geoseg.core.models import PanelSegmentationResult
 from geoseg.modules.cv_detect.colorbar_extractor import (
     extract_colorbar,
     extract_colorbar_bbox,
@@ -77,7 +78,7 @@ def segment_panel_stage(
     quality_preference: str,
     review_warnings: list[str],
     boundary_mode: str = "none",
-) -> tuple[dict[str, Any] | None, int, str | None]:
+) -> tuple[PanelSegmentationResult | None, int, str | None]:
     """Segment one panel and return panel result, layer count, and engine name."""
     is_target = (target_panel_id < 0) or (panel["id"] == target_panel_id)
     if not is_target and len(panel_bboxes) == 1:

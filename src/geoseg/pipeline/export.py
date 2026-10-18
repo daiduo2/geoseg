@@ -8,6 +8,7 @@ from typing import Any
 
 import numpy as np
 
+from geoseg.core.models import ExportSummary, PanelExport, PostProcessExportResult
 from geoseg.modules.exporter.specfem import (
     labels_to_grids,
     write_parfile_snippet,
@@ -32,7 +33,7 @@ def run_post_process_and_export(
     output_dir: str | Path | None = None,
     save_intermediates: bool = True,
     overlay: np.ndarray | None = None,
-) -> dict[str, Any]:
+) -> PostProcessExportResult:
     """Post-process a single label array and export SPECFEM artifacts."""
     if (labels != 0).sum() == 0:
         return {
@@ -101,7 +102,7 @@ def export_segmented_panels(
     properties_map: dict[str, dict] | None = None,
     output_dir: str | Path | None = None,
     save_intermediates: bool = True,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+) -> tuple[list[PanelExport], ExportSummary]:
     """Export all segmented panels from a segmentation-stage result."""
     out_dir = Path(output_dir) if output_dir else None
     panel_outputs: list[dict[str, Any]] = []
