@@ -124,3 +124,15 @@ validation/review/
 !validation/best/labels/*.npz
 !validation/best/overlays/
 !validation/best/overlays/*.jpg
+
+# Curated session results (tracked)
+!validation/curated/
+!validation/curated/README.md
+!validation/curated/manifest.jsonl
+!validation/curated/contact_sheet.jpg
+!validation/curated/images/
+!validation/curated/images/*.jpg
+!validation/curated/labels/
+!validation/curated/labels/*.npz
+!validation/curated/overlays/
+!validation/curated/overlays/*.jpg

@@ -80,6 +80,23 @@ make review        # 重新生成带编号的 review sheets
 
 `best/` 内的 `manifest.jsonl` 记录每个 panel 的 campaign 数、run 数、首次/最后日期和所用版本。复杂案例可加 `--include-optional`（c11b8db、jtecto fig7/fig6b）。
 
+## curated 子集（来自 agent session 的人工干预记录）
+
+`validation/curated/` 是从 Codex session（2026-07-16/17）里找到的、你实际多轮纠正并固化的结果：
+
+| panel | 结构 | 区域数 | session 证据 |
+|---|---|---:|---|
+| `paper22_fig5a` | layered | 8 | OCR ROI + 残差分类 + `label_blur sigma=2.5`，并定向追踪 2.91/3.3 界面；带真实密度 2.65–3.5 g/cm³ |
+| `paper22_fig6` | boundary_driven | 6 | 你指出 fig6 的边界由短黑/红线段决定而非颜色；边界驱动 watershed 为最终结果，boundary alignment 0.9306、碎片 0 |
+| `paper23_fig7a` | faulted | 15 | 11 步干预历史：图例吸收、F3 右延伸、谷底 vs 内部交点修正，最终 `reviewed/` |
+| `paper23_fault_guided` | faulted | 14 | 你指出图例误分割和 3 处漏边界；最终 color labels + red barriers + tangent completion |
+
+这四个 panel 里，`paper22_fig5a` 和 `paper22_fig6` 是最干净、最适合作为新方向主验证的；`paper23` 两个是断层/强边界压力样本。你在做 PPT 时选的三个例子正是 **newimage + paper22 + paper23**，所以 `validation/best`（newimage）和 `validation/curated`（paper22/23）合起来就是完整的 showcase。
+
+```bash
+make curated     # 重建 validation/curated 并补导出
+```
+
 ## 使用
 
 ```python
