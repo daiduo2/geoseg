@@ -88,6 +88,7 @@ make review        # 重新生成带编号的 review sheets
 |---|---|---:|---|
 | `paper22_fig5a` | layered | 8 | OCR ROI + 残差分类 + `label_blur sigma=2.5`，并定向追踪 2.91/3.3 界面；带真实密度 2.65–3.5 g/cm³ |
 | `paper22_fig6` | boundary_driven | 6 | 你指出 fig6 的边界由短黑/红线段决定而非颜色；边界驱动 watershed 为最终结果，boundary alignment 0.9306、碎片 0 |
+| `ph01_page8_panel3` | layered | 7 | 2026-06-20 你要求把 ph01 page8 放进 PPT；干净图从 fixture Page 8 第二行结构模型重建，重建 overlay 与历史 overlay 一致；沿用历史 tomo/Par_file |
 | `paper23_fig7a` | faulted | 15 | 11 步干预历史：图例吸收、F3 右延伸、谷底 vs 内部交点修正，最终 `reviewed/` |
 | `paper23_fault_guided` | faulted | 14 | 你指出图例误分割和 3 处漏边界；最终 color labels + red barriers + tangent completion |
 

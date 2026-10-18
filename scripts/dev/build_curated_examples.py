@@ -67,6 +67,24 @@ ITEMS = [
         },
     },
     {
+        "panel_id": "ph01_page8_panel3",
+        "labels": "ph01_page8/panel3_labels.npz",
+        "image": None,
+        "image_crop": {
+            "source": "tests/fixtures/ph01/ph01_page8_300dpi.png",
+            "box": [494, 1227, 258, 335],
+        },
+        "overlay": "ph01_page8/panel3_overlay.jpg",
+        "group": "ph01",
+        "structure": "layered",
+        "export_existing": "ph01_page8/panel3",
+        "session_evidence": (
+            "2026-06-20 PPT focus on ph01 page8; 2026-06-19 'ph01_page8 去整个"
+            "项目中去找'. Clean crop reconstructed from the 300 dpi Figure 8, "
+            "row-2 structural model; label boundaries align best with this crop."
+        ),
+    },
+    {
         "panel_id": "paper23_fig7a",
         "labels": "sandbox/paper23_fig7a_clear/reviewed/secondary_labels.npz",
         "image": "sandbox/paper23_fig7a_clear/fig7a_crop.png",
@@ -197,9 +215,15 @@ def build() -> list[dict]:
     tiles = []
     for item in ITEMS:
         lp = RUNS / item["labels"]
-        ip = RUNS / item["image"]
         labels = (np.load(lp)["labels"] if lp.suffix == ".npz" else np.load(lp)).astype(np.int32)
-        image = np.array(Image.open(ip).convert("RGB"))
+        if item.get("image_crop"):
+            crop = item["image_crop"]
+            page = Image.open(REPO_ROOT / crop["source"]).convert("RGB")
+            x, y, w, h = crop["box"]
+            image = np.array(page.crop((x, y, x + w, y + h)))
+        else:
+            ip = RUNS / item["image"]
+            image = np.array(Image.open(ip).convert("RGB"))
         if labels.shape != image.shape[:2]:
             raise ValueError(f"{item['panel_id']}: {labels.shape} != {image.shape[:2]}")
 
@@ -215,7 +239,43 @@ def build() -> list[dict]:
             ov = overlay(image, labels)
             Image.fromarray(ov).save(out_overlay, quality=92)
 
-        if item.get("export", True):
+        if item.get("export_existing"):
+            prefix = RUNS / item["export_existing"]
+            export_dir = EXPORT_ROOT / item["panel_id"]
+            export_dir.mkdir(parents=True, exist_ok=True)
+            small = OUT / "exports" / item["panel_id"]
+            small.mkdir(parents=True, exist_ok=True)
+            copied = {}
+            for src_name, dst_name in (
+                (prefix.parent / (prefix.name + "_parfile_snippet.txt"), "parfile_snippet.txt"),
+                (prefix.parent / (prefix.name + "_properties.json"), "properties.json"),
+                (prefix.parent / (prefix.name + "_polygons.geojson"), "polygons.geojson"),
+                (prefix.parent / (prefix.name + "_tomo.xyz"), "tomo.xyz"),
+            ):
+                if src_name.exists():
+                    dst = export_dir / dst_name
+                    shutil.copy2(src_name, dst)
+                    if dst_name != "tomo.xyz":
+                        shutil.copy2(dst, small / dst_name)
+                        copied[dst_name] = f"exports/{item['panel_id']}/{dst_name}"
+            tomo = export_dir / "tomo.xyz"
+            geojson = export_dir / "polygons.geojson"
+            n_polygons = 0
+            if geojson.exists():
+                try:
+                    n_polygons = len(json.loads(geojson.read_text())["features"])
+                except Exception:
+                    pass
+            export = {
+                "status": "ok",
+                "n_components": len(set(int(v) for v in np.unique(labels)) - {0}),
+                "n_polygons": n_polygons,
+                "properties_source": "existing paper artifact",
+                "tomo_xyz": str(tomo),
+                "tomo_size_mb": round(tomo.stat().st_size / 1e6, 2) if tomo.exists() else 0.0,
+                "files": copied,
+            }
+        elif item.get("export", True):
             export = export_panel(labels, item)
         else:
             export = {"status": "skipped", "reason": "schematic_3d", "n_components": 0, "n_polygons": 0, "properties_source": None, "tomo_xyz": None, "tomo_size_mb": 0.0, "files": {}}
