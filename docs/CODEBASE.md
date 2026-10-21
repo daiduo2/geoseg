@@ -37,7 +37,8 @@
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
 | `exporter/` | **M4**：SPECFEM2D/3D 模型导出。`tomography_file.xyz` + `Par_file` snippet | `specfem.py` | [exporter/CLAUDE.md](../src/geoseg/modules/exporter/CLAUDE.md) |
 | `editor/` | **Napari-based Shapes-primary 编辑器**（v0.8，legacy）：鼠标交互修改边界 | `napari_app.py` | [editor/CLAUDE.md](../src/geoseg/modules/editor/CLAUDE.md) |
-| `curve_editor/` | **控制点界面编辑器**（v0.9，主链路）：labels ↔ 参数曲线、splinebox、稳定 ID、幂等栅格化；napari 只做显示；`region.py` 支持画圈贴边+点内部填充，`boundary_ops.py` 处理越界裁剪与端点延伸 | `model.py`, `spline.py`, `rasterize.py`, `extract.py`, `region.py`, `boundary_ops.py`, `view.py` | [curve_editor/CLAUDE.md](../src/geoseg/modules/curve_editor/CLAUDE.md) |
+| `curve_editor/` | **控制点界面编辑器**（v0.9，主链路）：labels ↔ 参数曲线、splinebox、稳定 ID、幂等栅格化；napari 只做显示；`region.py` 支持画圈贴边+点内部填充，`boundary_ops.py` 处理越界裁剪与端点延伸；`exact_boundaries.py` 取分区结果的无平滑闭边界，Layer 1 保留判定与 `refine.py` 几何平滑严格分离 | `model.py`, `spline.py`, `rasterize.py`, `extract.py`, `region.py`, `boundary_ops.py`, `background.py`, `exact_boundaries.py`, `refine.py`, `view.py` | [curve_editor/CLAUDE.md](../src/geoseg/modules/curve_editor/CLAUDE.md) |
+| `iteration/` | **Agent-driven 审计 sandbox**：panel 预裁剪、缺层/文字/碎片审计、session 记录；动作由 agent 决定，系统不自动选策略 | `preprocess.py`, `audit.py`, `session.py`, `cleanup.py` | [iteration/CLAUDE.md](../src/geoseg/modules/iteration/CLAUDE.md) |
 | `visual_audit/` | **视觉审计**：生成 overlay-with-legend 与辅助视图，为 agent 视觉批评提供输入；不输出 PASS/FAIL | `views.py`, `crops.py`, `semantic.py`, `report.py` | — |
 
 ## 私有依赖边界
@@ -115,6 +116,9 @@ uv run pytest tests/test_integration_ph01.py
 | [`DESIGN.md`](./DESIGN.md) | 一页设计稿 **v0.7 已签字**（2026-05-23）。§4 = JSON schema 契约、§5 = 模块行预算、§8 = 开工顺序 |
 | [`refactor_roadmap_2026-07-14.md`](./design/refactor_roadmap_2026-07-14.md) | 当前架构收口后的后续重构待办与执行验收清单 |
 | [`curve_editor.md`](./design/curve_editor.md) | 控制点界面编辑器：模型契约、labels 曲线提取、curated 验收与 napari 手势 |
+| [`iteration_workflow.md`](./design/iteration_workflow.md) | Agent-driven 审计 sandbox：panel 预裁剪、审计证据、session 记录；固定流程不固定动作 |
+| [`layer2_smoothing_survey.md`](./design/layer2_smoothing_survey.md) | Layer 2 边界平滑的地球物理先验调研：结构导向、最小曲率/张力、断层/不整合、拓扑保持与推荐设计 |
+| [`layer2_group_meeting.md`](./design/layer2_group_meeting.md) | 面向数学背景组会的讲稿：问题结构、变分形式、实验过程、最终条件与 PPT 页面建议 |
 | [`PDF_VECTOR_EXTRACTION_SPEC.md`](./design/PDF_VECTOR_EXTRACTION_SPEC.md) | M0.5v 矢量提取规格（并行 session 开发，状态：待开发） |
 | [`ALGORITHM_FAMILY.md`](./ALGORITHM_FAMILY.md) | e001-e038 实验全景、算法路由，以及第 7 节的教训与反模式 |
 | [`design/`](./design/) | 历史 PRD、项目状态报告、重构记录（只读参考，不代表当前架构） |

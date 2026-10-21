@@ -13,7 +13,11 @@
 | `model.py` | `InterfaceModel`、`Interface`、`ControlPoint`；稳定 ID、背景 mask、区域种子、`base_labels` 精确回放 |
 | `spline.py` | splinebox 开放/闭合曲线、knots/control-points 两种模式、弧长重采样、曲率、freehand 拟合 |
 | `rasterize.py` | 曲线 → 边界 mask → 4 连通填充；多 seed 组件用测地线分配；未播种组件合并到最近区域 |
-| `extract.py` | 从已有 labels 提取边界骨架 → 曲线路径；支持开放层位与闭合透镜 |
+| `extract.py` | 交互编辑用：labels 边界骨架 → 曲线路径（RDP）；**不用于保留判定/审计** |
+| `background.py` | label 0 连通域语义：exterior surface vs internal hole |
+| `exact_boundaries.py` | Layer 1 唯一来源：相邻 label 之间的精确闭边界像素；不做 skeleton/RDP/spline；`keep/review/remove` 保守判定，当前不自动删除 |
+| `decisions.py` | 旧版曲线级 preview，仅服务交互编辑器；不能用于审计或决定分区闭边界去留 |
+| `refine.py` | Layer 2 几何平滑：只处理 Layer 1 已 keep 的边界；不得反过来决定保留/删除 |
 | `region.py` | 自由手绘区域：梯度贴边、弧长重采样、曲率/梯度控制点、内部点 |
 | `boundary_ops.py` | 超出图像边界的多边形裁剪、开放界面端点延伸/回缩、自交检测 |
 | `commands.py` | 与 UI/语言无关的命令层：move/insert/delete/set_locked/add/remove |
@@ -36,6 +40,31 @@
 2. 对 label 差异 mask 做 skeleton，按度 != 2 的节点拆成开放路径/闭合环。
 3. 用 RDP 简化到控制点（默认 ≤28 点/曲线），以 `B1` 基函数保存，尽量贴合原始边界。
 4. 首次编辑后重新栅格化：边界加厚 1 px 闭合小缺口；一个连通域含多个 seed 时按**测地线距离**分配，避免边界缺口导致整个区域被一个 ID 吞掉。
+
+## 边界保留与平滑（严格两层）
+
+### Layer 1：是否保留（exact closure）
+
+`extract_exact_boundaries(labels)` 是保留判定的唯一输入：
+
+- 对每一对相邻 label `(a, b)`，取 4 邻域中 `a/b` 相接的像素；
+- 按 8 连通拆成多个 boundary object；
+- 每个 object 的 `pixels` 就是分区结果的原始闭边界像素；不做 skeleton、RDP、spline、曲率平滑。
+
+`decide_exact_boundaries(labels)`：
+
+- foreground-foreground 闭边界默认 **keep**；
+- label 0 先区分 **exterior** 与 **internal_hole**（`background.py`）：长 exterior 闭边界 keep；短 exterior / internal hole 进入 review；
+- 短 boundary 默认 review，不自动 remove；
+- 当前 `remove` 永远为空；只有 agent/human 视觉审计后才能显式改为 remove。
+
+`draw_exact_decisions()` 直接画上述像素（green=keep, yellow=review, red=remove），审计 overlay 不使用任何平滑曲线。`extract.py` 的 skeleton/RDP 只用于交互编辑器生成可拖拽曲线，不能进入审计或保留判定。
+
+### Layer 2：保留后如何平滑
+
+只有 Layer 1 已经是 `keep` 的边界才允许进入 `refine.py`。Layer 2 输出几何，不改变 `keep/review/remove`；平滑失败或超曲率上限只能退回 review，不能静默删除。当前视觉审计停在 Layer 1，尚未启用 Layer 2。
+
+**视觉审计的 baseline 是分区结果重新上色的 mask，而不是 raw/denoised 照片**。照片中的噪声和纹理容易被误当成边界证据；mask 直接展示分区拓扑。闭边界必须画粗并加深色 halo（当前 contact sheet 3 px core + halo），保持最显眼。降噪 RGB 只能作为辅助证据，不能替代 mask baseline。
 
 ## 手势
 

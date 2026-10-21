@@ -1,0 +1,247 @@
+{
+  "generated": "2026-10-21",
+  "runs_root": "runs",
+  "note": "Direct historical results recovered from ~/geoseg-artifacts/2026-10/runs. Paths are relative to the geoseg repo. Curated manifest currently records only the final labels/overlay, not these variants.",
+  "panels": {
+    "newimage_p0": {
+      "curated_final": "runs/preprocess_newimage_iter5/panels/panel_0",
+      "clean_image": "runs/preprocess_newimage_iter5/03_cleaned.jpg",
+      "artifact_mask": "runs/preprocess_newimage_iter5/02_combined_mask_full.jpg",
+      "variants": [
+        "runs/preprocess_newimage_v1",
+        "runs/preprocess_newimage_iter2",
+        "runs/preprocess_newimage_iter3",
+        "runs/preprocess_newimage_iter4",
+        "runs/preprocess_newimage_iter5",
+        "runs/preprocess_newimage_perpanel",
+        "runs/preprocess_newimage_perpanel2",
+        "runs/preprocess_newimage_colorbar16",
+        "runs/preprocess_newimage_final"
+      ],
+      "merged_best_split": "runs/preprocess_newimage_merged/best_split_summary.json",
+      "notes": "curated uses iter5 only; v1/colorbar16/merged are direct historical variants."
+    },
+    "newimage_p1": {
+      "curated_final": "runs/preprocess_newimage_iter5/panels/panel_1",
+      "clean_image": "runs/preprocess_newimage_iter5/03_cleaned.jpg",
+      "artifact_mask": "runs/preprocess_newimage_iter5/02_combined_mask_full.jpg",
+      "variants": [
+        "runs/preprocess_newimage_v1",
+        "runs/preprocess_newimage_iter2",
+        "runs/preprocess_newimage_iter3",
+        "runs/preprocess_newimage_iter4",
+        "runs/preprocess_newimage_iter5",
+        "runs/preprocess_newimage_perpanel",
+        "runs/preprocess_newimage_perpanel2",
+        "runs/preprocess_newimage_colorbar16",
+        "runs/preprocess_newimage_final"
+      ],
+      "merged_best_split": "runs/preprocess_newimage_merged/best_split_summary.json",
+      "notes": "curated uses iter5 only; merged best-split reports exist."
+    },
+    "newimage_p2": {
+      "curated_final": "runs/preprocess_newimage_iter5/panels/panel_2",
+      "clean_image": "runs/preprocess_newimage_iter5/03_cleaned.jpg",
+      "artifact_mask": "runs/preprocess_newimage_iter5/02_combined_mask_full.jpg",
+      "variants": [
+        "runs/preprocess_newimage_v1",
+        "runs/preprocess_newimage_iter2",
+        "runs/preprocess_newimage_iter3",
+        "runs/preprocess_newimage_iter4",
+        "runs/preprocess_newimage_iter5",
+        "runs/preprocess_newimage_perpanel",
+        "runs/preprocess_newimage_perpanel2",
+        "runs/preprocess_newimage_colorbar16",
+        "runs/preprocess_newimage_final"
+      ],
+      "merged_best_split": "runs/preprocess_newimage_merged/best_split_summary.json",
+      "notes": "curated uses iter5 only."
+    },
+    "newimage_p3": {
+      "curated_final": "runs/preprocess_newimage_iter5/panels/panel_3",
+      "clean_image": "runs/preprocess_newimage_iter5/03_cleaned.jpg",
+      "artifact_mask": "runs/preprocess_newimage_iter5/02_combined_mask_full.jpg",
+      "variants": [
+        "runs/preprocess_newimage_v1",
+        "runs/preprocess_newimage_iter2",
+        "runs/preprocess_newimage_iter3",
+        "runs/preprocess_newimage_iter4",
+        "runs/preprocess_newimage_iter5",
+        "runs/preprocess_newimage_perpanel",
+        "runs/preprocess_newimage_perpanel2",
+        "runs/preprocess_newimage_colorbar16",
+        "runs/preprocess_newimage_final"
+      ],
+      "merged_best_split": "runs/preprocess_newimage_merged/best_split_summary.json",
+      "notes": "curated uses iter5 only; merged panel3/4 repair exists."
+    },
+    "newimage_p4": {
+      "curated_final": "runs/preprocess_newimage_iter5/panels/panel_4",
+      "clean_image": "runs/preprocess_newimage_iter5/03_cleaned.jpg",
+      "artifact_mask": "runs/preprocess_newimage_iter5/02_combined_mask_full.jpg",
+      "variants": [
+        "runs/preprocess_newimage_v1",
+        "runs/preprocess_newimage_iter2",
+        "runs/preprocess_newimage_iter3",
+        "runs/preprocess_newimage_iter4",
+        "runs/preprocess_newimage_iter5",
+        "runs/preprocess_newimage_perpanel",
+        "runs/preprocess_newimage_perpanel2",
+        "runs/preprocess_newimage_colorbar16",
+        "runs/preprocess_newimage_final"
+      ],
+      "merged_best_split": "runs/preprocess_newimage_merged/best_split_summary.json",
+      "notes": "curated uses iter5 only; merged panel3/4 repair exists."
+    },
+    "paper22_fig5a": {
+      "curated_final_dir": "runs/paper22/final/fig5a",
+      "final_files": [
+        "labels.npz",
+        "overlay.png",
+        "mask.png",
+        "ocr_text_mask.png",
+        "ocr_rois.json",
+        "boundary_audit.png",
+        "boundary_trace_2.91_3.3.json",
+        "residual_audit.png",
+        "rgb_vector_residual_abs.png",
+        "rgb_vector_residual_summary.json",
+        "comparison_original_mask_rgb_vector_residual.png"
+      ],
+      "audit_dir": "runs/paper22/final/fig5a/audit",
+      "refinement_dir": "runs/paper22/refinement/fig5a",
+      "refinement_files": [
+        "labels_8material.npz",
+        "ocr_mask.png",
+        "ocr_inpainted.png",
+        "ocr_inpaint_median3.png",
+        "ocr_inpaint_median5.png",
+        "ocr_inpaint_median7.png",
+        "palette_lab_t8.npz",
+        "palette_lab_t12.npz",
+        "palette_lab_t16.npz",
+        "overlay_8material.png"
+      ],
+      "baselines": "runs/paper22/baselines/fig5a",
+      "notes": "OCR/text mask, palette and boundary trace are direct denoising/refinement artifacts missing from curated."
+    },
+    "paper22_fig6": {
+      "curated_final_dir": "runs/paper22/final/fig6",
+      "final_files": [
+        "labels.npz",
+        "overlay_rectified.png",
+        "mask_rectified.png",
+        "labels_original_crop.npz",
+        "overlay_original_geometry.png",
+        "mask_original_geometry.png",
+        "comparison_rectified_boundary_mask.png",
+        "comparison_original_geometry_boundary_mask.png",
+        "mask_rectified_residual_palette.png",
+        "rgb_vector_residual_abs.png",
+        "rgb_vector_residual_summary.json"
+      ],
+      "audit_dir": "runs/paper22/final/fig6/audit",
+      "geometry_dir": "runs/paper22/geometry",
+      "refinement_dir": "runs/paper22/refinement/fig6",
+      "baselines": "runs/paper22/baselines/fig6",
+      "related_fig6_profile_groups": [
+        "runs/feng_fig6_*",
+        "runs/fig6_colorbar_16zone_*",
+        "runs/pm_repair_*"
+      ],
+      "notes": "final/fig6 is the curated front panel; feng_fig6 profile 03-07 runs are related but distinct panels and must not be conflated. Geometry transform and OCR/residual/refinement artifacts are not indexed by curated."
+    },
+    "ph01_page8_panel3": {
+      "curated_final_dir": "runs/ph01_page8",
+      "final_files": [
+        "panel3_labels.npz",
+        "panel3_overlay.jpg",
+        "panel3_properties.json",
+        "panel3_polygons.geojson",
+        "panel3_tomo.xyz"
+      ],
+      "denoise_variants": [],
+      "related_but_not_same": [
+        "runs/agent_review/ph01",
+        "runs/agent_review_vlm/ph01",
+        "runs/readme_examples_v2/ph01_page011",
+        "runs/readme_examples_v2/ph01_page004"
+      ],
+      "notes": "No text-removal/denoise variant for this panel. Curated labels are under-segmented: label2 merges light blue + gray-purple; label4 merges brown + gray-brown; label3 is white/text contaminated."
+    },
+    "paper23_fig7a": {
+      "curated_final_dir": "runs/sandbox/paper23_fig7a_clear/reviewed",
+      "final_files": [
+        "secondary_labels.npz",
+        "secondary_overlay.png",
+        "secondary_overlay_boundaries.png",
+        "secondary_regions.png",
+        "completed_fault_barrier.png",
+        "splitting_barrier_mask.png",
+        "report.json"
+      ],
+      "upstream": [
+        "runs/sandbox/paper23_fig7a_clear/fig7a_crop.png",
+        "runs/sandbox/paper23_fig7a_clear/first_stage/first_stage_labels.npz",
+        "runs/sandbox/paper23_fig7a_clear/autonomous/secondary_labels.npz",
+        "runs/sandbox/paper23_fig7a_clear/uncertain_fault_hints.json"
+      ],
+      "other_direct_runs": [
+        "runs/sandbox/paper23",
+        "runs/sandbox/paper23_connected",
+        "runs/sandbox/paper23_existing_pipeline",
+        "runs/sandbox/paper23_existing_pipeline_red_boundary"
+      ],
+      "notes": "Reviewed secondary labels are curated; first-stage, autonomous, fault masks, intervention comparisons and red-boundary pipeline are missing from index."
+    },
+    "paper23_fault_guided": {
+      "curated_final_dir": "runs/sandbox/paper23_fault_guided",
+      "final_files": [
+        "secondary_labels.npz",
+        "secondary_overlay.png",
+        "secondary_overlay_boundaries.png",
+        "secondary_regions.png",
+        "completed_fault_barrier.png",
+        "splitting_barrier_mask.png",
+        "intervention_history_comparison.png",
+        "intervention_history_masks.png",
+        "intervention_history_overlays.png",
+        "intervention_history_comparison_before_current_final.png",
+        "uncertain_fault_hints.json",
+        "report.json"
+      ],
+      "upstream": [
+        "runs/sandbox/paper23_connected/connected_labels.npz",
+        "runs/sandbox/paper23_connected/cropped_profile.png",
+        "runs/sandbox/paper23_connected/boundary_and_fault_overlay.png",
+        "runs/sandbox/paper23_panel/labels.npz"
+      ],
+      "notes": "Fault masks and intervention history are direct denoising/correction artifacts missing from curated."
+    },
+    "schematic_panel2": {
+      "curated_final_labels": "runs/3d_schematic_retune/best/panel_2_best_labels.npy",
+      "curated_image": "runs/3d_schematic_retune/panel_2/text_removed_best.png",
+      "curated_overlay": "runs/3d_schematic_retune/best/panel_2_best_overlay.jpg",
+      "audit_summary": "runs/3d_schematic_retune/best/panel_2_best_audit_summary.jpg",
+      "text_grid_dir": "runs/3d_schematic_retune/panel_2/text",
+      "text_grid_results": "runs/3d_schematic_retune/panel_2/text_grid_results.json",
+      "candidates": "runs/3d_schematic_retune/panel_2/candidates.json",
+      "sandbox_variants": [
+        "runs/sandbox_text/panel_2",
+        "runs/sandbox_notext/panel_2",
+        "runs/3d_schematic_correct_e2e",
+        "runs/3d_schematic_e2e",
+        "runs/3d_schematic_edge_guided"
+      ],
+      "notes": "81 text-removal grid results and sandbox_text/notext variants are direct denoising work but absent from curated."
+    }
+  },
+  "index_gaps": [
+    "build_corpus.py scans only selected roots and *labels*.npz; it misses .npy labels, text masks, cleaned images, OCR/geometry/residual/audit artifacts.",
+    "panel_history.py scans *labels*.npz only; denoise-only directories have no panel key.",
+    "export_view_history.py resolves panel keys through labels; text-only/denoise dirs are invisible.",
+    "validation/curated manifest records only final labels/overlay/export, with no variants/denoise/provenance chain.",
+    "docs/all_overlays is a flat 5k-file archive without panel/provenance mapping.",
+    "runs is a symlink to artifacts/2026-10; data is present, but the post-cleanup index was not rebuilt."
+  ]
+}

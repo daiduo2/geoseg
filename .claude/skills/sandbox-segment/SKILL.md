@@ -88,9 +88,41 @@ for p in templates.get('patterns', [])[:5]:
 Use this information to inform your initial strategy choice. If history strongly
 recommends a particular engine for this image type, start with that engine.
 
+### Step 0.5: Crop the panel to the data area (mandatory)
+
+Do this **before any engine**. Axes, tick labels, tick marks, white margins and
+axis leader lines are not geology. If you segment the full panel, the audit will
+mistake the axis for a layer and the result will look "repaired" only because
+the workflow added more labels.
+
+```bash
+uv run python -c "
+from pathlib import Path
+import json
+import numpy as np
+from PIL import Image
+from geoseg import api
+
+img = np.asarray(Image.open('{panel_path}').convert('RGB'))
+crop = api.crop_panel(img)
+print('auto bbox', crop.bbox, 'shape', crop.image.shape)
+# If the auto bbox includes an axis/colorbar or cuts geology, pass a manual bbox:
+# crop = api.crop_panel(img, bbox=(x0, y0, x1, y1))
+out = Path('runs/sandbox/{panel_id}')
+out.mkdir(parents=True, exist_ok=True)
+Image.fromarray(crop.image).save(out / 'panel_cropped.png')
+(out / 'crop.json').write_text(json.dumps({
+  'bbox': list(crop.bbox), 'offset': list(crop.offset), 'method': crop.method
+}, indent=2))
+"
+```
+
+Use `panel_cropped.png` for all attempts. For ph01 page8 panel3, the axis is at
+the left; the known good crop is `(28, 0, 258, 335)`.
+
 ### Step 1: Analyze the Panel Image
 
-Read the original panel (`panel.png`).
+Read the **cropped** panel (`panel_cropped.png`) and the original for context.
 
 - Saturation level (vivid / pastel / grayscale)
 - Presence of clear layer boundaries
@@ -305,6 +337,29 @@ Rules:
 - `remove_text_labels` is appropriate when the only/main issue is text/annotation labels.
 - `switch_engine` is appropriate when the whole image is poor.
 
+### Step 4d: Record attempts with the session helper
+
+The session is a recorder, not a policy. It enforces the crop, audit and
+artifact logging while leaving the next action entirely to you.
+
+```python
+from geoseg import api
+
+session = api.IterationSession(
+    original_image,                     # or a pre-cropped image with crop_bbox
+    output_dir="runs/sandbox/{panel_id}",
+    crop_bbox=(28, 0, 258, 335),        # use None for auto crop
+    audit_config=api.AuditConfig(expected_min_layers=8),
+)
+a1 = session.run_attempt("v4_kmeans", 8, note="initial cropped pass")
+# Read a1.audit / a1.artifacts['overlay'], then choose any next attempt:
+a2 = session.run_attempt("v4_kmeans", 10, note="split missing layers")
+# Repairs are also recorded:
+a3 = session.record_attempt(repaired_labels, engine="manual", note="remove text labels")
+session.accept(a2.attempt)
+session.save_best()
+```
+
 ### Step 5: Executor Loop (Audit → Repair → Re-audit)
 
 Read `runs/sandbox/{panel_id}/regional_audit.json`.
@@ -315,8 +370,13 @@ Read `runs/sandbox/{panel_id}/regional_audit.json`.
 
 #### Step 5a: Choose Repair Strategy
 
-Use the `repair_strategy` from the audit output. If missing, choose based on the
-audit notes:
+The table below is a set of **suggestions**, not a fixed decision tree. You own
+the choice: if a new observation (for example, an axis included in the crop, or
+two pure colours merged in one label) requires an action outside this table, do
+that instead and record it. The sandbox exists to allow trial and error.
+
+Use the `repair_strategy` from the audit output if it is useful; otherwise choose
+based on the audit notes and visual inspection:
 
 | `repair_strategy` | When to use | Executor action |
 |-------------------|-------------|-----------------|

@@ -1,5 +1,10 @@
 # Curated session results
 
+> Direct historical results, denoise/text-mask artifacts and index gaps are
+> recovered in [`direct_results.md`](./direct_results.md) and
+> [`direct_results.json`](./direct_results.json). The old index only recorded
+> final labels; use the direct-results index before rerunning any engine.
+
 - `newimage_p0` — layered, n=4, exported=True (5 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.
 - `newimage_p1` — layered, n=5, exported=True (5 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.
 - `newimage_p2` — layered, n=4, exported=True (8 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.

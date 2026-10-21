@@ -5,7 +5,22 @@ rasterizes them into labels without corrupting background, and is designed to
 be driven equally by napari mouse gestures and agent commands.
 """
 
+from geoseg.modules.curve_editor.background import background_roles
 from geoseg.modules.curve_editor.commands import EditorCommands
+from geoseg.modules.curve_editor.decisions import (
+    BoundaryDecision,
+    BoundaryDecisionResult,
+    curve_background_role,
+    decide_boundaries,
+    refine_decisions,
+)
+from geoseg.modules.curve_editor.exact_boundaries import (
+    ExactBoundary,
+    ExactBoundaryDecision,
+    decide_exact_boundaries,
+    draw_exact_decisions,
+    extract_exact_boundaries,
+)
 from geoseg.modules.curve_editor.boundary_ops import (
     clip_polygon_to_rect,
     extend_open_curve,
@@ -24,6 +39,13 @@ from geoseg.modules.curve_editor.io import (
 )
 from geoseg.modules.curve_editor.model import ControlPoint, Interface, InterfaceModel
 from geoseg.modules.curve_editor.rasterize import draw_interfaces, rasterize_interfaces
+from geoseg.modules.curve_editor.refine import (
+    BoundaryRefinementConfig,
+    RefinedBoundary,
+    adjacent_labels,
+    refine_curve,
+    refine_curves,
+)
 from geoseg.modules.curve_editor.region import (
     SnappedRegion,
     close_and_resample,
@@ -44,13 +66,27 @@ from geoseg.modules.curve_editor.spline import (
 
 __all__ = [
     "BASIS_NAMES",
+    "BoundaryDecision",
+    "BoundaryDecisionResult",
+    "BoundaryRefinementConfig",
     "ControlPoint",
     "EditorCommands",
+    "ExactBoundary",
+    "ExactBoundaryDecision",
     "ExtractedCurve",
     "Interface",
     "InterfaceModel",
+    "RefinedBoundary",
     "SnappedRegion",
+    "adjacent_labels",
+    "background_roles",
     "boundary_mask",
+    "curve_background_role",
+    "decide_boundaries",
+    "decide_exact_boundaries",
+    "draw_exact_decisions",
+    "extract_exact_boundaries",
+    "refine_decisions",
     "clip_polygon_to_rect",
     "close_and_resample",
     "curve_from_interface",
@@ -68,6 +104,8 @@ __all__ = [
     "load_shapes",
     "model_from_labels",
     "rasterize_interfaces",
+    "refine_curve",
+    "refine_curves",
     "resample_by_arc_length",
     "save_labels",
     "save_session",

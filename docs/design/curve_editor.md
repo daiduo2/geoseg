@@ -55,6 +55,26 @@ InterfaceModel
 
 提取结果用于建立可编辑模型；未编辑时仍返回原始 labels，因此提取误差不会污染“打开即保存”的场景。
 
+### 3.1 两个严格分离的层
+
+保留判定不能经过曲线简化或平滑，否则“边界是否该存在”会被几何拟合悄悄改变。当前分为：
+
+**Layer 1 — exact closure（`exact_boundaries.py`）**
+
+- 对每一对相邻 label，直接取分区结果中两者相接的原始像素；
+- 按 8 连通拆成 boundary object；`length` 即像素数；
+- 不做 skeleton、RDP、spline、曲率或任何平滑；
+- `decide_exact_boundaries` 只依据 label pair、背景角色（exterior / internal hole）和原始长度做保守的 keep/review；当前不自动 remove；
+- 视觉审计的 baseline 是 labels 重新上色的 mask；闭边界以粗线 + 深色 halo 绘制，不使用照片做 baseline。
+
+**Layer 2 — geometry（`refine.py`）**
+
+- 只接收 Layer 1 已判定 keep 的边界；
+- 做平滑样条、端点固定、曲率限制；
+- Layer 2 无权改变保留决定；失败只能回到 review。
+
+`extract.py` 的 skeleton + RDP 仅用于交互编辑器构造可编辑曲线，不属于 Layer 1，也不能作为审计依据。
+
 ## 4. 编辑后的重栅格化
 
 首次真实编辑会丢弃 `base_labels`，之后：
