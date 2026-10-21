@@ -18,7 +18,7 @@
 | `batch/` | 批处理 CLI、目录编排、单 entry 处理、审计与导出实现 | 外部调用用 `geoseg.batch` |
 | `preprocessing/` | 图像预处理与 artifact 吸收（在主管线上） | `absorb_artifacts`、`rectify_quadrilateral` 等 |
 | `compat/` | 历史兼容入口（controller / server / api / gui / batch_processor / pipeline_interfaces） | 产品代码禁止从这里导入，见 `tests/test_public_api.py` |
-| `Makefile` | 日常任务入口：`test` / `check` / `map` / `segment` / `batch` / `export` / `edit` / `bench` / `corpus` | 不依赖 `just`；`make map` 由 `scripts/dev/dev_cli.py` 生成 |
+| `Makefile` | 日常任务入口：`test` / `check` / `map` / `segment` / `batch` / `export` / `edit` / `curve-edit` / `bench` / `corpus` | 不依赖 `just`；`make map` 由 `scripts/dev/dev_cli.py` 生成 |
 | `scripts/dev/dev_cli.py` | `make` 背后的实现：单图 pipeline、API/registry 地图、合成基准 | 开发工具，不是产品 API |
 | `validation/` | 验证语料：123 个对齐 panel（72 core + 51 欠分割负例）+ 74 labels-only | 由 `scripts/dev/build_corpus.py` 生成；`make corpus-check` 校验；见 `validation/README.md` |
 
@@ -36,7 +36,8 @@
 | `segment_engines/diagnostics/` | 诊断、评估、批量对比工具 | `metrics.py`, `batch_test.py`, `compare_results.py` | — |
 | `post_process/` | **M3.5→M4 桥梁**：从分割 labels 提取多边形 + 连通域属性 + 物理属性分配（Vp/Vs/rho） | `polygon.py`, `properties.py` | [post_process/CLAUDE.md](../src/geoseg/modules/post_process/CLAUDE.md) |
 | `exporter/` | **M4**：SPECFEM2D/3D 模型导出。`tomography_file.xyz` + `Par_file` snippet | `specfem.py` | [exporter/CLAUDE.md](../src/geoseg/modules/exporter/CLAUDE.md) |
-| `editor/` | **Napari-based Shapes-primary 编辑器**（v0.8）。用户鼠标交互修改边界 | `napari_app.py` | [editor/CLAUDE.md](../src/geoseg/modules/editor/CLAUDE.md) |
+| `editor/` | **Napari-based Shapes-primary 编辑器**（v0.8，legacy）：鼠标交互修改边界 | `napari_app.py` | [editor/CLAUDE.md](../src/geoseg/modules/editor/CLAUDE.md) |
+| `curve_editor/` | **控制点界面编辑器**（v0.9，主链路）：labels ↔ 参数曲线、splinebox、稳定 ID、幂等栅格化；napari 只做显示；`region.py` 支持画圈贴边+点内部填充，`boundary_ops.py` 处理越界裁剪与端点延伸 | `model.py`, `spline.py`, `rasterize.py`, `extract.py`, `region.py`, `boundary_ops.py`, `view.py` | [curve_editor/CLAUDE.md](../src/geoseg/modules/curve_editor/CLAUDE.md) |
 | `visual_audit/` | **视觉审计**：生成 overlay-with-legend 与辅助视图，为 agent 视觉批评提供输入；不输出 PASS/FAIL | `views.py`, `crops.py`, `semantic.py`, `report.py` | — |
 
 ## 私有依赖边界
@@ -113,6 +114,7 @@ uv run pytest tests/test_integration_ph01.py
 |------|------|
 | [`DESIGN.md`](./DESIGN.md) | 一页设计稿 **v0.7 已签字**（2026-05-23）。§4 = JSON schema 契约、§5 = 模块行预算、§8 = 开工顺序 |
 | [`refactor_roadmap_2026-07-14.md`](./design/refactor_roadmap_2026-07-14.md) | 当前架构收口后的后续重构待办与执行验收清单 |
+| [`curve_editor.md`](./design/curve_editor.md) | 控制点界面编辑器：模型契约、labels 曲线提取、curated 验收与 napari 手势 |
 | [`PDF_VECTOR_EXTRACTION_SPEC.md`](./design/PDF_VECTOR_EXTRACTION_SPEC.md) | M0.5v 矢量提取规格（并行 session 开发，状态：待开发） |
 | [`ALGORITHM_FAMILY.md`](./ALGORITHM_FAMILY.md) | e001-e038 实验全景、算法路由，以及第 7 节的教训与反模式 |
 | [`design/`](./design/) | 历史 PRD、项目状态报告、重构记录（只读参考，不代表当前架构） |

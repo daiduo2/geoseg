@@ -23,7 +23,7 @@ DATASETS ?=
 PANEL ?=
 DRAWIO ?=
 
-.PHONY: help test check lint map tools doctor segment batch export edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check curated history review usage
+.PHONY: help test check lint map tools doctor segment batch export edit curve-edit bench sandbox export-txt reconstruct e2e docs corpus corpus-check curated history review usage
 
 help:
 	@echo "geoseg tasks:"
@@ -37,6 +37,7 @@ help:
 	@echo "  make batch IMAGES=dir [OUT=runs/batch] [N=5]"
 	@echo "  make export SESSION=session.json [OUT=runs/export]"
 	@echo "  make edit LABELS=labels.npz [IMAGE=x.png] [EDIT_OUT=runs/edit]"
+	@echo "  make curve-edit [LABELS=labels.npz] [IMAGE=x.png] [EDIT_OUT=runs/edit]"
 	@echo "  make sandbox IMAGE=x.png PANEL=0  single-panel sandbox segmentation"
 	@echo "  make export-txt RUN=run_dir [OUT=run_dir/txt_export]"
 	@echo "  make reconstruct TXT_DIR=dir [OUT=dir]"
@@ -83,6 +84,15 @@ edit:
 	@mkdir -p "$(EDIT_OUT)"
 	$(PY) -m geoseg.modules.editor.napari_app --labels "$(LABELS)" $(if $(IMAGE),--image "$(IMAGE)",) \
 		--output-labels "$(EDIT_OUT)/labels_edited.npz" --output-shapes "$(EDIT_OUT)/shapes.json"
+
+curve-edit:
+	@test -n "$(LABELS)$(IMAGE)$(SESSION)" || { echo "usage: make curve-edit [LABELS=labels.npz] [IMAGE=x.png] [SESSION=session.npz]"; exit 1; }
+	@mkdir -p "$(EDIT_OUT)"
+	$(PY) -m geoseg.modules.curve_editor.view $(if $(IMAGE),--image "$(IMAGE)",) \
+		$(if $(LABELS),--labels "$(LABELS)",) $(if $(SESSION),--session "$(SESSION)",) \
+		--output-labels "$(EDIT_OUT)/labels_edited.npz" \
+		--output-shapes "$(EDIT_OUT)/curves.json" \
+		--output-session "$(EDIT_OUT)/session.npz"
 
 bench:
 	$(PY) scripts/dev/dev_cli.py bench $(if $(OUT),--out "$(OUT)",)

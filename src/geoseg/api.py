@@ -47,6 +47,20 @@ from geoseg.core.models import (
 from geoseg.modules.cv_detect.colorbar_extractor import extract_colorbar
 from geoseg.modules.cv_detect.figure_classifier import classify
 from geoseg.modules.cv_detect.panel_detector import detect_panels
+from geoseg.modules.curve_editor import (
+    EditorCommands,
+    InterfaceModel,
+    SnappedRegion,
+    clip_polygon_to_rect,
+    curves_from_labels,
+    edge_strength,
+    extend_open_curve,
+    load_session as load_curve_session,
+    model_from_labels as curve_model_from_labels,
+    save_session as save_curve_session,
+    select_control_points,
+    snap_region,
+)
 from geoseg.modules.editor.editor_core import labels_to_shapes, shapes_to_labels
 from geoseg.modules.exporter.specfem import (
     labels_to_grids,
@@ -143,6 +157,18 @@ __all__ = [
     # editing / boundary geometry
     "labels_to_shapes",
     "shapes_to_labels",
+    "InterfaceModel",
+    "EditorCommands",
+    "SnappedRegion",
+    "clip_polygon_to_rect",
+    "curve_model_from_labels",
+    "curves_from_labels",
+    "edge_strength",
+    "extend_open_curve",
+    "load_curve_session",
+    "save_curve_session",
+    "select_control_points",
+    "snap_region",
     "bridge_boundary_with_endpoint_tangents",
     "repair_white_label_occluded_boundaries",
     # session

@@ -33,6 +33,7 @@ server = [
 gui = [
     "napari>=0.5",
     "PySide6>=6.6",
+    "splinebox>=1.1",
 ]
 full = [
     "fastapi>=0.110",
@@ -40,13 +41,18 @@ full = [
     "pymupdf>=1.24",
     "PySide6>=6.6",
     "requests>=2.31",
+    "splinebox>=1.1",
     "uvicorn>=0.29",
+]
+curves = [
+    "splinebox>=1.1",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.0",
     "coverage>=7.0",
+    "splinebox>=1.1",
 ]
 
 [tool.setuptools.packages.find]
