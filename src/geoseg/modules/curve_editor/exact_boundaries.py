@@ -57,6 +57,74 @@ def _pair_mask(labels: np.ndarray, a: int, b: int) -> np.ndarray:
     return mask
 
 
+def boundary_union(
+    labels: np.ndarray,
+    *,
+    side: Literal["both", "lower"] = "both",
+) -> np.ndarray:
+    """Raw union of all 4-neighbour label transitions.
+
+    The symmetric boundary set is
+
+        B(L) = {x : exists y ~ x with L(y) != L(x)},
+
+    with ~ the 4-neighbour relation.  ``side="both"`` marks both pixels of
+    every transition; ``side="lower"`` marks only the pixel carrying the
+    smaller label id, which is the canonical one-sided representative used by
+    :func:`extract_exact_boundaries`.
+
+    No skeleton, pruning, smoothing, pair splitting, or keep/remove decision
+    is applied.  Diagonal-only contacts are intentionally not marked; they
+    belong to a separate digital-topology convention.
+    """
+    labels = np.asarray(labels)
+    if labels.ndim != 2:
+        raise ValueError(f"labels must be 2-D, got shape {labels.shape}")
+    mask = np.zeros(labels.shape, dtype=bool)
+    if side == "both":
+        mask[:, :-1] |= labels[:, :-1] != labels[:, 1:]
+        mask[:, 1:] |= labels[:, 1:] != labels[:, :-1]
+        mask[:-1, :] |= labels[:-1, :] != labels[1:, :]
+        mask[1:, :] |= labels[1:, :] != labels[:-1, :]
+    elif side == "lower":
+        mask[:, :-1] |= labels[:, :-1] < labels[:, 1:]
+        mask[:, 1:] |= labels[:, 1:] < labels[:, :-1]
+        mask[:-1, :] |= labels[:-1, :] < labels[1:, :]
+        mask[1:, :] |= labels[1:, :] < labels[:-1, :]
+    else:
+        raise ValueError(f"side must be 'both' or 'lower', got {side!r}")
+    return mask
+
+
+def closed_boundary_union(
+    labels: np.ndarray,
+    *,
+    include_background: bool = True,
+) -> np.ndarray:
+    """Raw boundary union plus the outer rectangle of the label domain.
+
+    The domain is the current label array after any panel/frame cropping.  Its
+    four sides are domain edges, not label transitions, but they must belong to
+    the boundary network so that every region touching the rectangle has a
+    closed boundary.
+
+    By default the full rectangle is included.  Set ``include_background=False``
+    when a border label-0 band is exterior space rather than a region of the
+    partition; then only foreground-touching border arcs are added.
+    """
+    labels = np.asarray(labels)
+    mask = boundary_union(labels)
+    border = np.zeros(labels.shape, dtype=bool)
+    border[0, :] = True
+    border[-1, :] = True
+    border[:, 0] = True
+    border[:, -1] = True
+    if not include_background:
+        border &= labels != 0
+    mask |= border
+    return mask
+
+
 def extract_exact_boundaries(labels: np.ndarray) -> list[ExactBoundary]:
     """Return exact, un-smoothed boundary components for each adjacent label pair."""
     labels = np.asarray(labels, dtype=np.int32)
@@ -186,6 +254,8 @@ __all__ = [
     "DecisionAction",
     "ExactBoundary",
     "ExactBoundaryDecision",
+    "boundary_union",
+    "closed_boundary_union",
     "decide_exact_boundaries",
     "draw_exact_decisions",
     "extract_exact_boundaries",

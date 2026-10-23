@@ -32,6 +32,7 @@ geoseg-gui/dist/
 /experiments/3d_schematic/results/experiment_plan_repair/mask_comparison
 *.png
 !tests/fixtures/**/*.png
+!docs/assets/**/*.png
 *.jpg
 !tests/fixtures/**/*.jpg
 !docs/assets/**/*.jpg

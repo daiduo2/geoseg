@@ -5,6 +5,27 @@
 > [`direct_results.json`](./direct_results.json). The old index only recorded
 > final labels; use the direct-results index before rerunning any engine.
 
+## Boundary previews
+
+Each preview is **source (with data-domain bbox) | mask | closed boundary**.
+Only the final closed-boundary image is shown: raw and foreground-only border
+variants are intentionally omitted. The boundary is the exact label union plus
+the data-domain rectangle; it is not a smoothed curve.
+
+| Panel | Preview |
+|---|---|
+| `newimage_p0` | <img src="../../docs/assets/boundary_comparison/newimage_p0.png" width="760"> |
+| `paper22_fig5a` | <img src="../../docs/assets/boundary_comparison/paper22_fig5a.png" width="760"> |
+| `paper22_fig6` | <img src="../../docs/assets/boundary_comparison/paper22_fig6.png" width="760"> |
+| `ph01_page8_panel3` | <img src="../../docs/assets/boundary_comparison/ph01_page8_panel3.png" width="760"> |
+| `schematic_panel2` | <img src="../../docs/assets/boundary_comparison/schematic_panel2.png" width="760"> |
+
+The source image may still show axes, frame or annotations; the bbox marks the
+data rectangle. The mask and boundary are cropped to that rectangle. For
+`newimage_p0` and `ph01` this removes the false frame/axis boundary.
+
+## Panel provenance
+
 - `newimage_p0` — layered, n=4, exported=True (5 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.
 - `newimage_p1` — layered, n=5, exported=True (5 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.
 - `newimage_p2` — layered, n=4, exported=True (8 polygons). 2026-07-02 user: later attempts were '效果显然是越来越差的, 完全不如 runs/preprocess_newimage_iter5/09_per_panel_overlay.jpg'. Text removal used agent visual ROI + absorbing red lines/black crosses into the background before colorbar matching; iter5 is the retained version.

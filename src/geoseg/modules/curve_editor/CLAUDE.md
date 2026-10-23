@@ -15,7 +15,7 @@
 | `rasterize.py` | 曲线 → 边界 mask → 4 连通填充；多 seed 组件用测地线分配；未播种组件合并到最近区域 |
 | `extract.py` | 交互编辑用：labels 边界骨架 → 曲线路径（RDP）；**不用于保留判定/审计** |
 | `background.py` | label 0 连通域语义：exterior surface vs internal hole |
-| `exact_boundaries.py` | Layer 1 唯一来源：相邻 label 之间的精确闭边界像素；不做 skeleton/RDP/spline；`keep/review/remove` 保守判定，当前不自动删除 |
+| `exact_boundaries.py` | Layer 1 唯一来源：`boundary_union()` 给出原始边界的像素并集；`extract_exact_boundaries()` 再按 label pair/连通分量拆成对象；不做 skeleton/RDP/spline；`keep/review/remove` 保守判定，当前不自动删除 |
 | `decisions.py` | 旧版曲线级 preview，仅服务交互编辑器；不能用于审计或决定分区闭边界去留 |
 | `refine.py` | Layer 2 几何平滑：只处理 Layer 1 已 keep 的边界；不得反过来决定保留/删除 |
 | `region.py` | 自由手绘区域：梯度贴边、弧长重采样、曲率/梯度控制点、内部点 |
@@ -47,6 +47,7 @@
 
 `extract_exact_boundaries(labels)` 是保留判定的唯一输入：
 
+- `boundary_union(labels)` 先给出所有相邻异号像素的并集；默认 `side="both"` 标记 transition 两侧，`side="lower"` 给出与逐对象提取一致的 canonical 单侧代表；
 - 对每一对相邻 label `(a, b)`，取 4 邻域中 `a/b` 相接的像素；
 - 按 8 连通拆成多个 boundary object；
 - 每个 object 的 `pixels` 就是分区结果的原始闭边界像素；不做 skeleton、RDP、spline、曲率平滑。

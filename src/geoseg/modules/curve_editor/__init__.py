@@ -17,6 +17,8 @@ from geoseg.modules.curve_editor.decisions import (
 from geoseg.modules.curve_editor.exact_boundaries import (
     ExactBoundary,
     ExactBoundaryDecision,
+    boundary_union,
+    closed_boundary_union,
     decide_exact_boundaries,
     draw_exact_decisions,
     extract_exact_boundaries,
@@ -38,6 +40,7 @@ from geoseg.modules.curve_editor.io import (
     save_shapes,
 )
 from geoseg.modules.curve_editor.model import ControlPoint, Interface, InterfaceModel
+from geoseg.modules.curve_editor.partition import ComponentMerge, prune_small_components
 from geoseg.modules.curve_editor.rasterize import draw_interfaces, rasterize_interfaces
 from geoseg.modules.curve_editor.refine import (
     BoundaryRefinementConfig,
@@ -70,6 +73,7 @@ __all__ = [
     "BoundaryDecisionResult",
     "BoundaryRefinementConfig",
     "ControlPoint",
+    "ComponentMerge",
     "EditorCommands",
     "ExactBoundary",
     "ExactBoundaryDecision",
@@ -81,6 +85,8 @@ __all__ = [
     "adjacent_labels",
     "background_roles",
     "boundary_mask",
+    "boundary_union",
+    "closed_boundary_union",
     "curve_background_role",
     "decide_boundaries",
     "decide_exact_boundaries",
@@ -103,6 +109,7 @@ __all__ = [
     "load_session",
     "load_shapes",
     "model_from_labels",
+    "prune_small_components",
     "rasterize_interfaces",
     "refine_curve",
     "refine_curves",

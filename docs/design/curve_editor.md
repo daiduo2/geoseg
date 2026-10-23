@@ -61,6 +61,7 @@ InterfaceModel
 
 **Layer 1 — exact closure（`exact_boundaries.py`）**
 
+- `boundary_union(labels)` 先给出所有 4 邻域相邻异号像素的并集；默认两侧都标记，`side="lower"` 给出与逐对象提取一致的 canonical 单侧代表；
 - 对每一对相邻 label，直接取分区结果中两者相接的原始像素；
 - 按 8 连通拆成 boundary object；`length` 即像素数；
 - 不做 skeleton、RDP、spline、曲率或任何平滑；

@@ -64,6 +64,9 @@ validation/
 
 `validation/curated/` 汇总了从 session 与历史导出中找到的、你实际确认过效果的结果。按结构分组：
 
+边界预览（source | mask | 最终闭合边界）见
+[`curated/README.md`](./curated/README.md#boundary-previews)。
+
 | 组 | panels | 结构 | 证据 |
 |---|---|---|---|
 | **newimage** | p0–p4 | layered | 2026-07-02：用 agent 视觉 ROI 把红线和黑十字吸收到背景，再走 colorbar 匹配；后续尝试“效果显然是越来越差的”，最终保留 `preprocess_newimage_iter5`。每个 panel 有 11 个查看目录、10 个 legend overlay、5 个 comparison；本次补做了 SPECFEM 导出 |
